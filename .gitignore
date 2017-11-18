@@ -66,3 +66,4 @@ fabric.properties
 .glide/
 vendor/*
 !vendor/vendor.json
+*iml
