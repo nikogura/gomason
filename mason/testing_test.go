@@ -139,11 +139,3 @@ func TestGovendorSync(t *testing.T) {
 		t.Fail()
 	}
 }
-
-func TestWholeShebang(t *testing.T) {
-	_, err := WholeShebang("", "master", true)
-	if err != nil {
-		log.Printf("Error running whole shebang: %s", err)
-		t.Fail()
-	}
-}

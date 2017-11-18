@@ -15,9 +15,9 @@
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/nikogura/gomason/mason"
 	"github.com/spf13/cobra"
+	"log"
 )
 
 // testCmd represents the test command
@@ -38,7 +38,10 @@ Sure, you could do the same thing with a CI or CD system.  But sometimes that's 
 Sometimes you need the benefits of a full system here.  Now.  Right at your fingertips.  You're welcome.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("test called")
+		_, err := mason.WholeShebang(workdir, branch, verbose)
+		if err != nil {
+			log.Fatalf("Error running test: %s", err)
+		}
 	},
 }
 

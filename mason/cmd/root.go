@@ -27,6 +27,7 @@ var cfgFile string
 var verbose bool
 var branch string
 var dryrun bool
+var workdir string
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -64,6 +65,7 @@ func init() {
 	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose output")
 	RootCmd.PersistentFlags().BoolVarP(&dryrun, "dryrun", "d", false, "Dry Run (Only applies to publish.")
 	RootCmd.PersistentFlags().StringVarP(&branch, "branch", "b", "master", "Branch to operate upon")
+	RootCmd.PersistentFlags().StringVarP(&workdir, "workdir", "w", "", "Workdir.  If omitted, a temp dir will be created and subsequently cleaned up.")
 }
 
 // initConfig reads in config file and ENV variables if set.
