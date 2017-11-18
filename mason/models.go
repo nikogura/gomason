@@ -1,5 +1,6 @@
 package mason
 
+// Type to represent the metadata.json file
 type Metadata struct {
 	Path        string
 	Package     string
