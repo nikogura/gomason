@@ -16,4 +16,4 @@ If I have to explain why it's important to prove your code is working... nah.  Y
 
 # Limitations
 
-Right now, it's designed to work with git ssh repos with a url of the form 'git@github.com:<owner>/<repo>'
+Right now, it's designed to work with git ssh repos with a url of the form 'git@github.com:(owner)/(repo)'
