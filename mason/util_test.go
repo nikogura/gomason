@@ -44,15 +44,15 @@ func TestReadMetadata(t *testing.T) {
 
 	defer os.RemoveAll(tmpDir)
 
-	fileName := fmt.Sprintf("%s/%s", tmpDir, TestMetadataFileName())
+	fileName := fmt.Sprintf("%s/%s", tmpDir, testMetadataFileName())
 
-	err = ioutil.WriteFile(fileName, []byte(TestMetaDataJson()), 0644)
+	err = ioutil.WriteFile(fileName, []byte(testMetaDataJson()), 0644)
 	if err != nil {
 		log.Printf("Error writing metadata file: %s", err)
 		t.Fail()
 	}
 
-	expected := TestMetadataObj()
+	expected := testMetadataObj()
 
 	actual, err := ReadMetadata(fileName)
 	if err != nil {

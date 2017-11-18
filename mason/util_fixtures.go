@@ -1,6 +1,6 @@
 package mason
 
-func TestMetadataObj() (metadata Metadata) {
+func testMetadataObj() (metadata Metadata) {
 	metadata = Metadata{
 		Package:     "github.com/nikogura/gomason",
 		Version:     "0.1.0",
@@ -10,7 +10,7 @@ func TestMetadataObj() (metadata Metadata) {
 	return metadata
 }
 
-func TestMetaDataJson() string {
+func testMetaDataJson() string {
 	return `{
 	"version": "0.1.0",
 	"package": "github.com/nikogura/gomason",
@@ -18,6 +18,6 @@ func TestMetaDataJson() string {
 }`
 }
 
-func TestMetadataFileName() string {
+func testMetadataFileName() string {
 	return "metadata.json"
 }
