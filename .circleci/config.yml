@@ -19,5 +19,3 @@ jobs:
       - run:
           name: Run Tests
           command: go test -v ./...
-          environment:
-            PATH
