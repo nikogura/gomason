@@ -1,5 +1,9 @@
 # gomason
 
+[![Circle CI](https://circleci.com/gh/nikogura/gomason.svg?style=shield)](https://circleci.com/gh/nikogura/gomason)
+
+<!--[![Go Report Card](https://goreportcard.com/badge/github.com/nikogura/gomason)](https://goreportcard.com/report/github.com/nikogura/gomason)-->
+
 Tool for building Go binaries in a clean GOPATH.  
 
 Why is this important?  Mainly to make sure you have all the dependencies properly vendored, and your tests run.
