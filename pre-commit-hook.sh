@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-/usr/local/bin/gofmt -w mason
+/usr/local/go/bin/gofmt -w mason
