@@ -24,6 +24,9 @@ import (
 )
 
 var cfgFile string
+var verbose bool
+var branch string
+var dryrun bool
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
@@ -57,7 +60,10 @@ func init() {
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	//RootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	RootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Verbose output")
+	RootCmd.PersistentFlags().BoolVarP(&dryrun, "dryrun", "d", false, "Dry Run (Only applies to publish.")
+	RootCmd.PersistentFlags().StringVarP(&branch, "branch", "b", "master", "Branch to operate upon")
 }
 
 // initConfig reads in config file and ENV variables if set.
