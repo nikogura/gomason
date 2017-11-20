@@ -8,11 +8,9 @@ Tool for building Go binaries in a clean GOPATH.
 
 Why is this important?  Mainly to make sure you have all the dependencies properly vendored, and your tests run.
 
-You don't care if your tests run?  That's a problem for the consumer of your code?
+You don't care if your tests run?  That's a problem for the consumer of your code? Go away choom.  Nothing more for us to talk about.  
 
-Go away choom.  Nothing more for us to talk about.  
-
-If I have to explain why it's important to prove your code is working... nah.  You're supposed to grok that all on your own.
+If I have to explain why it's important to prove your code is working... nah.  You're supposed to understand that all on your own.
 
 Gomason uses gox to do it's compiling.  It builds whatever versions you like, but they need to be specified in the metadata.json file detailed below in gox-like format.
 
@@ -22,7 +20,40 @@ Gomason depends on a metadata file imaginatively named 'metadata.json'.  It's ex
 
 The metadata.json contains such information as the version. (Yes, I'm old fashioned that way.  I like human readable version numbers.)
 
-The 'buildtargets' section of the metadata.json is used to determine which OSes and architectures to compile for.  The 'package' section is the package spec as used by 'go get' and 'govendor'.
+Example:
+
+        {
+          "version": "0.1.0",
+          "package": "github.com/nikogura/gomason",
+          "description": "A tool for building and testing your project in a clean GOPATH.",
+          "buildtargets": [
+            "darwin/amd64",
+            "linux/amd64"
+          ]
+        }
+
+### Config Sections
+
+#### Version
+
+Semantic version string of your package.  I realize go's github dependency mechanism provides commit-level granularity, but honestly?  Is that really useful?  
+
+When's the last time you looked at a commit hash and derived any meaning around how much this version has changed from the last one you depended on?  I'm a fan of the idea that the major/minor/patch contract of semantic versioning can help you estimate, at a glance, how much of a change that upgrade you're pondering will be.
+
+Sure, it needs to be tested.  (Trust but verify, right?)  But it's really nice to be able to have that estimate in a glance before you devote resources to the upgrade, even if it's just a quick estimate in your head.
+
+#### Package
+
+The name of the Go package as used by 'go get' or 'govendor'.  Used to actually check out the code in the clean build environment.
+
+
+#### Description
+
+A nice, human readable description for your module, cos that's really nice.  Having it in a parsable location as a simple string is also useful for other things, as you can probably imagine.
+
+#### Buildtargets
+
+This is used to determine which OSes and architectures to compile for. It's gotta be Gox's way of expressing the version and arch (os/arch), as the strings will simply be passed along to gox to build your toys.
 
 ## Limitations
 
