@@ -44,33 +44,18 @@ func Build(gopath string, gomodule string, branch string, verbose bool) (err err
 	}
 	// Install gox if it's not already there
 	if _, err := os.Stat(fmt.Sprintf("%s/go/bin/gox", gopath)); os.IsNotExist(err) {
-		if verbose {
-			log.Printf("Installing Gox.\n")
-		}
 		err = GoxInstall(gopath, verbose)
 		if err != nil {
 			err = errors.Wrap(err, "Failed to install gox")
 		}
-	} else {
-		if verbose {
-			log.Printf("Gox already installed.\n")
-		}
 	}
 
 	if _, err := os.Stat(fmt.Sprintf("%s/%s/metadata.json", gopath, gomodule)); os.IsNotExist(err) {
-		if verbose {
-			log.Printf("Checking out code.\n")
-		}
 		err = Checkout(gopath, gomodule, branch, verbose)
 		if err != nil {
 			err = errors.Wrap(err, fmt.Sprintf("Failed to checkout module: %s branch: %s ", gomodule, branch))
 			return err
 		}
-	} else {
-		if verbose {
-			log.Printf("Code already checked out.\n")
-		}
-
 	}
 
 	wd := fmt.Sprintf("%s/src/%s", gopath, gomodule)
