@@ -47,6 +47,7 @@ func Build(gopath string, gomodule string, branch string, verbose bool) (err err
 		err = GoxInstall(gopath, verbose)
 		if err != nil {
 			err = errors.Wrap(err, "Failed to install gox")
+			return err
 		}
 	}
 
