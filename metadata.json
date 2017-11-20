@@ -1,5 +1,9 @@
 {
   "version": "0.1.0",
   "package": "github.com/nikogura/gomason",
-  "description": "A tool for building and testing your project in a clean GOPATH."
+  "description": "A tool for building and testing your project in a clean GOPATH.",
+  "buildtargets": [
+    "darwin/amd64",
+    "linux/amd64"
+  ]
 }

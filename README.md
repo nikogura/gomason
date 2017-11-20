@@ -14,6 +14,16 @@ Go away choom.  Nothing more for us to talk about.
 
 If I have to explain why it's important to prove your code is working... nah.  You're supposed to grok that all on your own.
 
-# Limitations
+Gomason uses gox to do it's compiling.  It builds whatever versions you like, but they need to be specified in the metadata.json file detailed below in gox-like format.
+
+## Config
+
+Gomason depends on a metadata file imaginatively named 'metadata.json'.  It's expected to be in the root of the repo.
+
+The metadata.json contains such information as the version. (Yes, I'm old fashioned that way.  I like human readable version numbers.)
+
+The 'buildtargets' section of the metadata.json is used to determine which OSes and architectures to compile for.  The 'package' section is the package spec as used by 'go get' and 'govendor'.
+
+## Limitations
 
 Right now, it's designed to work with git ssh repos with a url of the form 'git@github.com:(owner)/(repo)'
