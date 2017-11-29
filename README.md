@@ -12,7 +12,11 @@ You don't care if your tests run?  That's a problem for the consumer of your cod
 
 If I have to explain why it's important to prove your code is working... nah.  You're supposed to understand that all on your own.
 
-Gomason uses gox to do it's compiling.  It builds whatever versions you like, but they need to be specified in the metadata.json file detailed below in gox-like format.
+If you have access to a CI system, Gomason isn't going to impress you- unless like me you like making sure all t's are crossed and all i's are dotted *before* you commit and push.  Pushing things that fail is harmless if you have a good branching model and you adhere to it, but it's still embarassing.
+
+Gomason comes from an experience where management was so astounding **anti-testing** *(yeah, I couldn't believe it either.)* that I needed to come up with a way to do clean-room CI testing quickly, easily and transparently, but also fly under the weather.  They didn't need to know I was 'wasting time' testing my work.
+
+Gomason uses ```gox``` the Go cross compiler  to do it's compiling.  It builds whatever versions you like, but they need to be specified in the metadata.json file detailed below in gox-like format.
 
 ## Config
 
