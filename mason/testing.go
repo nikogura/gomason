@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 // GovendorInstall  Installs govendor into the gopath indicated.
@@ -114,11 +115,18 @@ func GoTest(gopath string, gomodule string, verbose bool) (err error) {
 	return err
 }
 
-// WholeShebang Creates an ephemeral GOPATH, installs Govendor into it, checks out your code, and runs the tests.  The whole shebang.
+// WholeShebang Creates an ephemeral GOPATH, installs Govendor into it, checks out your code, and runs the tests.  The whole shebang, hence the name.
+// Optionally, it will build and publish your code too while it has the whole GOPATH setup.
 // Specify workdir if you want to speed things up (govendor sync can take a while), but it's up to you to keep it clean.
 // If workDir is the empty string, it will use a temp file
-func WholeShebang(workDir string, branch string, verbose bool) (buildmetadata Metadata, err error) {
+func WholeShebang(workDir string, branch string, build bool, sign bool, publish bool, verbose bool) (buildmetadata Metadata, err error) {
 	var actualWorkDir string
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		err = errors.Wrap(err, "Failed to get current working directory.")
+		return buildmetadata, err
+	}
 
 	if workDir == "" {
 		actualWorkDir, err = ioutil.TempDir("", "gomason")
@@ -181,6 +189,47 @@ func WholeShebang(workDir string, branch string, verbose bool) (buildmetadata Me
 	}
 
 	log.Printf("Success!\n\n")
+
+	if build {
+		Build(gopath, commandmetadata.Package, branch, verbose)
+		parts := strings.Split(commandmetadata.Package, "/")
+
+		binaryPrefix := parts[len(parts)-1]
+
+		for _, arch := range commandmetadata.BuildTargets {
+			archparts := strings.Split(arch, "/")
+
+			osname := archparts[0]
+			archname := archparts[1]
+
+			workdir := fmt.Sprintf("%s/src/%s", gopath, commandmetadata.Package)
+			binary := fmt.Sprintf("%s/%s_%s_%s", workdir, binaryPrefix, osname, archname)
+
+			if _, err := os.Stat(binary); os.IsNotExist(err) {
+				err = errors.New(fmt.Sprintf("Gox failed to build binary: %s\n", binary))
+				return buildmetadata, err
+			}
+
+			destinationPath := fmt.Sprintf("%s/%s_%s_%s", cwd, binaryPrefix, osname, archname)
+
+			err = os.Rename(binary, destinationPath)
+			if err != nil {
+				err = errors.Wrap(err, fmt.Sprintf("Failed to collect binary %s\n", binary))
+				return buildmetadata, err
+			}
+		}
+	}
+
+	if sign {
+		log.Printf("Signing not yet implemented.  Stay tuned\n")
+		// sign binaries
+
+	}
+
+	if publish {
+		log.Printf("Publish not yet implemented.  Stay tuned\n")
+		// upload binaries
+	}
 
 	return buildmetadata, err
 }

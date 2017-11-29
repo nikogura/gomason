@@ -20,41 +20,35 @@ import (
 	"log"
 )
 
-// testCmd represents the test command
-var testCmd = &cobra.Command{
-	Use:   "test",
-	Short: "Test your code in a clean environment.",
+// signCmd represents the sign command
+var signCmd = &cobra.Command{
+	Use:   "sign",
+	Short: "Sign your binaries after building them.",
 	Long: `
-Test your code in a clean environment.
+Sign your binaries after building them.
 
-You know how it goes, you write stuff.  You even test it.  You commit it, you push it,
-and then you get nagging and embarrassing issues logged against your otherwise wonderful project because you forgot to
-list some code dependency or other.
+Artists sign their work, you should too.
 
-Gomason will help protect you from such infamy by building your code in a clean environment locally and letting you know the results.
-
-Sure, you could do the same thing with a CI or CD system.  But sometimes that's not an option.
-
-Sometimes you need the benefits of a full system here.  Now.  Right at your fingertips.  You're welcome.
+Signing sorta implies something to sign, which in turn, implies that it built, which means it tested successfully.  What I'm getting at is this command will run 'test', 'build', and then it will 'sign'.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		_, err := mason.WholeShebang(workdir, branch, false, false, false, verbose)
+		_, err := mason.WholeShebang(workdir, branch, true, true, false, verbose)
 		if err != nil {
-			log.Fatalf("Error running test: %s", err)
+			log.Fatalf("Error running sign: %s", err)
 		}
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(testCmd)
+	RootCmd.AddCommand(signCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// testCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// signCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// testCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// signCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

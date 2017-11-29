@@ -15,20 +15,25 @@
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/nikogura/gomason/mason"
 	"github.com/spf13/cobra"
+	"log"
 )
 
 // publishCmd represents the publish command
 var publishCmd = &cobra.Command{
 	Use:   "publish",
-	Short: "Test, build, and publish your code",
+	Short: "Test, build, sign and publish your code",
 	Long: `
-Test, build, and publish your code.
+Test, build, sign and publish your code.
+
+Publish will upload your binaries to wherever it is you've configured them to go in whatever way you like.  The detached signatures will likewise be uploaded.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("publish called")
+		_, err := mason.WholeShebang(workdir, branch, true, true, true, verbose)
+		if err != nil {
+			log.Fatalf("Error running publish: %s\n", err)
+		}
 	},
 }
 
