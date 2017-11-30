@@ -4,15 +4,21 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/nikogura/gomason)](https://goreportcard.com/report/github.com/nikogura/gomason)
 
-Tool for building Go binaries in a clean GOPATH.  
+Tool for testing, building, signing and publishing Go binaries in a clean Go workspace.  Think of it as an on premesis CI/CD system.
 
-Why is this important?  Mainly to make sure you have all the dependencies properly vendored, and your tests run.
+You could do this via a CI/CD System and an artifact repository of some flavor.  But wiring that up properly takes time, experience, and tends to be very specific to your particular system and repository.  
 
-You don't care if your tests run?  That's a problem for the consumer of your code? Go away choom.  Nothing more for us to talk about.  
+Gomason attempts to abstract all of that.  Any system must be able to handle the following:
 
-If I have to explain why it's important to prove your code is working... nah.  You're supposed to understand that all on your own.
+1. Running tests and reporting on results
 
-If you have access to a CI system, ```gomason``` isn't going to impress you- unless like me you like making sure all t's are crossed and all i's are dotted *before* you commit and push.  Pushing things that fail is harmless if you have a good branching model and you adhere to it, but it's still embarassing.
+2. Building binaries for the target OS/Arch.
+
+3. Personally signing the binaries thus built.  Artifact repos can sign things, it's true, but that just means you can verify that binary X was put in repo Y.  It's one step removed from actual authorship.  The idea is the actual author of a binary will sign their work- by whatever supported means you choose, and then you can upload it to the repo of your choice for distribution with the world.
+
+4. Actually publish those binaries and their signatures to the artifact repo of your choice.
+
+None of this is exactly rocket science, but the I have done it enough times, in enough different ways, that it was finally time to say 'enough' and be done with it.  
 
 Gomason comes from an experience I had where management was so astounding **anti-testing** that I needed to come up with a way to do clean-room CI testing quickly, easily and transparently, but also fly under the radar.  They didn't need to know I was 'wasting time' testing my work. *(yeah, I couldn't believe it either.  Blew my mind.)* 
 
