@@ -30,7 +30,7 @@ Gomason uses ```gox``` the Go cross compiler  to do it's compiling.  It builds w
     
 ## Usage
 
-* NOTE: you must have a ```metadata.json``` in your project as described in [Config](#config-reference) below.
+* NOTE: you must have a ```metadata.json``` in your project as described in [Config Reference](#config-reference) below.
 
 ### Testing
 
