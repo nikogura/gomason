@@ -24,7 +24,50 @@ Gomason comes from an experience I had where management was so astounding **anti
 
 Gomason uses ```gox``` the Go cross compiler  to do it's compiling.  It builds whatever versions you like, but they need to be specified in the metadata.json file detailed below in gox-like format.
 
-## Config
+## Installation
+
+    go get github.com/nikogura/gomason
+    
+## Usage
+
+* NOTE: you must have a ```metadata.json``` in your project as described in [Config](#config-reference) below.
+
+### Testing
+
+Example Minimum Config:
+
+    {
+      "package": "github.com/nikogura/gomason",
+      "version": "0.1.0",
+      "description": "A tool for building and testing your project in a clean GOPATH."
+    }
+
+Run:
+
+    gomason test
+    
+### Building
+
+Example Minimum Config:
+
+    {
+      "package": "github.com/nikogura/gomason",
+      "version": "0.1.0",
+      "description": "A tool for building and testing your project in a clean GOPATH.",
+      "buildtargets": [
+        "darwin/amd64",
+        "linux/amd64"
+      ]
+    }
+    
+## Limitations
+
+Right now, it's designed to work with git ssh repos with a url of the form 'git@github.com:(owner)/(repo)'
+
+Signing and publishing are coming, but still in the works
+
+    
+## Config Reference
 
 Gomason depends on a metadata file imaginatively named 'metadata.json'.  It's expected to be in the root of the repo.
 
@@ -65,6 +108,4 @@ A nice, human readable description for your module, cos that's really nice.  Hav
 
 This is used to determine which OSes and architectures to compile for. It's gotta be Gox's way of expressing the version and arch (os/arch), as the strings will simply be passed along to gox to build your toys.
 
-## Limitations
 
-Right now, it's designed to work with git ssh repos with a url of the form 'git@github.com:(owner)/(repo)'
