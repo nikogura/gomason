@@ -76,6 +76,7 @@ Expire-Date: 0
 		log.Printf("Test key generation file: %s", keyFile)
 
 		// setup gpg
+		log.Printf("Priming gpg.")
 		cmd := exec.Command(shellCmd, "--trustdb", trustdb, "--no-default-keyring", "--keyring", keyring, "--list-keys")
 		err = cmd.Run()
 		if err != nil {
