@@ -89,6 +89,7 @@ func SignBinary(meta Metadata, binary string, verbose bool) (err error) {
 	return err
 }
 
+// VerifyBinary will verify the signature of a signed binary.
 func VerifyBinary(binary string, signEntity, signProg string, metadata Metadata) (ok bool, err error) {
 	switch signProg {
 	// insert other signing types here
@@ -138,6 +139,7 @@ func SignGPG(binary string, signingEntity string, meta Metadata) (err error) {
 	return err
 }
 
+// VerifyGPG  Verifies signatures with gpg.
 func VerifyGPG(binary string, signEntity string, meta Metadata) (ok bool, err error) {
 	sigFile := fmt.Sprintf("%s.asc", binary)
 

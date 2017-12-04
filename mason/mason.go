@@ -19,6 +19,7 @@ type Metadata struct {
 	Options      map[string]interface{} `json:"-"`
 }
 
+//Signing information
 type Signing struct {
 	Program string `json:"program"`
 	Email   string `json:"email"`
