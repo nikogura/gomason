@@ -94,7 +94,7 @@ Expire-Date: 0
 			binary := fmt.Sprintf("%s/%s_%s_%s", workdir, binaryPrefix, osname, archname)
 
 			if _, err := os.Stat(binary); os.IsNotExist(err) {
-				fmt.Sprintf("Gox failed to build binary: %s\n", binary)
+				fmt.Printf("Gox failed to build binary: %s\n", binary)
 				log.Printf("Failed to find binary %s", binary)
 				t.Fail()
 			}
