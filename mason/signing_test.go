@@ -43,6 +43,7 @@ func TestSignBinary(t *testing.T) {
 		// set up test keys
 		keyring := fmt.Sprintf("%s/keyring.gpg", tmpDir)
 		trustdb := fmt.Sprintf("%s/trustdb.gpg", tmpDir)
+
 		meta.Options = make(map[string]interface{})
 		meta.Options["keyring"] = keyring
 		meta.Options["trustdb"] = trustdb
@@ -70,11 +71,15 @@ Expire-Date: 0
 			t.Fail()
 		}
 
+		log.Printf("Keyring file: %s", keyring)
+		log.Printf("Trustdb file: %s", trustdb)
+		log.Printf("Test key generation file: %s", keyFile)
+
 		// generate a test key
 		cmd := exec.Command(shellCmd, "--trustdb", trustdb, "--no-default-keyring", "--keyring", keyring, "--batch", "--generate-key", keyFile)
 		err = cmd.Run()
 		if err != nil {
-			log.Printf("Error writing test key: %s", err)
+			log.Printf("****** Error creating test key: %s *****", err)
 			t.Fail()
 		}
 
