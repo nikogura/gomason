@@ -75,8 +75,16 @@ Expire-Date: 0
 		log.Printf("Trustdb file: %s", trustdb)
 		log.Printf("Test key generation file: %s", keyFile)
 
+		// setup gpg
+		cmd := exec.Command(shellCmd, "--trustdb", trustdb, "--no-default-keyring", "--keyring", keyring, "--list-keys")
+		err = cmd.Run()
+		if err != nil {
+			log.Printf("****** Error priming gpg: %s *****", err)
+			t.Fail()
+		}
+
 		// generate a test key
-		cmd := exec.Command(shellCmd, "--trustdb", trustdb, "--no-default-keyring", "--keyring", keyring, "--batch", "--generate-key", keyFile)
+		cmd = exec.Command(shellCmd, "--trustdb", trustdb, "--no-default-keyring", "--keyring", keyring, "--batch", "--generate-key", keyFile)
 		err = cmd.Run()
 		if err != nil {
 			log.Printf("****** Error creating test key: %s *****", err)
