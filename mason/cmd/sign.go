@@ -32,7 +32,7 @@ Artists sign their work, you should too.
 Signing sorta implies something to sign, which in turn, implies that it built, which means it tested successfully.  What I'm getting at is this command will run 'test', 'build', and then it will 'sign'.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		_, err := mason.WholeShebang(workdir, branch, true, true, false, verbose)
+		err := mason.WholeShebang(workdir, branch, true, true, false, verbose)
 		if err != nil {
 			log.Fatalf("Error running sign: %s", err)
 		}

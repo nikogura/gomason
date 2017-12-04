@@ -30,7 +30,7 @@ Test, build, sign and publish your code.
 Publish will upload your binaries to wherever it is you've configured them to go in whatever way you like.  The detached signatures will likewise be uploaded.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		_, err := mason.WholeShebang(workdir, branch, true, true, true, verbose)
+		err := mason.WholeShebang(workdir, branch, true, true, true, verbose)
 		if err != nil {
 			log.Fatalf("Error running publish: %s\n", err)
 		}

@@ -34,7 +34,7 @@ You could run 'test' separately, but 'build' is nice enough to do it for you.
 Binaries are dropped into the current working directory.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		_, err := mason.WholeShebang(workdir, branch, true, false, false, verbose)
+		err := mason.WholeShebang(workdir, branch, true, false, false, verbose)
 		if err != nil {
 			log.Fatalf("Error running test and build: %s\n", err)
 		}

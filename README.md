@@ -28,9 +28,33 @@ Gomason uses ```gox``` the Go cross compiler  to do it's compiling.  It builds w
 
     go get github.com/nikogura/gomason
     
+## Project Config
+
+Projects are configured by the file ```metadata.json``` in the root of the project being tested/built/published by gomason.  This file is intended to be checked into the project and contains information required for gomason to function.  See below for examples and [Project Config Reference](#project-config-reference) for full details.
+
+Some information in ```metadata.json```, such as signing info can be overwritten by the [User Config](#user-config) detailed below.
+
+## User Config
+
+User configuration is accomplished by the file ```~/.gomason```.  This is an *ini* formatted file that contains user level information such as the identity of the signer for use when signing binaries.
+
+An example ```~/.gomason```:
+
+    [user]
+        email = nik.ogura@gmail.com
+
+    [signing]
+        program = gpg
+        
+This config would use the gpg program to sign binaries with the author's private key.  Obviously a key for the listed user must exist within gpg's keychain for this to function.
+
+User config, if set, overrides any project config.
+
+See [User Config Reference](#user-config-reference) for more details.
+    
 ## Usage
 
-* NOTE: you must have a ```metadata.json``` in your project as described in [Config Reference](#config-reference) below.
+* NOTE: you must have a ```metadata.json``` in your project as described in [Project Config Reference](#project-config-reference) below.
 
 ### Testing
 
@@ -67,7 +91,7 @@ Right now, it's designed to work with git ssh repos with a url of the form 'git@
 Signing and publishing are coming, but still in the works
 
     
-## Config Reference
+## Project Config Reference
 
 Gomason depends on a metadata file imaginatively named 'metadata.json'.  It's expected to be in the root of the repo.
 
@@ -108,4 +132,35 @@ A nice, human readable description for your module, cos that's really nice.  Hav
 
 This is used to determine which OSes and architectures to compile for. It's gotta be Gox's way of expressing the version and arch (os/arch), as the strings will simply be passed along to gox to build your toys.
 
+## User Config Reference
+
+Per-user config.  Primarily used to set per-user information that would not make sense to have in the project config.  
+
+Which identity and key to use for signing is a good example.  While you can set and distribute a shared key for *everyone* to use, it's a better practice to have each publisher use their own key.  
+
+### Config Sections
+
+#### User
+
+The user using gomason.  Supported configuration keys:
+
+* email
+
+example:
+
+    [user]
+        email = nik.ogura@gmail.com
+        
+### Signing
+
+Configuration related to signing.  Supported configuration keys:
+
+* program
+
+example:
+
+    [signing]
+        program = gpg
+        
+ 
 
