@@ -48,9 +48,6 @@ func TestSignBinary(t *testing.T) {
 		meta.Options["keyring"] = keyring
 		meta.Options["trustdb"] = trustdb
 
-		commandEnv := os.Environ()
-		commandEnv = append(commandEnv, fmt.Sprintf("KEYRING=%s", keyring))
-
 		// write gpg batch file
 		defaultKeyText := `%echo Generating a default key
 %no-protection

@@ -127,7 +127,7 @@ func ProcessBuildTargets(meta Metadata, gopath string, cwd string, sign bool, pu
 		binary := fmt.Sprintf("%s/%s_%s_%s", workdir, binaryPrefix, osname, archname)
 
 		if _, err := os.Stat(binary); os.IsNotExist(err) {
-			err = errors.New(fmt.Sprintf("Gox failed to build binary: %s\n", binary))
+			err = fmt.Errorf("Gox failed to build binary: %s\n", binary)
 			return err
 		}
 
