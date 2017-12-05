@@ -78,10 +78,12 @@ Example Minimum Config:
       "package": "github.com/nikogura/gomason",
       "version": "0.1.0",
       "description": "A tool for building and testing your project in a clean GOPATH.",
-      "buildtargets": [
-        "darwin/amd64",
-        "linux/amd64"
-      ]
+      "building": {
+          "targets": [
+            "darwin/amd64",
+            "linux/amd64"
+          ]
+      }
     }
     
 ## Limitations
@@ -103,15 +105,15 @@ Example:
           "version": "0.1.0",
           "package": "github.com/nikogura/gomason",
           "description": "A tool for building and testing your project in a clean GOPATH.",
-          "buildtargets": [
-            "darwin/amd64",
-            "linux/amd64"
-          ]
+          "building": {
+              "targets": [
+                "darwin/amd64",
+                "linux/amd64"
+              ]
+          }
         }
 
-### Config Sections
-
-#### Version
+### Version
 
 Semantic version string of your package.  I realize go's github dependency mechanism provides commit-level granularity, but honestly?  Is that really useful?  
 
@@ -119,18 +121,48 @@ When's the last time you looked at a commit hash and derived any meaning around 
 
 Sure, it needs to be tested.  (Trust but verify, right?)  But it's really nice to be able to have that estimate in a glance before you devote resources to the upgrade, even if it's just a quick estimate in your head.
 
-#### Package
+### Package
 
 The name of the Go package as used by 'go get' or 'govendor'.  Used to actually check out the code in the clean build environment.
 
 
-#### Description
+### Description
 
 A nice, human readable description for your module, cos that's really nice.  Having it in a parsable location as a simple string is also useful for other things, as you can probably imagine.
 
-#### Buildtargets
+### Building
+
+Information specifically for building the project.
+
+#### Targets
 
 This is used to determine which OSes and architectures to compile for. It's gotta be Gox's way of expressing the version and arch (os/arch), as the strings will simply be passed along to gox to build your toys.
+
+For example, the following will build 64 bit binaries for MacOS and Linux:
+
+    "targets": [
+          "darwin/amd64",
+          "linux/amd64"
+    ]
+    
+    
+### Signing
+
+Information related to signing.
+
+#### Program
+
+Defaults to 'gpg'.  Others such as keybase.io will be added depending on time and user interest.
+
+#### Email
+
+The email of the entity (generally a person) who's doing the signing.  This entity, and their attendant keys must be available to the signing program.  
+
+For instance, with the default 'gpg' program, gomason merely calls ```gpg -bau <email> <file>``` on the binaries.  If gpg doesn't already have a key registered for the email, an error will occur.
+
+### Publishing
+
+Information related to publishing.
 
 ## User Config Reference
 
