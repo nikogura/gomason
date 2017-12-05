@@ -22,7 +22,16 @@ None of this is exactly rocket science, but the I have done it enough times, in 
 
 Gomason comes from an experience I had where management was so astounding **anti-testing** that I needed to come up with a way to do clean-room CI testing quickly, easily and transparently, but also fly under the radar.  They didn't need to know I was 'wasting time' testing my work. *(yeah, I couldn't believe it either.  Blew my mind.)* 
 
+What started out as a sort of subversive method of continuing to test my own code expanded after we parted ways.  See, signing binaries and uploading the various bits to a repo isn't exactly rocket science, but it's also *dreadfully boring* once you've done it a few times.  I figured DRY, so I made a 'one and done' means for doing so.
+
+CI systems like Artifactory Pro can sign binaries, it's true, but they don't really have provenance on who the author was.  The bits arrived there, presumably after authentication (but that depends on the config), but you don't really know who did the signing.
+
+Enter gomason, which can do the building and signing locally with personal keys and then upload.  Presumably you'd also require authentication on upload, but now you've actually established 2 things- someone with credentials has uploaded this, *and* they've personally signed what they uploaded.  Whether you trust that signature is up to you, but we've provided an easy means to extend what a traditional CI system can do.
+
 Gomason uses ```gox``` the Go cross compiler  to do it's compiling.  It builds whatever versions you like, but they need to be specified in the metadata.json file detailed below in gox-like format.
+
+Code is downloaded via ```go get```.  If you have your VCS configured so that you can do that without authentication, then everything will *just work*.
+
 
 ## Installation
 
@@ -85,13 +94,6 @@ Example Minimum Config:
           ]
       }
     }
-    
-## Limitations
-
-Right now, it's designed to work with git ssh repos with a url of the form 'git@github.com:(owner)/(repo)'
-
-Publishing is coming, but currently it's still in the works
-
     
 ## Project Config Reference
 
