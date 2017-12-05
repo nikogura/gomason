@@ -108,7 +108,7 @@ Expire-Date: 0
 			}
 
 			// verify binaries
-			ok, err := VerifyGPG(binary, "tester@foo.bar", meta)
+			ok, err := VerifyBinary(binary, meta)
 			if err != nil {
 				log.Printf("Error verifying signature: %s", err)
 				//t.Fail()

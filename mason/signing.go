@@ -90,11 +90,18 @@ func SignBinary(meta Metadata, binary string, verbose bool) (err error) {
 }
 
 // VerifyBinary will verify the signature of a signed binary.
-func VerifyBinary(binary string, signEntity, signProg string, metadata Metadata) (ok bool, err error) {
+func VerifyBinary(binary string, meta Metadata) (ok bool, err error) {
+	// pull signing info out of metadata.json
+	signInfo := meta.SignInfo
+
+	signProg := signInfo.Program
+	if signProg == "" {
+		signProg = defaultSigningProgram
+	}
 	switch signProg {
 	// insert other signing types here
 	default:
-		ok, err = VerifyGPG(binary, signEntity, metadata)
+		ok, err = VerifyGPG(binary, meta)
 		if err != nil {
 			err = errors.Wrap(err, fmt.Sprintf("failed to run %q", signProg))
 			return ok, err
@@ -140,7 +147,7 @@ func SignGPG(binary string, signingEntity string, meta Metadata) (err error) {
 }
 
 // VerifyGPG  Verifies signatures with gpg.
-func VerifyGPG(binary string, signEntity string, meta Metadata) (ok bool, err error) {
+func VerifyGPG(binary string, meta Metadata) (ok bool, err error) {
 	sigFile := fmt.Sprintf("%s.asc", binary)
 
 	shellCmd, err := exec.LookPath("gpg")
