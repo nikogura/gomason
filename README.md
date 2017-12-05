@@ -170,13 +170,15 @@ Per-user config.  Primarily used to set per-user information that would not make
 
 Which identity and key to use for signing is a good example.  While you can set and distribute a shared key for *everyone* to use, it's a better practice to have each publisher use their own key.  
 
-### Config Sections
+The user config file gives you a place to do this.  You can, however set a group shared signing entity in ```metadata.json``` if you like. 
 
-#### User
+### User
 
-The user using gomason.  Supported configuration keys:
+The user using gomason.
 
-* email
+#### Email
+
+The email address of the person using gomason and signing binaries. 
 
 example:
 
@@ -185,9 +187,11 @@ example:
         
 ### Signing
 
-Configuration related to signing.  Supported configuration keys:
+User specific configuration information related to signing.  Supported configuration keys:
 
-* program
+#### Program
+
+The program used to sign your binaries.  Set here it overrides any setting in ```metadata.json```
 
 example:
 
