@@ -11,18 +11,28 @@ import (
 
 // Metadata type to represent the metadata.json file
 type Metadata struct {
-	Version      string                 `json:"version"`
-	Package      string                 `json:"package"`
-	Description  string                 `json:"description"`
-	BuildTargets []string               `json:"buildtargets,omitempty"`
-	Signing      Signing                `json:"signing,omitempty"`
-	Options      map[string]interface{} `json:"-"`
+	Version     string                 `json:"version"`
+	Package     string                 `json:"package"`
+	Description string                 `json:"description"`
+	BuildInfo   BuildInfo              `json:"building,omitempty"`
+	SignInfo    SignInfo               `json:"signing,omitempty"`
+	PublishInfo PublishInfo            `json:"publishing,omitempty"`
+	Options     map[string]interface{} `json:"-"`
 }
 
-//Signing information
-type Signing struct {
+// BuildInfo stores information used for building the code.
+type BuildInfo struct {
+	Targets []string `json:"targets,omitempty"`
+}
+
+// SignInfo holds information used for signing your binaries.
+type SignInfo struct {
 	Program string `json:"program"`
 	Email   string `json:"email"`
+}
+
+// PublishInfo holds information for publishing
+type PublishInfo struct {
 }
 
 // WholeShebang Creates an ephemeral workspace, installs Govendor into it, checks out your code, and runs the tests.  The whole shebang, hence the name.
@@ -117,7 +127,7 @@ func ProcessBuildTargets(meta Metadata, gopath string, cwd string, sign bool, pu
 	binaryPrefix := parts[len(parts)-1]
 
 	// loop through the built things for each type of build target
-	for _, arch := range meta.BuildTargets {
+	for _, arch := range meta.BuildInfo.Targets {
 		archparts := strings.Split(arch, "/")
 
 		osname := archparts[0]   // linux or darwin generally

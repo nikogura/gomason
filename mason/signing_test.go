@@ -84,7 +84,7 @@ Expire-Date: 0
 		parts := strings.Split(meta.Package, "/")
 		binaryPrefix := parts[len(parts)-1]
 
-		for _, arch := range meta.BuildTargets {
+		for _, arch := range meta.BuildInfo.Targets {
 			archparts := strings.Split(arch, "/")
 
 			osname := archparts[0]   // linux or darwin generally

@@ -17,7 +17,7 @@ const defaultSigningProgram = "gpg"
 func SignBinary(meta Metadata, binary string, verbose bool) (err error) {
 
 	// pull signing info out of metadata.json
-	signInfo := meta.Signing
+	signInfo := meta.SignInfo
 
 	signProg := signInfo.Program
 	if signProg == "" {

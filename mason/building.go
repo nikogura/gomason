@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+// TODO Provide for building 'extra' things based on templates.  take template name, data structure, and output file name.
+
 // GoxInstall Installs github.com/mitchellh/gox, the go cross compiler
 func GoxInstall(gopath string, verbose bool) (err error) {
 	if verbose {
@@ -75,7 +77,7 @@ func Build(gopath string, gomodule string, branch string, verbose bool) (err err
 	gox := fmt.Sprintf("%s/bin/gox", gopath)
 
 	if verbose {
-		fmt.Printf("Gox is: %s", gox)
+		log.Printf("Gox is: %s", gox)
 	}
 
 	metadatapath := fmt.Sprintf("%s/src/%s/metadata.json", gopath, gomodule)
@@ -86,9 +88,13 @@ func Build(gopath string, gomodule string, branch string, verbose bool) (err err
 		return err
 	}
 
-	targets := md.BuildTargets
+	targets := md.BuildInfo.Targets
 
 	targetstring := strings.Join(targets, " ")
+
+	if verbose {
+		log.Printf("Building with targets: %q\n", targetstring)
+	}
 
 	// This gets weird because go's exec shell doesn't like the arg format that gox expects
 	// Building it thusly keeps the various quoting levels straight
