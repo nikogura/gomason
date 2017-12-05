@@ -156,6 +156,7 @@ Run:
     
 The binaries and their signatures will be dumped into the current working directory.
 
+---
     
 ## Project Config Reference
 
@@ -227,6 +228,8 @@ For instance, with the default 'gpg' program, gomason merely calls ```gpg -bau <
 ### Publishing
 
 Information related to publishing.
+
+---
 
 ## User Config Reference
 
