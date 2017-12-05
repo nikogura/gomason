@@ -14,7 +14,7 @@ Gomason attempts to abstract all of that.  Any system must be able to handle the
 
 2. Building binaries for the target OS/Arch.
 
-3. Personally signing the binaries thus built.  Artifact repos can sign things, it's true, but that just means you can verify that binary X was put in repo Y.  It's one step removed from actual authorship.  The idea is the actual author of a binary will sign their work- by whatever supported means you choose, and then you can upload it to the repo of your choice for distribution with the world.
+3. Personally signing the binaries thus built.
 
 4. Actually publish those binaries and their signatures to the artifact repo of your choice.
 
