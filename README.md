@@ -90,7 +90,7 @@ Example Minimum Config:
 
 Right now, it's designed to work with git ssh repos with a url of the form 'git@github.com:(owner)/(repo)'
 
-Signing and publishing are coming, but still in the works
+Publishing is coming, but currently it's still in the works
 
     
 ## Project Config Reference
