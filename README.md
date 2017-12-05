@@ -18,7 +18,7 @@ Gomason attempts to abstract all of that.  Any system must be able to handle the
 
 4. Actually publish those binaries and their signatures to the artifact repo of your choice.
 
-None of this is exactly rocket science, but the I have done it enough times, in enough different ways, that it was finally time to say 'enough' and be done with it.  
+None of this is exactly rocket science, but I have done it enough times, in enough different ways, that it was finally time to say 'enough' and be done with it.  
 
 Gomason comes from an experience I had where management was so astounding **anti-testing** that I needed to come up with a way to do clean-room CI testing quickly, easily and transparently, but also fly under the radar.  They didn't need to know I was 'wasting time' testing my work. *(yeah, I couldn't believe it either.  Blew my mind.)* 
 
