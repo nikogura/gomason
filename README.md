@@ -95,6 +95,68 @@ Example Minimum Config:
       }
     }
     
+Run:
+
+    gomason build
+    
+The binaries will be moved into the current working directory.
+    
+### Signing
+
+Example Config (Shared Key Signing):
+
+    {
+      "package": "github.com/nikogura/gomason",
+      "version": "0.1.0",
+      "description": "A tool for building and testing your project in a clean GOPATH.",
+      "building": {
+          "targets": [
+            "darwin/amd64",
+            "linux/amd64"
+          ]
+      },
+      "signing": {
+        "program": "gpg",
+        "email": "gomason-tester@foo.com"
+      },
+    }
+    
+Run:
+
+    gomason sign
+    
+The binaries and their signatures will be dumped into the current working directory.
+
+Example Config (Personal Key Signing):
+
+    {
+      "package": "github.com/nikogura/gomason",
+      "version": "0.1.0",
+      "description": "A tool for building and testing your project in a clean GOPATH.",
+      "building": {
+          "targets": [
+            "darwin/amd64",
+            "linux/amd64"
+          ]
+      }
+    }
+    
+```~/.gomason```:
+
+
+    [user]
+        email = nik.ogura@gmail.com
+        
+    [signing]
+        program = gpg
+        
+Run:
+
+    gomason sign
+    
+The binaries and their signatures will be dumped into the current working directory.
+
+    
 ## Project Config Reference
 
 Gomason depends on a metadata file imaginatively named 'metadata.json'.  It's expected to be in the root of the repo.
