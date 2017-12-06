@@ -4,7 +4,7 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/nikogura/gomason)](https://goreportcard.com/report/github.com/nikogura/gomason)
 
-Tool for testing, building, signing and publishing Go binaries in a clean Go workspace.  Think of it as an on premesis CI/CD system.
+Tool for testing, building, signing and publishing Go binaries in a clean Go workspace.  Think of it as an on premesis CI/CD system- that also performs code signing and publishing of artifacts.
 
 You could do this via a CI/CD System and an artifact repository of some flavor.  But wiring that up properly takes time, experience, and tends to be very specific to your particular system and repository.  
 
@@ -14,9 +14,9 @@ Gomason attempts to abstract all of that.  Any system must be able to handle the
 
 2. Building binaries for the target OS/Arch.
 
-3. Personally signing the binaries thus built.
+3. Signing the binaries thus built.
 
-4. Actually publish those binaries and their signatures to the artifact repo of your choice.
+4. Publish those binaries, their signatures, and their checksums to the artifact repo of your choice.
 
 None of this is exactly rocket science, but I have done it enough times, in enough different ways, that it was finally time to say 'enough' and be done with it.  
 
