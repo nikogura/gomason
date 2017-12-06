@@ -13,5 +13,19 @@
     "email": "gomason-tester@foo.com"
   },
   "publishing": {
+    "targets": [
+      {
+        "src": "gomason_darwin_amd64",
+        "dst": "http://localhost:8081/artifactory/generic-local/gomason/{{.Version}}/darwin/amd64/gomason",
+        "sig": true,
+        "checksums": false
+      },
+      {
+        "src": "gomason_linux_amd64",
+        "dst": "http://localhost:8081/artifactory/generic-local/gomason/{{.Version}}/linux/amd64/gomason",
+        "sig": true,
+        "checksums": false
+      }
+    ]
   }
 }

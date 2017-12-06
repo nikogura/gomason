@@ -1,12 +1,16 @@
 package mason
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 	"io/ioutil"
+	"log"
 	"os"
+	"os/exec"
 	"strings"
+	"text/template"
 )
 
 // CreateGoPath Creates an empty but workable GOPATH in the directory specified.  Returns the full GOPATH
@@ -47,9 +51,17 @@ func ReadMetadata(filename string) (metadata Metadata, err error) {
 		return metadata, err
 	}
 
+	metadata.PublishInfo.Targets = make([]PublishTarget, 0)
+
 	err = json.Unmarshal(mdBytes, &metadata)
 	if err != nil {
 		return metadata, err
+	}
+
+	// populate the targets map so we can look them up by src when publishing
+	metadata.PublishInfo.TargetsMap = make(map[string]PublishTarget)
+	for _, target := range metadata.PublishInfo.Targets {
+		metadata.PublishInfo.TargetsMap[target.Source] = target
 	}
 
 	return metadata, err
@@ -61,4 +73,130 @@ func GitSSHUrlFromPackage(packageName string) (gitpath string) {
 	gitpath = fmt.Sprintf("git@%s.git", munged)
 
 	return gitpath
+}
+
+// GetCredentials gets credentials, first from the metadata.json, and then from the user config in ~/.gomason if it exists.  If no credentials are found in any of the places, it returns the empty stings for usernames and passwords.  This is not recommended, but it might be useful in some cases.  Who knows?  We makes the tools, we don't tell you how to use them.  (we do, however make suggestions.) :D
+func GetCredentials(meta Metadata, verbose bool) (username, password string, err error) {
+	if verbose {
+		log.Printf("Getting credentials")
+	}
+
+	// get creds from metadata
+	// usernamefunc takes precedence over username
+	if meta.PublishInfo.UsernameFunc != "" {
+		log.Printf("Getting username from function")
+		username, err = GetFunc(meta.PublishInfo.UsernameFunc)
+		if err != nil {
+			err = errors.Wrapf(err, "failed to get username from shell function %q", meta.PublishInfo.UsernameFunc)
+			return username, password, err
+		}
+	} else if meta.PublishInfo.Username != "" {
+		log.Printf("Getting username from metadata")
+		username = meta.PublishInfo.Username
+	}
+
+	// passwordfunc takes precedence over password
+	if meta.PublishInfo.PasswordFunc != "" {
+		log.Printf("Getting password from function")
+		password, err = GetFunc(meta.PublishInfo.PasswordFunc)
+		if err != nil {
+			err = errors.Wrapf(err, "failed to get password from shell function %q", meta.PublishInfo.PasswordFunc)
+			return username, password, err
+		}
+	} else if meta.PublishInfo.Password != "" {
+		log.Printf("Getting password from metadata")
+		password = meta.PublishInfo.Password
+	}
+
+	// get creds from user config
+	config, err := GetUserConfig()
+	if err != nil {
+		err = errors.Wrapf(err, "failed to get user config from ~/.gomason")
+		return username, password, err
+	}
+
+	// usernamefunc takes precedence over username
+	if config.User.UsernameFunc != "" {
+		username, err = GetFunc(config.User.UsernameFunc)
+		if err != nil {
+			err = errors.Wrapf(err, "failed to get username from shell function %q", meta.PublishInfo.UsernameFunc)
+			return username, password, err
+		}
+	} else if config.User.Username != "" {
+		username = config.User.Username
+	}
+
+	// passwordfunc takes precedence over password
+	if config.User.PasswordFunc != "" {
+		password, err = GetFunc(config.User.PasswordFunc)
+		if err != nil {
+			err = errors.Wrapf(err, "failed to get password from shell function %q", meta.PublishInfo.UsernameFunc)
+			return username, password, err
+		}
+	} else if config.User.Password != "" {
+		password = config.User.Password
+	}
+
+	// We return empty strings for username and password if none is set anywhere.
+	// The err variable will be nil in this case.  Why?  No creds configured is not necessarily an error.
+	// People might want to use it without authentication
+	// Not recommended, but we don't know where/how gomason will be used, and it might just make sense
+	return username, password, err
+}
+
+// GetFunc runs a shell command that is a getter function.  This could certainly be dangerous, so be careful how you use it.
+func GetFunc(shellCommand string) (result string, err error) {
+	commandParts := strings.Split(shellCommand, " ")
+
+	// TODO  Fix GetFunc
+	if len(commandParts) <= 0 {
+		err = fmt.Errorf("command %q doesn't look like a shell command", shellCommand)
+		return result, err
+	}
+
+	command := commandParts[0]
+
+	var args []string
+
+	if len(commandParts) > 1 {
+		args = commandParts[1:]
+	}
+
+	cmd := exec.Command(command, args...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+	cmd.Stderr = os.Stderr
+
+	cmd.Env = os.Environ()
+
+	outBytes, err := cmd.Output()
+	if err != nil {
+		err = errors.Wrap(err, fmt.Sprintf("failed to run %q", shellCommand))
+	}
+
+	result = string(outBytes)
+
+	return result, err
+}
+
+// ParseStringForMetadata parses a raw string as if it was a text/template template and uses the Metadata from metadata.json as it's data source.  e.g. injecting Version into upload targets (PUT url) when publishing.
+func ParseStringForMetadata(rawUrlString string, metadata Metadata) (url string, err error) {
+	tmpl, err := template.New("PublishingDestinationParse").Parse(rawUrlString)
+	if err != nil {
+		err = errors.Wrapf(err, "syntax error in destination url %q", rawUrlString)
+		return url, err
+	}
+
+	buf := new(bytes.Buffer)
+
+	err = tmpl.Execute(buf, metadata)
+	if err != nil {
+		err = errors.Wrapf(err, "failed to fill template %q with data", rawUrlString)
+		return url, err
+	}
+
+	url = buf.String()
+
+	return url, err
 }

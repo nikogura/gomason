@@ -156,6 +156,76 @@ Run:
     
 The binaries and their signatures will be dumped into the current working directory.
 
+### Publishing
+
+Example Config (Personal Key Signing, Personal Credentials):
+
+    {
+      "package": "github.com/nikogura/gomason",
+      "version": "0.1.0",
+      "description": "A tool for building and testing your project in a clean GOPATH.",
+      "building": {
+          "targets": [
+            "darwin/amd64",
+            "linux/amd64"
+          ]
+      }
+    }
+    
+```~/.gomason```:
+
+
+    [user]
+        email = nik.ogura@gmail.com
+        username = nikogura
+        password = $ecretY0uNoR3ad!
+        
+    [signing]
+        program = gpg
+        
+Run:
+
+    gomason publish
+
+Example Config (Shared Key Signing, Shared Credentials):
+
+    {
+      "package": "github.com/nikogura/gomason",
+      "version": "0.1.0",
+      "description": "A tool for building and testing your project in a clean GOPATH.",
+      "building": {
+          "targets": [
+            "darwin/amd64",
+            "linux/amd64"
+          ]
+      },
+      "signing": {
+        "program": "gpg",
+        "email": "gomason-tester@foo.com"
+      },
+      "publishing": {
+        "targets": [
+            {
+                "src": "gomason_darwin_amd64",
+                "dst": "http://localhost:8081/artifactory/generic-local/gomason/{{.Version}}/darwin/amd64/gomason",
+                "sig": true,
+                "checksums": false
+            },
+            {
+                "src": "gomason_linux_amd64",
+                "dst": "http://localhost:8081/artifactory/generic-local/gomason/{{.Version}}/linux/amd64/gomason",
+                "sig": true,
+                "checksums": false
+            }
+        ],
+        "username": "nikogura",
+        "password": "$ecretY0uNoR3ad!"
+      }
+    }
+        
+Run:
+
+    gomason publish
 ---
     
 ## Project Config Reference
@@ -229,6 +299,22 @@ For instance, with the default 'gpg' program, gomason merely calls ```gpg -bau <
 
 Information related to publishing.
 
+#### Targets
+
+Each target represents a file that will be uploaded.  Targets have the following attributes:
+
+* **src** String. This is the file name as gomason would see it after running ```gox``` in the checked out code directory. 
+
+* **dst** String. This is the upload path on the repository server.  Template fields of the form ```{{{.Field}}``` are supported.  The data being fed to the template is the Metadata object created from ```metadata.json```.  It's particularly useful for interpolating the *version* (```{{.Version}}```) into the upload path.
+
+* **sig** Boolean.  Whether or not to upload the signature of the file you're publishing.  Generally you would want this to be true.
+
+* **checksums** Boolean Whether or not to upload the checksum files for your published file.  Artifactory generates these files automatically, but if you're using something that supports a PUT, but can't generate the checksums, setting this to true will handle it for you.
+
+* **username** String.  The username to use when authenticating to your artifact repository.  This can be set here, or in the per-user config.  Setting it in the per-user config is recommended.
+
+* **password** String.  The password to use when authenticating to your artifact repository.  You can set it here (not recommended), or you can set it in the per-user config.
+
 ---
 
 ## User Config Reference
@@ -242,6 +328,24 @@ The user config file gives you a place to do this.  You can, however set a group
 ### User
 
 The user using gomason.
+
+### Username
+
+Username for your user.  This is used when publishing to an artifact repository.
+
+example:
+
+    [user]
+        username = nikogura
+        
+### Password
+
+Password for your user.  This is used when publishing to an artifact server.
+
+example:
+    
+    [user]
+        password = $ecretY0uNoR3ad!
 
 #### Email
 

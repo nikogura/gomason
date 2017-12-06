@@ -3,11 +3,9 @@ package mason
 import (
 	"fmt"
 	"github.com/pkg/errors"
-	"gopkg.in/ini.v1"
 	"log"
 	"os"
 	"os/exec"
-	"os/user"
 )
 
 // It's a good default.  You can install it anywhere.
@@ -26,44 +24,19 @@ func SignBinary(meta Metadata, binary string, verbose bool) (err error) {
 
 	signEntity := signInfo.Email
 
-	// pull per-user signing info out of ~/.gomason if present
-	userObj, err := user.Current()
+	config, err := GetUserConfig()
 	if err != nil {
-		err = fmt.Errorf("failed to get current user: %s", err)
-		return err
+		err = errors.Wrapf(err, "failed to get per-user config from ~/.gomason")
 	}
 
-	homeDir := userObj.HomeDir
-
-	if _, err := os.Stat(homeDir); os.IsNotExist(err) {
-		err = fmt.Errorf("user %s's homedir %s does not exist", userObj.Name, homeDir)
-		return err
+	// email from .gomason overrides metadata
+	if config.User.Email != "" {
+		signEntity = config.User.Email
 	}
 
-	perUserConfigFile := fmt.Sprintf("%s/.gomason", homeDir)
-
-	if _, err := os.Stat(perUserConfigFile); !os.IsNotExist(err) {
-		cfg, err := ini.Load(perUserConfigFile)
-		if err != nil {
-			err = errors.Wrap(err, fmt.Sprintf("failed to load per user config file %s", perUserConfigFile))
-			return err
-		}
-
-		userSection, _ := cfg.GetSection("user")
-		if userSection != nil {
-			if userSection.HasKey("email") {
-				key, _ := userSection.GetKey("email")
-				signEntity = key.Value()
-			}
-		}
-
-		signingSection, _ := cfg.GetSection("signing")
-		if signingSection != nil {
-			if signingSection.HasKey("program") {
-				key, _ := signingSection.GetKey("program")
-				signProg = key.Value()
-			}
-		}
+	// program from .gomason overrides metadata
+	if config.Signing.Program != "" {
+		signProg = config.Signing.Program
 	}
 
 	if signEntity == "" {

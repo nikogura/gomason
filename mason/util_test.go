@@ -30,9 +30,7 @@ func TestCreateGoPath(t *testing.T) {
 		if _, err := os.Stat(fmt.Sprintf("%s/%s", tmpDir, dir)); os.IsNotExist(err) {
 			t.Fail()
 		}
-
 	}
-
 }
 
 func TestReadMetadata(t *testing.T) {
@@ -69,4 +67,24 @@ func TestGitSSHUrlFromPackage(t *testing.T) {
 	expected := "git@github.com:nikogura/gomason.git"
 
 	assert.Equal(t, expected, GitSSHUrlFromPackage(input), "Git SSH URL from Package Name meets expectations.")
+}
+
+func TestParseStringForMetadata(t *testing.T) {
+	meta, err := ReadMetadata("metadata.json")
+	if err != nil {
+		log.Printf("Error reading metadata file: %s", err)
+		t.Fail()
+	}
+
+	rawUrlString := testRawUrl()
+
+	expected := testParsedUrl(meta.Version)
+
+	actual, err := ParseStringForMetadata(rawUrlString, meta)
+	if err != nil {
+		log.Printf("Error parsing string: %s", err)
+		t.Fail()
+	}
+
+	assert.Equal(t, expected, actual, "parsed url string meets expectations")
 }
