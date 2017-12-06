@@ -311,9 +311,21 @@ Each target represents a file that will be uploaded.  Targets have the following
 
 * **checksums** Boolean Whether or not to upload the checksum files for your published file.  Artifactory generates these files automatically, but if you're using something that supports a PUT, but can't generate the checksums, setting this to true will handle it for you.
 
-* **username** String.  The username to use when authenticating to your artifact repository.  This can be set here, or in the per-user config.  Setting it in the per-user config is recommended.
+#### Username
 
-* **password** String.  The password to use when authenticating to your artifact repository.  You can set it here (not recommended), or you can set it in the per-user config.
+The username to use when authenticating to your artifact repository.  This can be set here, or in the per-user config.  Setting it in the per-user config is recommended.
+
+#### Password
+
+The password to use when authenticating to your artifact repository.  You can set it here (not recommended), or you can set it in the per-user config.
+
+#### Usernamefunc
+
+A bash shell function that will return the username to use.  Enables getting username info from a service.  Use carefully.  It's executing a command on your system.
+
+#### Passwordfunc
+
+A bash shell function that will return the password to use when publishing.  Enables getting the password from a service such as AWS Parameter store or Vault.
 
 ---
 
@@ -338,6 +350,15 @@ example:
     [user]
         username = nikogura
         
+#### Usernamefunc
+
+A bash shell function that will return the username to use.  Enables getting username info from a service.  Use carefully.  It's executing a command on your system.  Probably not that useful, but supported for completenes sake.
+
+example:
+
+    [user]
+        usernamefunc = curl -s http://url/of/config/service/where/we/store/the/username
+
 ### Password
 
 Password for your user.  This is used when publishing to an artifact server.
@@ -346,6 +367,15 @@ example:
     
     [user]
         password = $ecretY0uNoR3ad!
+
+#### Passwordfunc
+
+A bash shell function that will return the password to use when publishing.  Really useful if you have a password manager with a cli such as LastPass.  You'll have to login separately though.  You won't be able to do it transparently via gomason... yet.  *(sometimes it takes a few tries to work out the magic)*
+
+example:
+
+    [user]
+        passwordfunc = lpass show --notes gomason-test
 
 #### Email
 

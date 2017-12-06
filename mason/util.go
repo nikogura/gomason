@@ -85,7 +85,7 @@ func GetCredentials(meta Metadata, verbose bool) (username, password string, err
 	// usernamefunc takes precedence over username
 	if meta.PublishInfo.UsernameFunc != "" {
 		log.Printf("Getting username from function")
-		username, err = GetFunc(meta.PublishInfo.UsernameFunc)
+		username, err = GetFunc(meta.PublishInfo.UsernameFunc, verbose)
 		if err != nil {
 			err = errors.Wrapf(err, "failed to get username from shell function %q", meta.PublishInfo.UsernameFunc)
 			return username, password, err
@@ -98,7 +98,7 @@ func GetCredentials(meta Metadata, verbose bool) (username, password string, err
 	// passwordfunc takes precedence over password
 	if meta.PublishInfo.PasswordFunc != "" {
 		log.Printf("Getting password from function")
-		password, err = GetFunc(meta.PublishInfo.PasswordFunc)
+		password, err = GetFunc(meta.PublishInfo.PasswordFunc, verbose)
 		if err != nil {
 			err = errors.Wrapf(err, "failed to get password from shell function %q", meta.PublishInfo.PasswordFunc)
 			return username, password, err
@@ -117,7 +117,7 @@ func GetCredentials(meta Metadata, verbose bool) (username, password string, err
 
 	// usernamefunc takes precedence over username
 	if config.User.UsernameFunc != "" {
-		username, err = GetFunc(config.User.UsernameFunc)
+		username, err = GetFunc(config.User.UsernameFunc, verbose)
 		if err != nil {
 			err = errors.Wrapf(err, "failed to get username from shell function %q", meta.PublishInfo.UsernameFunc)
 			return username, password, err
@@ -128,7 +128,7 @@ func GetCredentials(meta Metadata, verbose bool) (username, password string, err
 
 	// passwordfunc takes precedence over password
 	if config.User.PasswordFunc != "" {
-		password, err = GetFunc(config.User.PasswordFunc)
+		password, err = GetFunc(config.User.PasswordFunc, verbose)
 		if err != nil {
 			err = errors.Wrapf(err, "failed to get password from shell function %q", meta.PublishInfo.UsernameFunc)
 			return username, password, err
@@ -145,37 +145,39 @@ func GetCredentials(meta Metadata, verbose bool) (username, password string, err
 }
 
 // GetFunc runs a shell command that is a getter function.  This could certainly be dangerous, so be careful how you use it.
-func GetFunc(shellCommand string) (result string, err error) {
-	commandParts := strings.Split(shellCommand, " ")
+func GetFunc(shellCommand string, verbose bool) (result string, err error) {
+	cmd := exec.Command("bash", "-c", shellCommand)
 
-	// TODO  Fix GetFunc
-	if len(commandParts) <= 0 {
-		err = fmt.Errorf("command %q doesn't look like a shell command", shellCommand)
-		return result, err
+	if verbose {
+		fmt.Printf("Getting input with shell function %q", shellCommand)
 	}
 
-	command := commandParts[0]
+	stdout, err := cmd.StdoutPipe()
 
-	var args []string
-
-	if len(commandParts) > 1 {
-		args = commandParts[1:]
-	}
-
-	cmd := exec.Command(command, args...)
-
-	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
 
 	cmd.Env = os.Environ()
 
-	outBytes, err := cmd.Output()
+	err = cmd.Start()
 	if err != nil {
-		err = errors.Wrap(err, fmt.Sprintf("failed to run %q", shellCommand))
+		err = errors.Wrapf(err, "failed to run %q", shellCommand)
+		return result, err
 	}
 
-	result = string(outBytes)
+	stdoutBytes, err := ioutil.ReadAll(stdout)
+	if err != nil {
+		err = errors.Wrapf(err, "error reading stdout from func")
+		return result, err
+	}
+
+	err = cmd.Wait()
+	if err != nil {
+		err = errors.Wrapf(err, "error waiting for %q to exit", shellCommand)
+		return result, err
+	}
+
+	result = strings.TrimSuffix(string(stdoutBytes), "\n")
 
 	return result, err
 }
