@@ -35,6 +35,7 @@ func PublishFile(meta Metadata, filePath string, verbose bool) (err error) {
 		err = UploadFile(client, target.Destination, filePath, meta, username, password, verbose)
 		if err != nil {
 			err = errors.Wrapf(err, "failed to upload file %s", filePath)
+			return err
 		}
 
 		// upload the detached signature
@@ -42,6 +43,7 @@ func PublishFile(meta Metadata, filePath string, verbose bool) (err error) {
 			err := UploadSignature(client, target.Destination, filePath, meta, username, password, verbose)
 			if err != nil {
 				err = errors.Wrapf(err, "failed to upload signature for %s", filePath)
+				return err
 			}
 
 		}
@@ -51,6 +53,7 @@ func PublishFile(meta Metadata, filePath string, verbose bool) (err error) {
 			err := UploadChecksums(client, target.Destination, filePath, meta, username, password, verbose)
 			if err != nil {
 				err = errors.Wrapf(err, "failed to upload checksums for %s", filePath)
+				return err
 			}
 		}
 	}
@@ -98,6 +101,7 @@ func UploadChecksums(client *http.Client, destination, filename string, meta Met
 	return err
 }
 
+// UploadChecksum uploads the checksum of the given type for the given file
 func UploadChecksum(parsedDestination, checksum, sumtype, fileName string, client *http.Client, username, password string, verbose bool) (err error) {
 	// upload Md5 sum
 	target := fmt.Sprintf("%s.%s", parsedDestination, sumtype)
@@ -152,7 +156,7 @@ func UploadFile(client *http.Client, destination string, filename string, meta M
 
 }
 
-// UploadSignature uploads the detatched signature for a file
+// UploadSignature uploads the detached signature for a file
 func UploadSignature(client *http.Client, destination string, filename string, meta Metadata, username string, password string, verbose bool) (err error) {
 	filename += ".asc"
 	destination += ".asc"
