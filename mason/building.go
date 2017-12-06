@@ -135,6 +135,7 @@ func Build(gopath string, gomodule string, branch string, verbose bool) (err err
 	return err
 }
 
+// BuildExtras builds the extra artifacts specified in the metadata.json
 func BuildExtras(meta Metadata, workdir string, verbose bool) (err error) {
 	if verbose {
 		log.Printf("Building Extra Artifacts")
