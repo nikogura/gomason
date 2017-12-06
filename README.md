@@ -43,6 +43,40 @@ Projects are configured by the file ```metadata.json``` in the root of the proje
 
 Some information in ```metadata.json```, such as signing info can be overwritten by the [User Config](#user-config) detailed below.
 
+Example metadata.json:
+
+    {
+      "version": "1.0.0",
+      "package": "github.com/nikogura/gomason",
+      "description": "A tool for testing, building, signing, and publishing your project from a clean workspace.",
+      "building": {
+        "targets": [
+          "darwin/amd64",
+          "linux/amd64"
+        ]
+      },
+      "signing": {
+        "program": "gpg",
+        "email": "gomason-tester@foo.com"
+      },
+      "publishing": {
+        "targets": [
+          {
+            "src": "gomason_darwin_amd64",
+            "dst": "http://localhost:8081/artifactory/generic-local/gomason/{{.Version}}/darwin/amd64/gomason",
+            "sig": true,
+            "checksums": false
+          },
+          {
+            "src": "gomason_linux_amd64",
+            "dst": "http://localhost:8081/artifactory/generic-local/gomason/{{.Version}}/linux/amd64/gomason",
+            "sig": true,
+            "checksums": false
+          }
+        ]
+      }
+    }
+
 ## User Config
 
 User configuration is accomplished by the file ```~/.gomason```.  This is an *ini* formatted file that contains user level information such as the identity of the signer for use when signing binaries.
