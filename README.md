@@ -14,9 +14,9 @@ Gomason attempts to abstract all of that.  Any system must be able to handle the
 
 2. Building binaries for the target OS/Arch.
 
-3. Personally signing the binaries thus built.
+3. Signing the binaries thus built.
 
-4. Actually publish those binaries and their signatures to the artifact repo of your choice.
+4. Publish those binaries, their signatures, and their checksums to the artifact repo of your choice.
 
 None of this is exactly rocket science, but I have done it enough times, in enough different ways, that it was finally time to say 'enough' and be done with it.  
 
