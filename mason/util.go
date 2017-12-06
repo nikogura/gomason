@@ -182,23 +182,23 @@ func GetFunc(shellCommand string, verbose bool) (result string, err error) {
 	return result, err
 }
 
-// ParseStringForMetadata parses a raw string as if it was a text/template template and uses the Metadata from metadata.json as it's data source.  e.g. injecting Version into upload targets (PUT url) when publishing.
-func ParseStringForMetadata(rawUrlString string, metadata Metadata) (url string, err error) {
-	tmpl, err := template.New("PublishingDestinationParse").Parse(rawUrlString)
+// ParseTemplateForMetadata parses a raw string as if it was a text/template template and uses the Metadata from metadata.json as it's data source.  e.g. injecting Version into upload targets (PUT url) when publishing.
+func ParseTemplateForMetadata(templateText string, metadata Metadata) (outputText string, err error) {
+	tmpl, err := template.New("OnTheFlyTemplate").Parse(templateText)
 	if err != nil {
-		err = errors.Wrapf(err, "syntax error in destination url %q", rawUrlString)
-		return url, err
+		err = errors.Wrapf(err, "syntax error in destination url %q", templateText)
+		return outputText, err
 	}
 
 	buf := new(bytes.Buffer)
 
 	err = tmpl.Execute(buf, metadata)
 	if err != nil {
-		err = errors.Wrapf(err, "failed to fill template %q with data", rawUrlString)
-		return url, err
+		err = errors.Wrapf(err, "failed to fill template %q with data", templateText)
+		return outputText, err
 	}
 
-	url = buf.String()
+	outputText = buf.String()
 
-	return url, err
+	return outputText, err
 }

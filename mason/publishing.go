@@ -74,7 +74,7 @@ func UploadChecksums(client *http.Client, destination, filename string, meta Met
 
 	base := filepath.Base(filename)
 
-	parsedDestination, err := ParseStringForMetadata(destination, meta)
+	parsedDestination, err := ParseTemplateForMetadata(destination, meta)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to parse destination url %s", destination)
 		return err
@@ -142,7 +142,7 @@ func UploadFile(client *http.Client, destination string, filename string, meta M
 		return err
 	}
 
-	parsedDestination, err := ParseStringForMetadata(destination, meta)
+	parsedDestination, err := ParseTemplateForMetadata(destination, meta)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to parse destination url %s", destination)
 		return err

@@ -3,6 +3,7 @@ package mason
 import (
 	"fmt"
 	"github.com/pkg/errors"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -121,6 +122,58 @@ func Build(gopath string, gomodule string, branch string, verbose bool) (err err
 	if err == nil {
 		if verbose {
 			log.Printf("Gox build complete and successful.\n\n")
+		}
+	}
+
+	err = BuildExtras(md, wd, verbose)
+	if err != nil {
+		err = errors.Wrapf(err, "Failed to build extras")
+		return err
+
+	}
+
+	return err
+}
+
+func BuildExtras(meta Metadata, workdir string, verbose bool) (err error) {
+	if verbose {
+		log.Printf("Building Extra Artifacts")
+	}
+
+	for _, extra := range meta.BuildInfo.Extras {
+		templateName := fmt.Sprintf("%s/%s", workdir, extra.Template)
+		outputFileName := fmt.Sprintf("%s/%s", workdir, extra.FileName)
+		executable := extra.Executable
+
+		if verbose {
+			fmt.Printf("Reading template from %s", templateName)
+			fmt.Printf("Writing to %s", outputFileName)
+		}
+
+		var mode os.FileMode
+
+		if executable {
+			mode = 0755
+		} else {
+			mode = 0644
+		}
+
+		tmplBytes, err := ioutil.ReadFile(templateName)
+		if err != nil {
+			err = errors.Wrapf(err, "failed to read template file %s", templateName)
+			return err
+		}
+
+		output, err := ParseTemplateForMetadata(string(tmplBytes), meta)
+		if err != nil {
+			err = errors.Wrapf(err, "failed to inject metadata into template text")
+			return err
+		}
+
+		err = ioutil.WriteFile(outputFileName, []byte(output), mode)
+		if err != nil {
+			err = errors.Wrapf(err, "failed to write file %s", outputFileName)
+			return err
 		}
 	}
 

@@ -80,7 +80,7 @@ func TestParseStringForMetadata(t *testing.T) {
 
 	expected := testParsedUrl(meta.Version)
 
-	actual, err := ParseStringForMetadata(rawUrlString, meta)
+	actual, err := ParseTemplateForMetadata(rawUrlString, meta)
 	if err != nil {
 		log.Printf("Error parsing string: %s", err)
 		t.Fail()

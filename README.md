@@ -49,6 +49,7 @@ Example metadata.json:
       "version": "1.0.0",
       "package": "github.com/nikogura/gomason",
       "description": "A tool for testing, building, signing, and publishing your project from a clean workspace.",
+      "repository": "http://localhost:8081/artifactory/generic-local",
       "building": {
         "targets": [
           "darwin/amd64",
@@ -63,13 +64,13 @@ Example metadata.json:
         "targets": [
           {
             "src": "gomason_darwin_amd64",
-            "dst": "http://localhost:8081/artifactory/generic-local/gomason/{{.Version}}/darwin/amd64/gomason",
+            "dst": "{{.Repository}}/gomason/{{.Version}}/darwin/amd64/gomason",
             "sig": true,
             "checksums": false
           },
           {
             "src": "gomason_linux_amd64",
-            "dst": "http://localhost:8081/artifactory/generic-local/gomason/{{.Version}}/linux/amd64/gomason",
+            "dst": "{{.Repository}}/gomason/{{.Version}}/linux/amd64/gomason",
             "sig": true,
             "checksums": false
           }
@@ -202,11 +203,28 @@ Example Config (Personal Key Signing, Personal Credentials):
       "package": "github.com/nikogura/gomason",
       "version": "0.1.0",
       "description": "A tool for building and testing your project in a clean GOPATH.",
+      "repository": "http://localhost:8081/artifactory/generic-local",
       "building": {
           "targets": [
             "darwin/amd64",
             "linux/amd64"
           ]
+      },
+      "publishing": {
+        "targets": [
+            {
+                "src": "gomason_darwin_amd64",
+                "dst": "{{.Repository}}/gomason/{{.Version}}/darwin/amd64/gomason",
+                "sig": true,
+                "checksums": false
+            },
+            {
+                "src": "gomason_linux_amd64",
+                "dst": "{{.Repository}}/gomason/{{.Version}}/linux/amd64/gomason",
+                "sig": true,
+                "checksums": false
+            }
+        ]
       }
     }
     
@@ -231,6 +249,7 @@ Example Config (Shared Key Signing, Shared Credentials):
       "package": "github.com/nikogura/gomason",
       "version": "0.1.0",
       "description": "A tool for building and testing your project in a clean GOPATH.",
+      "repository": "http://localhost:8081/artifactory/generic-local",
       "building": {
           "targets": [
             "darwin/amd64",
@@ -245,13 +264,13 @@ Example Config (Shared Key Signing, Shared Credentials):
         "targets": [
             {
                 "src": "gomason_darwin_amd64",
-                "dst": "http://localhost:8081/artifactory/generic-local/gomason/{{.Version}}/darwin/amd64/gomason",
+                "dst": "{{.Repository}}/gomason/{{.Version}}/darwin/amd64/gomason",
                 "sig": true,
                 "checksums": false
             },
             {
                 "src": "gomason_linux_amd64",
-                "dst": "http://localhost:8081/artifactory/generic-local/gomason/{{.Version}}/linux/amd64/gomason",
+                "dst": "{{.Repository}}/gomason/{{.Version}}/linux/amd64/gomason",
                 "sig": true,
                 "checksums": false
             }
@@ -278,6 +297,7 @@ Example:
           "version": "0.1.0",
           "package": "github.com/nikogura/gomason",
           "description": "A tool for building and testing your project in a clean GOPATH.",
+      "repository": "http://localhost:8081/artifactory/generic-local",
           "building": {
               "targets": [
                 "darwin/amd64",
@@ -303,6 +323,10 @@ The name of the Go package as used by 'go get' or 'govendor'.  Used to actually 
 
 A nice, human readable description for your module, cos that's really nice.  Having it in a parsable location as a simple string is also useful for other things, as you can probably imagine.
 
+### Repository
+
+The url of the repository to which you're planning to publish your binaries.
+
 ### Building
 
 Information specifically for building the project.
@@ -318,6 +342,19 @@ For example, the following will build 64 bit binaries for MacOS and Linux:
           "linux/amd64"
     ]
     
+#### Extras
+
+Extra artifacts such as scripts and such you'd like built along side your go binaries.
+
+Files are built from templates using the ```metadata.json``` as an information source.  Any field of the Metadata object created from ```metadata.json``` can be included in the template.  See golang's text/template documentation at [https://dlintw.github.io/gobyexample/public/text-template.html](https://dlintw.github.io/gobyexample/public/text-template.html) for examples.
+
+Each 'extra' is a map with the following information:
+
+* **template** String The template file to use.
+
+* **filename** String The name of the file to write from the template
+
+* **executable** Bool  Whether to make the written file executable.
     
 ### Signing
 
@@ -343,7 +380,7 @@ Each target represents a file that will be uploaded.  Targets have the following
 
 * **src** String. This is the file name as gomason would see it after running ```gox``` in the checked out code directory. 
 
-* **dst** String. This is the upload path on the repository server.  Template fields of the form ```{{{.Field}}``` are supported.  The data being fed to the template is the Metadata object created from ```metadata.json```.  It's particularly useful for interpolating the *version* (```{{.Version}}```) into the upload path.
+* **dst** String. This is the upload path on the repository server.  Template fields of the form ```{{{.Field}}``` are supported.  The data being fed to the template is the Metadata object created from ```metadata.json```.  It's particularly useful for interpolating the *version* (```{{.Version}}```) and the *repository* ```{{.Repository}}``` into the upload path.
 
 * **sig** Boolean.  Whether or not to upload the signature of the file you're publishing.  Generally you would want this to be true.
 

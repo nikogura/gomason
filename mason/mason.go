@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/user"
+	"path/filepath"
 	"strings"
 )
 
@@ -16,15 +17,24 @@ type Metadata struct {
 	Version     string                 `json:"version"`
 	Package     string                 `json:"package"`
 	Description string                 `json:"description"`
+	Repository  string                 `json:"repository"`
 	BuildInfo   BuildInfo              `json:"building,omitempty"`
 	SignInfo    SignInfo               `json:"signing,omitempty"`
 	PublishInfo PublishInfo            `json:"publishing,omitempty"`
-	Options     map[string]interface{} `json:"-"`
+	Options     map[string]interface{} `json:"options,omitempty"`
 }
 
 // BuildInfo stores information used for building the code.
 type BuildInfo struct {
-	Targets []string `json:"targets,omitempty"`
+	Targets []string        `json:"targets,omitempty"`
+	Extras  []ExtraArtifact `json:"extras,omitempty"`
+}
+
+// ExtraArtifact is an extra file built from a template at build time
+type ExtraArtifact struct {
+	Template   string `json:"template"`
+	FileName   string `json:"filename"`
+	Executable bool   `json:"executable"`
 }
 
 // SignInfo holds information used for signing your binaries.
@@ -146,19 +156,25 @@ func WholeShebang(workDir string, branch string, build bool, sign bool, publish 
 			return err
 		}
 
-		err = ProcessBuildTargets(meta, gopath, cwd, sign, publish, verbose)
+		err = PublishBuildTargets(meta, gopath, cwd, sign, publish, verbose)
 		if err != nil {
 			err = errors.Wrap(err, "post-build processing failed")
+			return err
+		}
+
+		err = PublishBuildExtras(meta, gopath, cwd, sign, publish, verbose)
+		if err != nil {
+			err = errors.Wrap(err, "Extra artifact processing failed")
 			return err
 		}
 	}
 	return err
 }
 
-// ProcessBuildTargets loops over the expected files built by Build() and optionally signs them and publishes them along with their signatures (if signing).
+// PublishBuildTargets loops over the expected files built by Build() and optionally signs them and publishes them along with their signatures (if signing).
 //
 // If not publishing, the binaries (and their optional signatures) are collected and dumped into the directory where gomason was called. (Typically the root of a go project).
-func ProcessBuildTargets(meta Metadata, gopath string, cwd string, sign bool, publish bool, verbose bool) (err error) {
+func PublishBuildTargets(meta Metadata, gopath string, cwd string, sign bool, publish bool, verbose bool) (err error) {
 	parts := strings.Split(meta.Package, "/")
 	binaryPrefix := parts[len(parts)-1]
 
@@ -173,16 +189,16 @@ func ProcessBuildTargets(meta Metadata, gopath string, cwd string, sign bool, pu
 		archname := archparts[1] // amd64 generally
 
 		workdir := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
-		binary := fmt.Sprintf("%s/%s_%s_%s", workdir, binaryPrefix, osname, archname)
+		filename := fmt.Sprintf("%s/%s_%s_%s", workdir, binaryPrefix, osname, archname)
 
-		if _, err := os.Stat(binary); os.IsNotExist(err) {
-			err = fmt.Errorf("Gox failed to build binary: %s\n", binary)
+		if _, err := os.Stat(filename); os.IsNotExist(err) {
+			err = fmt.Errorf("failed to build binary: %s\n", filename)
 			return err
 		}
 
 		// sign 'em if we're signing
 		if sign {
-			err = SignBinary(meta, binary, verbose)
+			err = SignBinary(meta, filename, verbose)
 			if err != nil {
 				err = errors.Wrap(err, "failed to sign binary")
 				return err
@@ -191,7 +207,7 @@ func ProcessBuildTargets(meta Metadata, gopath string, cwd string, sign bool, pu
 
 		// publish and return if we're publishing
 		if publish {
-			err = PublishFile(meta, binary, verbose)
+			err = PublishFile(meta, filename, verbose)
 			if err != nil {
 				err = errors.Wrap(err, "failed to publish binary")
 				return err
@@ -199,7 +215,7 @@ func ProcessBuildTargets(meta Metadata, gopath string, cwd string, sign bool, pu
 
 		} else {
 			// if we're not publishing, collect up the stuff we built, and dump 'em into the cwd where we called gomason
-			err := CollectBinaryAndSignature(cwd, binary, binaryPrefix, osname, archname, verbose)
+			err := CollectFileAndSignature(cwd, filename, verbose)
 			if err != nil {
 				err = errors.Wrap(err, "failed to collect binaries")
 				return err
@@ -210,30 +226,78 @@ func ProcessBuildTargets(meta Metadata, gopath string, cwd string, sign bool, pu
 	return err
 }
 
-// CollectBinaryAndSignature grabs the binary and the signature if it exists and moves it from the temp workspace into the CWD where gomason was called.
-func CollectBinaryAndSignature(cwd string, binary string, binaryPrefix string, osname string, archname string, verbose bool) (err error) {
-	binaryDestinationPath := fmt.Sprintf("%s/%s_%s_%s", cwd, binaryPrefix, osname, archname)
+// PublishBuildExtras loops over the expected files built by Build() and optionally signs them and publishes them along with their signatures (if signing).
+//
+// If not publishing, the binaries (and their optional signatures) are collected and dumped into the directory where gomason was called. (Typically the root of a go project).
+func PublishBuildExtras(meta Metadata, gopath string, cwd string, sign bool, publish bool, verbose bool) (err error) {
+
+	// loop through the built things for each type of build target
+	for _, extra := range meta.BuildInfo.Extras {
+		if verbose {
+			log.Printf("Processing build extra: %s", extra.Template)
+		}
+
+		workdir := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
+		filename := fmt.Sprintf("%s/%s", workdir, extra.FileName)
+
+		if _, err := os.Stat(filename); os.IsNotExist(err) {
+			err = fmt.Errorf("failed to build extra artifact: %s\n", filename)
+			return err
+		}
+
+		// sign 'em if we're signing
+		if sign {
+			err = SignBinary(meta, filename, verbose)
+			if err != nil {
+				err = errors.Wrap(err, "failed to sign extra artifact")
+				return err
+			}
+		}
+
+		// publish and return if we're publishing
+		if publish {
+			err = PublishFile(meta, filename, verbose)
+			if err != nil {
+				err = errors.Wrap(err, "failed to publish extra artifact")
+				return err
+			}
+
+		} else {
+			// if we're not publishing, collect up the stuff we built, and dump 'em into the cwd where we called gomason
+			err := CollectFileAndSignature(cwd, filename, verbose)
+			if err != nil {
+				err = errors.Wrap(err, "failed to collect binaries")
+				return err
+			}
+		}
+	}
+
+	return err
+}
+
+// CollectFileAndSignature grabs a file and the signature if it exists and moves it from the temp workspace into the CWD where gomason was called.
+func CollectFileAndSignature(cwd string, filename string, verbose bool) (err error) {
+	binaryDestinationPath := fmt.Sprintf("%s/%s", cwd, filepath.Base(filename))
 
 	if verbose {
 		log.Printf("Collecting Binaries and Signatures (if signing)")
 	}
 
-	err = os.Rename(binary, binaryDestinationPath)
+	err = os.Rename(filename, binaryDestinationPath)
 	if err != nil {
-		err = errors.Wrap(err, fmt.Sprintf("failed to collect binary %q", binary))
+		err = errors.Wrap(err, fmt.Sprintf("failed to collect file %q", filename))
 		return err
 	}
 
-	sigName := fmt.Sprintf("%s.asc", binary)
+	sigName := fmt.Sprintf("%s.asc", filepath.Base(filename))
 	if _, err := os.Stat(sigName); !os.IsNotExist(err) {
-		signatureDestinationPath := fmt.Sprintf("%s/%s_%s_%s.asc", cwd, binaryPrefix, osname, archname)
+		signatureDestinationPath := fmt.Sprintf("%s/%s", cwd, sigName)
 
 		err = os.Rename(sigName, signatureDestinationPath)
 		if err != nil {
 			err = errors.Wrap(err, fmt.Sprintf("failed to collect signature %q", sigName))
 			return err
 		}
-
 	}
 
 	return err
