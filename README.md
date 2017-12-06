@@ -51,6 +51,8 @@ An example ```~/.gomason```:
 
     [user]
         email = nik.ogura@gmail.com
+        username = nikogura
+        passwordfunc = lpass show --notes gomason-test
 
     [signing]
         program = gpg
