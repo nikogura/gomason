@@ -57,7 +57,9 @@ An example ```~/.gomason```:
     [signing]
         program = gpg
         
-This config would use the gpg program to sign binaries with the author's private key.  Obviously a key for the listed user must exist within gpg's keychain for this to function.  This example also uses the LastPass cli to get the publishing password.
+This config would use the gpg program to sign binaries with the author's private key.  Obviously a key for the listed user must exist within gpg's keychain for this to function.  
+
+This example also uses the LastPass cli to get the publishing password.  Neat huh?
 
 User config, if set, overrides any project config.
 
