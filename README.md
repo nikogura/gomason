@@ -26,7 +26,7 @@ Gomason comes from an experience I had where management was so astounding **anti
 
 What started out as a sort of subversive method of continuing to test my own code expanded after we parted ways.  See, signing binaries and uploading the various bits to a repo isn't exactly rocket science, but it's also *dreadfully boring* once you've done it a few times.  I figured DRY, so I made a 'one and done' means for doing so.
 
-CI systems like Artifactory Pro can sign binaries, it's true, but they don't really have provenance on who the author was.  The bits arrived there, presumably after authentication (but that depends on the config), but you don't really know who did the signing.
+CI systems like Artifactory Pro can sign binaries, but they don't really have provenance on who the author was.  The bits arrived there, presumably after authentication (but that depends on the config), but you don't really know who did the signing.
 
 Enter gomason, which can do the building and signing locally with personal keys and then upload.  Presumably you'd also require authentication on upload, but now you've actually established 2 things- someone with credentials has uploaded this, *and* they've personally signed what they uploaded.  Whether you trust that signature is up to you, but we've provided an easy means to extend what a traditional CI system can do.
 
