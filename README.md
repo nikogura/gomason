@@ -8,7 +8,7 @@ Tool for testing, building, signing and publishing Go binaries in a clean Go wor
 
 You could do this via a CI/CD System and an artifact repository of some flavor.  But wiring that up properly takes time, experience, and tends to be very specific to your particular system and repository.  
 
-Gomason attempts to abstract all of that.  Any system must be able to handle the following:
+Gomason attempts to abstract all of that.  It will:
 
 1. Running tests and reporting on results
 
