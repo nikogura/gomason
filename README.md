@@ -10,13 +10,15 @@ You could do this via a CI/CD System and an artifact repository of some flavor. 
 
 Gomason attempts to abstract all of that.  It will:
 
-1. Running tests and reporting on results
+1. Run tests and report on results
 
-2. Building binaries for the target OS/Arch.
+2. Build binaries for the target OS/Arch and other files based on templates.
 
-3. Signing the binaries thus built.
+3. Sign the binaries and files thus built.
 
-4. Publish those binaries, their signatures, and their checksums to the artifact repo of your choice.
+4. Publish the files, their signatures, and their checksums to the destination of your choice.
+
+It does all of this based on config file called 'metadata.json' which you place in the root of your repository.
 
 None of this is exactly rocket science, but I have done it enough times, in enough different ways, that it was finally time to say 'enough' and be done with it.  
 
