@@ -32,6 +32,8 @@ Gomason uses ```gox``` the Go cross compiler  to do it's compiling.  It builds w
 
 Code is downloaded via ```go get```.  If you have your VCS configured so that you can do that without authentication, then everything will *just work*.
 
+Signing is currently done via GPG.  I intend to support other signing methods such as Keybase.io, but at the moment, gpg is all you get.  If your signing keys are in gpg, and you have the gpg-agent running, it should *just work*.
+
 
 ## Installation
 
