@@ -19,5 +19,5 @@ jobs:
       - run: gpg-agent --daemon
       - run: go test -v ./...
       - run: go get github.com/mattn/goveralls
-      - run: go test -v -cover -race -coverprofile=/home/circleci/coverage.out
+      - run: go test -v -cover -race -coverprofile=/home/circleci/coverage.out ./mason
       - run: goveralls -coverprofile=/home/circleci/coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
