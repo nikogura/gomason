@@ -20,8 +20,6 @@ jobs:
 #      - run:
 #          name: Run Tests
 #          command: go test -v ./...
-  test:
-    steps:
       - go get github.com/mattn/goveralls
       - go test -v -cover -race -coverprofile=/home/circleci/coverage.out ./...
       - /home/circleci/.go_workspace/bin/goveralls -coverprofile=/home/circleci/coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
