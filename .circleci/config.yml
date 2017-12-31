@@ -16,10 +16,10 @@ jobs:
       - run: go get -v -t -d ./...
       - run: go get github.com/kardianos/govendor
       - run: govendor sync
-      - run:  gpg-agent --daemon
+      - run: gpg-agent --daemon
 #      - run:
 #          name: Run Tests
 #          command: go test -v ./...
-      - go get github.com/mattn/goveralls
-      - go test -v -cover -race -coverprofile=/home/circleci/coverage.out ./...
-      - /home/circleci/.go_workspace/bin/goveralls -coverprofile=/home/circleci/coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
+      - run: go get github.com/mattn/goveralls
+      - run: go test -v -cover -race -coverprofile=/home/circleci/coverage.out ./...
+      - run: goveralls -coverprofile=/home/circleci/coverage.out -service=circle-ci -repotoken=$COVERALLS_TOKEN
