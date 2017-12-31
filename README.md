@@ -1,14 +1,15 @@
 # gomason
 
+[![Current Release](https://img.shields.io/github/release/nikogura/gomason.svg)](https://img.shields.io/github/release/nikogura/gomason.svg)
+
 [![Circle CI](https://circleci.com/gh/nikogura/gomason.svg?style=shield)](https://circleci.com/gh/nikogura/gomason)
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/nikogura/gomason)](https://goreportcard.com/report/github.com/nikogura/gomason)
 
 [![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](http://godoc.org/github.com/nikogura/gomason)
 
-[![Go Coverage](https://gocover.io/github.com/nikogura/gomason/mason)](https://gocover.io/github.com/nikogura/gomason/mason)
+[![Coverage Status](https://coveralls.io/repos/github/nikogura/gomason/badge.svg?branch=master)](https://coveralls.io/github/nikogura/gomason?branch=master)
 
-[![Current Release](https://img.shields.io/github/release/nikogura/gomason.svg)](https://img.shields.io/github/release/nikogura/gomason.svg)
 
 Tool for testing, building, signing and publishing Go binaries in a clean Go workspace.  Think of it as an on premesis CI/CD system- that also performs code signing and publishing of artifacts.
 
