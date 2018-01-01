@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestSignBinary(t *testing.T) {
+func TestSignVerifyBinary(t *testing.T) {
 	shellCmd, err := exec.LookPath("gpg")
 	if err != nil {
 		log.Printf("Failed to check if gpg is installed:%s", err)
