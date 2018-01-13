@@ -30,6 +30,10 @@ func Checkout(gopath string, meta Metadata, branch string, verbose bool) (err er
 
 	}
 
+	if verbose {
+		log.Printf("Running %s %s", gocommand, cmd.Args)
+	}
+
 	cmd.Env = runenv
 
 	err = cmd.Run()
