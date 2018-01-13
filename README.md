@@ -61,6 +61,7 @@ Example metadata.json:
       "package": "github.com/nikogura/gomason",
       "description": "A tool for testing, building, signing, and publishing your project from a clean workspace.",
       "repository": "http://localhost:8081/artifactory/generic-local",
+      "insecure_get": false,
       "building": {
         "targets": [
           "darwin/amd64",
@@ -337,6 +338,10 @@ A nice, human readable description for your module, cos that's really nice.  Hav
 ### Repository
 
 The url of the repository to which you're planning to publish your binaries.
+
+### Insecure_Get
+
+Sometimes you've got a code repo that has a self signed cert.  Set this to true, and it'll pass ```-insecure``` to ```go get``` and ```govendor sync``` so you can still run- even if your internal repo has a self signed cert on it.
 
 ### Building
 

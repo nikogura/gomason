@@ -2,41 +2,10 @@ package mason
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"testing"
 )
-
-var tmpDir string
-
-func TestMain(m *testing.M) {
-	setUp()
-
-	code := m.Run()
-
-	tearDown()
-
-	os.Exit(code)
-}
-
-func setUp() {
-	dir, err := ioutil.TempDir("", "gomason")
-	if err != nil {
-		log.Fatal("Error creating temp dir\n")
-	}
-
-	tmpDir = dir
-
-	log.Printf("Setting up temporary work dir %s", tmpDir)
-
-}
-
-func tearDown() {
-	if _, err := os.Stat(tmpDir); !os.IsNotExist(err) {
-		os.Remove(tmpDir)
-	}
-}
 
 func TestGovendorInstall(t *testing.T) {
 	log.Printf("Installing Govendor")
@@ -80,7 +49,7 @@ func TestGovendorSync(t *testing.T) {
 
 	log.Printf("Checking out Master Branch")
 
-	err = Checkout(gopath, testModuleName(), "master", true)
+	err = Checkout(gopath, testMetadataObj(), "master", true)
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.Fail()
@@ -91,7 +60,7 @@ func TestGovendorSync(t *testing.T) {
 		t.Fail()
 	}
 
-	err = GovendorSync(gopath, "github.com/nikogura/gomason", true)
+	err = GovendorSync(gopath, testMetadataObj(), true)
 	if err != nil {
 		log.Printf("Error runnig govendor sync: %s", err)
 		t.Fail()

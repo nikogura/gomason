@@ -40,7 +40,7 @@ func TestBuild(t *testing.T) {
 	gomodule := "github.com/nikogura/gomason"
 	branch := "master"
 
-	err = Build(gopath, gomodule, branch, true)
+	err = Build(gopath, testMetadataObj(), branch, true)
 	if err != nil {
 		log.Printf("Error building: %s", err)
 		t.Fail()

@@ -15,7 +15,7 @@ func TestCheckoutDefault(t *testing.T) {
 		t.Fail()
 	}
 
-	err = Checkout(gopath, testModuleName(), "master", true)
+	err = Checkout(gopath, testMetadataObj(), "master", true)
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.Fail()
@@ -36,7 +36,7 @@ func TestCheckoutBranch(t *testing.T) {
 		t.Fail()
 	}
 
-	err = Checkout(gopath, testModuleName(), "test_branch", true)
+	err = Checkout(gopath, testMetadataObj(), "test_branch", true)
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.Fail()

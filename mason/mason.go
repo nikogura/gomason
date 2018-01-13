@@ -18,6 +18,7 @@ type Metadata struct {
 	Package     string                 `json:"package"`
 	Description string                 `json:"description"`
 	Repository  string                 `json:"repository"`
+	InsecureGet bool                   `json:"insecure_get"`
 	BuildInfo   BuildInfo              `json:"building,omitempty"`
 	SignInfo    SignInfo               `json:"signing,omitempty"`
 	PublishInfo PublishInfo            `json:"publishing,omitempty"`
@@ -117,25 +118,25 @@ func WholeShebang(workDir string, branch string, build bool, sign bool, publish 
 		return err
 	}
 
+	meta, err := ReadMetadata("metadata.json")
+
 	err = GovendorInstall(gopath, verbose)
 	if err != nil {
 		return err
 	}
-
-	meta, err := ReadMetadata("metadata.json")
 
 	if err != nil {
 		err = errors.Wrap(err, "couldn't read package information from metadata.json.")
 		return err
 	}
 
-	err = Checkout(gopath, meta.Package, branch, verbose)
+	err = Checkout(gopath, meta, branch, verbose)
 	if err != nil {
 		err = errors.Wrap(err, fmt.Sprintf("failed to checkout package %s at branch %s: %s", meta.Package, branch, err))
 		return err
 	}
 
-	err = GovendorSync(gopath, meta.Package, verbose)
+	err = GovendorSync(gopath, meta, verbose)
 	if err != nil {
 		err = errors.Wrap(err, "error running govendor sync")
 		return err
@@ -150,7 +151,7 @@ func WholeShebang(workDir string, branch string, build bool, sign bool, publish 
 	log.Printf("Success!\n\n")
 
 	if build {
-		err = Build(gopath, meta.Package, branch, verbose)
+		err = Build(gopath, meta, branch, verbose)
 		if err != nil {
 			err = errors.Wrap(err, "build failed")
 			return err

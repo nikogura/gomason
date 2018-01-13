@@ -32,8 +32,8 @@ func GovendorInstall(gopath string, verbose bool) (err error) {
 }
 
 // GovendorSync  Runs govendor sync in the diretory of your checked out code
-func GovendorSync(gopath string, gomodule string, verbose bool) (err error) {
-	wd := fmt.Sprintf("%s/src/%s", gopath, gomodule)
+func GovendorSync(gopath string, meta Metadata, verbose bool) (err error) {
+	wd := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
 
 	if verbose {
 		log.Printf("Changing working directory to: %s", wd)
@@ -48,7 +48,15 @@ func GovendorSync(gopath string, gomodule string, verbose bool) (err error) {
 
 	govendor := fmt.Sprintf("%s/bin/govendor", gopath)
 
-	cmd := exec.Command(govendor, "sync")
+	var cmd *exec.Cmd
+
+	if meta.InsecureGet {
+		cmd = exec.Command(govendor, "sync", "-insecure")
+
+	} else {
+		cmd = exec.Command(govendor, "sync")
+
+	}
 
 	runenv := append(os.Environ(), fmt.Sprintf("GOPATH=%s", gopath))
 

@@ -10,8 +10,6 @@ import (
 	"strings"
 )
 
-// TODO Provide for building 'extra' things based on templates.  take template name, data structure, and output file name.
-
 // GoxInstall Installs github.com/mitchellh/gox, the go cross compiler
 func GoxInstall(gopath string, verbose bool) (err error) {
 	if verbose {
@@ -41,7 +39,7 @@ func GoxInstall(gopath string, verbose bool) (err error) {
 }
 
 // Build  Builds the package.  Builds binaries for the architectures listed in the metadata.json file
-func Build(gopath string, gomodule string, branch string, verbose bool) (err error) {
+func Build(gopath string, meta Metadata, branch string, verbose bool) (err error) {
 	if verbose {
 		log.Printf("Checking to see that gox is installed.\n")
 	}
@@ -54,15 +52,15 @@ func Build(gopath string, gomodule string, branch string, verbose bool) (err err
 		}
 	}
 
-	if _, err := os.Stat(fmt.Sprintf("%s/%s/metadata.json", gopath, gomodule)); os.IsNotExist(err) {
-		err = Checkout(gopath, gomodule, branch, verbose)
+	if _, err := os.Stat(fmt.Sprintf("%s/%s/metadata.json", gopath, meta.Package)); os.IsNotExist(err) {
+		err = Checkout(gopath, meta, branch, verbose)
 		if err != nil {
-			err = errors.Wrap(err, fmt.Sprintf("Failed to checkout module: %s branch: %s ", gomodule, branch))
+			err = errors.Wrap(err, fmt.Sprintf("Failed to checkout module: %s branch: %s ", meta.Package, branch))
 			return err
 		}
 	}
 
-	wd := fmt.Sprintf("%s/src/%s", gopath, gomodule)
+	wd := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
 
 	if verbose {
 		log.Printf("Changing working directory to: %s", wd)
@@ -81,7 +79,7 @@ func Build(gopath string, gomodule string, branch string, verbose bool) (err err
 		log.Printf("Gox is: %s", gox)
 	}
 
-	metadatapath := fmt.Sprintf("%s/src/%s/metadata.json", gopath, gomodule)
+	metadatapath := fmt.Sprintf("%s/src/%s/metadata.json", gopath, meta.Package)
 
 	md, err := ReadMetadata(metadatapath)
 	if err != nil {

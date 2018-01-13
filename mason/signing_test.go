@@ -18,8 +18,6 @@ func TestSignVerifyBinary(t *testing.T) {
 		t.Fail()
 	}
 
-	meta, err := ReadMetadata("metadata.json")
-
 	// create workspace
 	gopath, err := CreateGoPath(tmpDir)
 	if err != nil {
@@ -27,12 +25,13 @@ func TestSignVerifyBinary(t *testing.T) {
 		t.Fail()
 	}
 
-	gomodule := "github.com/nikogura/gomason"
+	meta := testMetadataObj()
+
 	branch := "master"
 
 	// build artifacts
 	log.Printf("Running Build\n")
-	err = Build(gopath, gomodule, branch, true)
+	err = Build(gopath, meta, branch, true)
 	if err != nil {
 		log.Printf("Error building: %s", err)
 		t.Fail()
@@ -77,6 +76,8 @@ Expire-Date: 0
 		log.Printf("****** Error creating test key: %s *****", err)
 		t.Fail()
 	}
+
+	log.Printf("Done creating keyring and test keys")
 
 	// sign binaries
 	parts := strings.Split(meta.Package, "/")

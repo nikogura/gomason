@@ -9,7 +9,7 @@ import (
 )
 
 // Checkout  Actually checks out the code you're trying to test into your temporary GOPATH
-func Checkout(gopath string, gopackage string, branch string, verbose bool) (err error) {
+func Checkout(gopath string, meta Metadata, branch string, verbose bool) (err error) {
 
 	// install the code via go get  after all, we don't really want to play if it's not in a repo.
 	gocommand, err := exec.LookPath("go")
@@ -20,7 +20,15 @@ func Checkout(gopath string, gopackage string, branch string, verbose bool) (err
 
 	runenv := append(os.Environ(), fmt.Sprintf("GOPATH=%s", gopath))
 
-	cmd := exec.Command(gocommand, "get", gopackage)
+	var cmd *exec.Cmd
+
+	if meta.InsecureGet {
+		cmd = exec.Command(gocommand, "get", "-insecure", meta.Package)
+
+	} else {
+		cmd = exec.Command(gocommand, "get", meta.Package)
+
+	}
 
 	cmd.Env = runenv
 
@@ -28,7 +36,7 @@ func Checkout(gopath string, gopackage string, branch string, verbose bool) (err
 
 	if err == nil {
 		if verbose {
-			log.Printf("Checkout of %s complete\n\n", gopackage)
+			log.Printf("Checkout of %s complete\n\n", meta.Package)
 		}
 	}
 
@@ -38,7 +46,7 @@ func Checkout(gopath string, gopackage string, branch string, verbose bool) (err
 		return err
 	}
 
-	codepath := fmt.Sprintf("%s/src/%s", gopath, gopackage)
+	codepath := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
 
 	err = os.Chdir(codepath)
 

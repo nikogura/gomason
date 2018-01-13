@@ -48,6 +48,7 @@ func mkdir(dir string, perms os.FileMode) (err error) {
 func ReadMetadata(filename string) (metadata Metadata, err error) {
 	mdBytes, err := ioutil.ReadFile(filename)
 	if err != nil {
+		err = errors.Wrapf(err, "failed to read file %s", filename)
 		return metadata, err
 	}
 
