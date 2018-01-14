@@ -98,7 +98,6 @@ Expire-Date: 0
 			t.Fail()
 		}
 
-		// sign 'em if we're signing
 		err = SignBinary(meta, binary, true)
 		if err != nil {
 			err = errors.Wrap(err, "failed to sign binary")
@@ -107,7 +106,7 @@ Expire-Date: 0
 		}
 
 		// verify binaries
-		ok, err := VerifyBinary(binary, meta)
+		ok, err := VerifyBinary(binary, meta, true)
 		if err != nil {
 			log.Printf("Error verifying signature: %s", err)
 			//t.Fail()

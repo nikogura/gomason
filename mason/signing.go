@@ -14,12 +14,20 @@ const defaultSigningProgram = "gpg"
 // SignBinary  signs the given binary based on the entity and program given in metadata.json, possibly overridden by information in ~/.gomason
 func SignBinary(meta Metadata, binary string, verbose bool) (err error) {
 
+	if verbose {
+		log.Printf("Preparing to sign binary %s", binary)
+	}
+
 	// pull signing info out of metadata.json
 	signInfo := meta.SignInfo
 
 	signProg := signInfo.Program
 	if signProg == "" {
 		signProg = defaultSigningProgram
+	}
+
+	if verbose {
+		log.Printf("Signing program is %s", signProg)
 	}
 
 	signEntity := signInfo.Email
@@ -52,6 +60,9 @@ func SignBinary(meta Metadata, binary string, verbose bool) (err error) {
 	switch signProg {
 	// insert other signing types here
 	default:
+		if verbose {
+			log.Printf("Signing with default program.")
+		}
 		err = SignGPG(binary, signEntity, meta)
 		if err != nil {
 			err = errors.Wrap(err, fmt.Sprintf("failed to run %q", signProg))
@@ -63,7 +74,7 @@ func SignBinary(meta Metadata, binary string, verbose bool) (err error) {
 }
 
 // VerifyBinary will verify the signature of a signed binary.
-func VerifyBinary(binary string, meta Metadata) (ok bool, err error) {
+func VerifyBinary(binary string, meta Metadata, verbose bool) (ok bool, err error) {
 	// pull signing info out of metadata.json
 	signInfo := meta.SignInfo
 
@@ -74,6 +85,9 @@ func VerifyBinary(binary string, meta Metadata) (ok bool, err error) {
 	switch signProg {
 	// insert other signing types here
 	default:
+		if verbose {
+			log.Printf("Verifying with default program.")
+		}
 		ok, err = VerifyGPG(binary, meta)
 		if err != nil {
 			err = errors.Wrap(err, fmt.Sprintf("failed to run %q", signProg))
