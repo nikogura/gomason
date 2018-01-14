@@ -5,7 +5,9 @@ func testMetadataObj() (metadata Metadata) {
 		Package:     testModuleName(),
 		Version:     "0.1.0",
 		Description: "A tool for building and testing your project in a clean GOPATH.",
-		BuildInfo:   BuildInfo{},
+		BuildInfo: BuildInfo{
+			Targets: []string{"linux/amd64"},
+		},
 		SignInfo: SignInfo{
 			Program: "gpg",
 			Email:   "gomason-tester@foo.com",
