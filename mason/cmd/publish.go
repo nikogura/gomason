@@ -17,7 +17,9 @@ package cmd
 import (
 	"github.com/nikogura/gomason/mason"
 	"github.com/spf13/cobra"
+	"io/ioutil"
 	"log"
+	"os"
 )
 
 // publishCmd represents the publish command
@@ -30,9 +32,70 @@ Test, build, sign and publish your code.
 Publish will upload your binaries to wherever it is you've configured them to go in whatever way you like.  The detached signatures will likewise be uploaded.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := mason.WholeShebang(workdir, branch, true, true, true, verbose)
+		cwd, err := os.Getwd()
 		if err != nil {
-			log.Fatalf("Error running publish: %s\n", err)
+			log.Fatalf("Failed to get current working directory: %s", err)
+		}
+		workDir, err := ioutil.TempDir("", "gomason")
+		if err != nil {
+			log.Fatalf("Failed to create temp dir: %s", err)
+		}
+
+		if verbose {
+			log.Printf("Created temp dir %s", workDir)
+		}
+
+		defer os.RemoveAll(workDir)
+
+		gopath, err := mason.CreateGoPath(workDir)
+		if err != nil {
+			log.Fatalf("Failed to create ephemeral GOPATH: %s", err)
+		}
+
+		meta, err := mason.ReadMetadata("metadata.json")
+
+		err = mason.GovendorInstall(gopath, verbose)
+		if err != nil {
+			log.Fatalf("Failed to install Govendor: %s", err)
+		}
+
+		if err != nil {
+			log.Fatalf("couldn't read package information from metadata.json: %s", err)
+
+		}
+
+		err = mason.Checkout(gopath, meta, branch, verbose)
+		if err != nil {
+			log.Fatalf("failed to checkout package %s at branch %s: %s", meta.Package, branch, err)
+		}
+
+		err = mason.GovendorSync(gopath, meta, verbose)
+		if err != nil {
+			log.Fatalf("error running govendor sync: %s", err)
+		}
+
+		err = mason.GoTest(gopath, meta.Package, verbose)
+		if err != nil {
+			log.Fatalf("error running go test: %s", err)
+		}
+
+		log.Printf("Tests Succeeded!\n\n")
+
+		err = mason.Build(gopath, meta, branch, verbose)
+		if err != nil {
+			log.Fatalf("build failed: %s", err)
+		}
+
+		log.Printf("Build Succeeded!\n\n")
+
+		err = mason.PublishBuildTargets(meta, gopath, cwd, true, true, verbose)
+		if err != nil {
+			log.Fatalf("post-build processing failed", err)
+		}
+
+		err = mason.PublishBuildExtras(meta, gopath, cwd, true, true, verbose)
+		if err != nil {
+			log.Fatalf("Extra artifact processing failed: %s", err)
 		}
 	},
 }

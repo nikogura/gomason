@@ -17,7 +17,9 @@ package cmd
 import (
 	"github.com/nikogura/gomason/mason"
 	"github.com/spf13/cobra"
+	"io/ioutil"
 	"log"
+	"os"
 )
 
 // testCmd represents the test command
@@ -38,10 +40,50 @@ Sure, you could do the same thing with a CI or CD system.  But sometimes that's 
 Sometimes you need the benefits of a full system here.  Now.  Right at your fingertips.  You're welcome.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		err := mason.WholeShebang(workdir, branch, false, false, false, verbose)
+		workDir, err := ioutil.TempDir("", "gomason")
 		if err != nil {
-			log.Fatalf("Error running test: %s", err)
+			log.Fatalf("Failed to create temp dir: %s", err)
 		}
+
+		if verbose {
+			log.Printf("Created temp dir %s", workDir)
+		}
+
+		defer os.RemoveAll(workDir)
+
+		gopath, err := mason.CreateGoPath(workDir)
+		if err != nil {
+			log.Fatalf("Failed to create ephemeral GOPATH: %s", err)
+		}
+
+		meta, err := mason.ReadMetadata("metadata.json")
+
+		err = mason.GovendorInstall(gopath, verbose)
+		if err != nil {
+			log.Fatalf("Failed to install Govendor: %s", err)
+		}
+
+		if err != nil {
+			log.Fatalf("couldn't read package information from metadata.json: %s", err)
+
+		}
+
+		err = mason.Checkout(gopath, meta, branch, verbose)
+		if err != nil {
+			log.Fatalf("failed to checkout package %s at branch %s: %s", meta.Package, branch, err)
+		}
+
+		err = mason.GovendorSync(gopath, meta, verbose)
+		if err != nil {
+			log.Fatalf("error running govendor sync: %s", err)
+		}
+
+		err = mason.GoTest(gopath, meta.Package, verbose)
+		if err != nil {
+			log.Fatalf("error running go test: %s", err)
+		}
+
+		log.Printf("Success!\n\n")
 	},
 }
 
