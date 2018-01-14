@@ -96,6 +96,20 @@ func TestGetCredentials(t *testing.T) {
 		t.Fail()
 	}
 
-	log.Printf("Fetched username: %s\n", username)
-	log.Printf("Fetched password: %s\n", password)
+	assert.Equal(t, "", username, "Empty username")
+	assert.Equal(t, "", password, "Empty password")
+}
+
+func TestGetFunc(t *testing.T) {
+	expected := "foo"
+	command := "echo 'foo'"
+
+	actual, err := GetFunc(command, true)
+	if err != nil {
+		log.Printf("Error calling test func: %s", err)
+		t.Fail()
+	}
+
+	assert.Equal(t, expected, actual, "Command output meets expectations.")
+
 }
