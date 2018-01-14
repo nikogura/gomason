@@ -88,3 +88,14 @@ func TestParseStringForMetadata(t *testing.T) {
 
 	assert.Equal(t, expected, actual, "parsed url string meets expectations")
 }
+
+func TestGetCredentials(t *testing.T) {
+	username, password, err := GetCredentials(testMetadataObj(), true)
+	if err != nil {
+		log.Printf("Error getting credentials: %s", err)
+		t.Fail()
+	}
+
+	log.Printf("Fetched username: %s\n", username)
+	log.Printf("Fetched password: %s\n", password)
+}
