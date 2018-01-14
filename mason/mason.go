@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"gopkg.in/ini.v1"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/user"
