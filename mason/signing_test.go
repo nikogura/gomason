@@ -27,6 +27,37 @@ func TestSignVerifyBinary(t *testing.T) {
 
 	meta := testMetadataObj()
 
+	meta.Repository = fmt.Sprintf("http://localhost:%d/repo/tool", servicePort)
+
+	darwin := PublishTarget{
+		Source:      "gomason_darwin_amd64",
+		Destination: "{{.Repository}}/gomason/{{.Version}}/darwin/amd64/gomason",
+		Signature:   true,
+		Checksums:   true,
+	}
+
+	linux := PublishTarget{
+		Source:      "gomason_linux_amd64",
+		Destination: "{{.Repository}}/gomason/{{.Version}}/linux/amd64/gomason",
+		Signature:   true,
+		Checksums:   true,
+	}
+
+	targets := []PublishTarget{darwin, linux}
+
+	targetsMap := make(map[string]PublishTarget)
+
+	for _, target := range targets {
+		targetsMap[target.Source] = target
+	}
+
+	pubInfo := PublishInfo{
+		Targets:    targets,
+		TargetsMap: targetsMap,
+	}
+
+	meta.PublishInfo = pubInfo
+
 	branch := "master"
 
 	// build artifacts
@@ -117,6 +148,23 @@ Expire-Date: 0
 			t.Fail()
 		}
 
+	}
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Failed to get current working directory: %s", err)
+	}
+
+	fmt.Printf("Publishing\n")
+
+	err = PublishBuildTargets(meta, gopath, cwd, false, true, true)
+	if err != nil {
+		log.Fatalf("post-build processing failed", err)
+	}
+
+	err = PublishBuildExtras(meta, gopath, cwd, false, true, true)
+	if err != nil {
+		log.Fatalf("Extra artifact processing failed: %s", err)
 	}
 
 }
