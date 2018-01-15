@@ -1,6 +1,7 @@
 package mason
 
 import (
+	"github.com/phayes/freeport"
 	"io/ioutil"
 	"log"
 	"os"
@@ -8,6 +9,7 @@ import (
 )
 
 var tmpDir string
+var servicePort int
 
 func TestMain(m *testing.M) {
 	setUp()
@@ -28,6 +30,18 @@ func setUp() {
 	tmpDir = dir
 
 	log.Printf("Setting up temporary work dir %s", tmpDir)
+
+	freePort, err := freeport.GetFreePort()
+	if err != nil {
+		log.Printf("Error getting a free port: %s", err)
+		os.Exit(1)
+	}
+
+	servicePort = freePort
+
+	tr := TestRepo{}
+
+	go tr.Run(servicePort)
 
 }
 
