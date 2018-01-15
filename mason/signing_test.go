@@ -159,7 +159,7 @@ Expire-Date: 0
 
 	err = PublishBuildTargets(meta, gopath, cwd, false, true, true)
 	if err != nil {
-		log.Fatalf("post-build processing failed", err)
+		log.Fatalf("post-build processing failed: %s", err)
 	}
 
 	err = PublishBuildExtras(meta, gopath, cwd, false, true, true)

@@ -26,6 +26,6 @@ func (tr *TestRepo) Run(port int) (err error) {
 func (tr *TestRepo) HandlerTool(w http.ResponseWriter, r *http.Request) {
 	log.Printf("*TestRepo: Request for %s*", r.URL.Path)
 
-	// we just return 200.  We're not doing anythign beyond providing an endpoint for the client to hit.
+	// we just return 200.  We're not doing anything beyond providing an endpoint for the client to hit.
 	w.WriteHeader(200)
 }

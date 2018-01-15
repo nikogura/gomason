@@ -90,7 +90,7 @@ Publish will upload your binaries to wherever it is you've configured them to go
 
 		err = mason.PublishBuildTargets(meta, gopath, cwd, true, true, verbose)
 		if err != nil {
-			log.Fatalf("post-build processing failed", err)
+			log.Fatalf("post-build processing failed: %s", err)
 		}
 
 		err = mason.PublishBuildExtras(meta, gopath, cwd, true, true, verbose)
