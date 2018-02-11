@@ -10,7 +10,6 @@
 
 [![Coverage Status](https://coveralls.io/repos/github/nikogura/gomason/badge.svg?branch=master)](https://coveralls.io/github/nikogura/gomason?branch=master)
 
-
 Tool for testing, building, signing and publishing Go binaries in a clean Go workspace.  Think of it as an on premesis CI/CD system- that also performs code signing and publishing of artifacts.
 
 You could do this via a CI/CD System and an artifact repository of some flavor.  But wiring that up properly takes time, experience, and tends to be very specific to your particular system and repository.  
