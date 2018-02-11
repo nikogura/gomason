@@ -157,7 +157,7 @@ Expire-Date: 0
 
 	fmt.Printf("Publishing\n")
 
-	err = PublishBuildTargets(meta, gopath, cwd, false, true, true)
+	err = PublishBuildTargets(meta, gopath, cwd, false, true, true, true)
 	if err != nil {
 		log.Fatalf("post-build processing failed: %s", err)
 	}

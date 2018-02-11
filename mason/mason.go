@@ -84,7 +84,7 @@ type UserSignInfo struct {
 // PublishBuildTargets loops over the expected files built by Build() and optionally signs them and publishes them along with their signatures (if signing).
 //
 // If not publishing, the binaries (and their optional signatures) are collected and dumped into the directory where gomason was called. (Typically the root of a go project).
-func PublishBuildTargets(meta Metadata, gopath string, cwd string, sign bool, publish bool, verbose bool) (err error) {
+func PublishBuildTargets(meta Metadata, gopath string, cwd string, sign bool, publish bool, collect bool, verbose bool) (err error) {
 	parts := strings.Split(meta.Package, "/")
 	binaryPrefix := parts[len(parts)-1]
 
@@ -123,7 +123,9 @@ func PublishBuildTargets(meta Metadata, gopath string, cwd string, sign bool, pu
 				return err
 			}
 
-		} else {
+		}
+
+		if collect {
 			// if we're not publishing, collect up the stuff we built, and dump 'em into the cwd where we called gomason
 			err := CollectFileAndSignature(cwd, filename, verbose)
 			if err != nil {
