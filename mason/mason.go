@@ -51,7 +51,7 @@ type PublishInfo struct {
 	Password     string                   `json:"password"`
 	UsernameFunc string                   `json:"usernamefunc"`
 	PasswordFunc string                   `json:"passwordfunc"`
-	SkipSigning  bool                     `json:"skip"`
+	SkipSigning  bool                     `json:"skip-signing"`
 }
 
 // PublishTarget  a struct representing an individual file to upload
