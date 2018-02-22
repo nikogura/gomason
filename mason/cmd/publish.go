@@ -1,4 +1,4 @@
-// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2017 Nik Ogura <nik.ogura@gmail.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -89,6 +89,9 @@ Publish will upload your binaries to wherever it is you've configured them to go
 		log.Printf("Build Succeeded!\n\n")
 
 		if meta.PublishInfo.SkipSigning {
+			if verbose {
+				log.Printf("Skipping signing due to 'skip-signing': true in metadata.json")
+			}
 			err = mason.PublishBuildTargets(meta, gopath, cwd, false, true, false, verbose)
 			if err != nil {
 				log.Fatalf("post-build processing failed: %s", err)
