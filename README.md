@@ -294,6 +294,45 @@ Example Config (Shared Key Signing, Shared Credentials):
 Run:
 
     gomason publish
+    
+### Publishing without signing.
+    
+Occasionally, it might be useful to test and publish, but not sign.  Internal use for instance, where you don't really have a web of trust set up.
+
+In that case, set "skip-signing": true in the publishing section and gomason will publish without bothering with the signatures.
+
+Example:
+
+    {
+      "package": "github.com/nikogura/gomason",
+      "version": "0.1.0",
+      "description": "A tool for building and testing your project in a clean GOPATH.",
+      "repository": "http://localhost:8081/artifactory/generic-local",
+      "building": {
+          "targets": [
+            "darwin/amd64",
+            "linux/amd64"
+          ]
+      },
+      "publishing": {
+        "skip-signing": true,
+        "targets": [
+            {
+                "src": "gomason_darwin_amd64",
+                "dst": "{{.Repository}}/gomason/{{.Version}}/darwin/amd64/gomason",
+                "sig": true,
+                "checksums": false
+            },
+            {
+                "src": "gomason_linux_amd64",
+                "dst": "{{.Repository}}/gomason/{{.Version}}/linux/amd64/gomason",
+                "sig": true,
+                "checksums": false
+            }
+        ]
+      }
+    }
+
 ---
     
 ## Project Config Reference

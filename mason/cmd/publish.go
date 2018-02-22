@@ -88,14 +88,27 @@ Publish will upload your binaries to wherever it is you've configured them to go
 
 		log.Printf("Build Succeeded!\n\n")
 
-		err = mason.PublishBuildTargets(meta, gopath, cwd, true, true, false, verbose)
-		if err != nil {
-			log.Fatalf("post-build processing failed: %s", err)
-		}
+		if meta.PublishInfo.SkipSigning {
+			err = mason.PublishBuildTargets(meta, gopath, cwd, false, true, false, verbose)
+			if err != nil {
+				log.Fatalf("post-build processing failed: %s", err)
+			}
 
-		err = mason.PublishBuildExtras(meta, gopath, cwd, true, true, verbose)
-		if err != nil {
-			log.Fatalf("Extra artifact processing failed: %s", err)
+			err = mason.PublishBuildExtras(meta, gopath, cwd, false, true, verbose)
+			if err != nil {
+				log.Fatalf("Extra artifact processing failed: %s", err)
+			}
+
+		} else {
+			err = mason.PublishBuildTargets(meta, gopath, cwd, true, true, false, verbose)
+			if err != nil {
+				log.Fatalf("post-build processing failed: %s", err)
+			}
+
+			err = mason.PublishBuildExtras(meta, gopath, cwd, true, true, verbose)
+			if err != nil {
+				log.Fatalf("Extra artifact processing failed: %s", err)
+			}
 		}
 	},
 }
