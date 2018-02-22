@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"github.com/davecgh/go-spew/spew"
 	"github.com/nikogura/gomason/mason"
 	"github.com/spf13/cobra"
 	"io/ioutil"
@@ -54,9 +53,6 @@ Publish will upload your binaries to wherever it is you've configured them to go
 		}
 
 		meta, err := mason.ReadMetadata("metadata.json")
-
-		log.Printf("Metadata: ")
-		spew.Dump(meta)
 
 		err = mason.GovendorInstall(gopath, verbose)
 		if err != nil {
