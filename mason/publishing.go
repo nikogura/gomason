@@ -33,7 +33,6 @@ func PublishFile(meta Metadata, filePath string, verbose bool) (err error) {
 	target, ok := meta.PublishInfo.TargetsMap[fileName]
 
 	if ok {
-		fmt.Println("Goongaga Goongala")
 		// upload the file
 		err = UploadFile(client, target.Destination, filePath, meta, username, password, verbose)
 		if err != nil {
