@@ -28,8 +28,6 @@ func PublishFile(meta Metadata, filePath string, verbose bool) (err error) {
 
 	fileName := filepath.Base(filePath)
 
-	fmt.Printf("File path: %s", fileName)
-
 	target, ok := meta.PublishInfo.TargetsMap[fileName]
 
 	if ok {
