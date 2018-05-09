@@ -117,10 +117,12 @@ func Build(gopath string, meta Metadata, branch string, verbose bool) (err error
 
 	log.Printf("%s\n", string(out))
 
-	if err == nil {
-		if verbose {
-			log.Printf("Gox build complete and successful.\n\n")
-		}
+	if err != nil {
+		return err
+	}
+
+	if verbose {
+		log.Printf("Gox build complete and successful.\n\n")
 	}
 
 	err = BuildExtras(md, wd, verbose)

@@ -92,7 +92,7 @@ Signing sorta implies something to sign, which in turn, implies that it built, w
 
 		err = mason.PublishBuildTargets(meta, gopath, cwd, true, false, true, verbose)
 		if err != nil {
-			log.Fatalf("post-build processing failed: %s", err)
+			log.Fatalf("signing failed: %s", err)
 		}
 
 		err = mason.PublishBuildExtras(meta, gopath, cwd, true, false, verbose)
