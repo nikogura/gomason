@@ -118,6 +118,7 @@ func Build(gopath string, meta Metadata, branch string, verbose bool) (err error
 	log.Printf("%s\n", string(out))
 
 	if err != nil {
+		log.Printf("Build error: %s\n", err.Error())
 		return err
 	}
 
