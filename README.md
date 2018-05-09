@@ -450,11 +450,11 @@ The password to use when authenticating to your artifact repository.  You can se
 
 #### Usernamefunc
 
-A bash shell function that will return the username to use.  Enables getting username info from a service.  Use carefully.  It's executing a command on your system.
+A shell function that will return the username to use.  Enables getting username info from a service.  Use carefully.  It's executing a command on your system.
 
 #### Passwordfunc
 
-A bash shell function that will return the password to use when publishing.  Enables getting the password from a service such as AWS Parameter store or Vault.
+A shell function that will return the password to use when publishing.  Enables getting the password from a service such as AWS Parameter store or Vault.
 
 ---
 
@@ -481,7 +481,7 @@ example:
         
 #### Usernamefunc
 
-A bash shell function that will return the username to use.  Enables getting username info from a service.  Use carefully.  It's executing a command on your system.  Probably not that useful, but supported for completenes sake.
+A shell function that will return the username to use.  Enables getting username info from a service.  Use carefully.  It's executing a command on your system.  Probably not that useful, but supported for completenes sake.
 
 example:
 
@@ -499,7 +499,7 @@ example:
 
 #### Passwordfunc
 
-A bash shell function that will return the password to use when publishing.  Really useful if you have a password manager with a cli such as LastPass.  You'll have to login separately though.  You won't be able to do it transparently via gomason... yet.  *(sometimes it takes a few tries to work out the magic)*
+A shell function that will return the password to use when publishing.  Really useful if you have a password manager with a cli such as LastPass.  You'll have to login separately though.  You won't be able to do it transparently via gomason... yet.  *(sometimes it takes a few tries to work out the magic)*
 
 example:
 

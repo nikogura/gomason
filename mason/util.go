@@ -147,7 +147,7 @@ func GetCredentials(meta Metadata, verbose bool) (username, password string, err
 
 // GetFunc runs a shell command that is a getter function.  This could certainly be dangerous, so be careful how you use it.
 func GetFunc(shellCommand string, verbose bool) (result string, err error) {
-	cmd := exec.Command("bash", "-c", shellCommand)
+	cmd := exec.Command("sh", "-c", shellCommand)
 
 	if verbose {
 		fmt.Printf("Getting input with shell function %q", shellCommand)

@@ -100,8 +100,8 @@ func Build(gopath string, meta Metadata, branch string, verbose bool) (err error
 
 	args := gox + ` -osarch="` + targetstring + `"`
 
-	// Calling it through bash makes everything happy
-	cmd := exec.Command("bash", "-c", args)
+	// Calling it through sh makes everything happy
+	cmd := exec.Command("sh", "-c", args)
 
 	gopathenv := fmt.Sprintf("GOPATH=%s", gopath)
 
