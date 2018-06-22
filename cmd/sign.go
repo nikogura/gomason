@@ -1,4 +1,4 @@
-// Copyright © 2017 Nik Ogura <nik.ogura@gmail.com>
+// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,21 +15,23 @@
 package cmd
 
 import (
-	"github.com/nikogura/gomason/mason"
+	"github.com/nikogura/gomason/internal/app/gomason"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"log"
 	"os"
 )
 
-// publishCmd represents the publish command
-var publishCmd = &cobra.Command{
-	Use:   "publish",
-	Short: "Test, build, sign and publish your code",
+// signCmd represents the sign command
+var signCmd = &cobra.Command{
+	Use:   "sign",
+	Short: "Sign your binaries after building them.",
 	Long: `
-Test, build, sign and publish your code.
+Sign your binaries after building them.
 
-Publish will upload your binaries to wherever it is you've configured them to go in whatever way you like.  The detached signatures will likewise be uploaded.
+Artists sign their work, you should too.
+
+Signing sorta implies something to sign, which in turn, implies that it built, which means it tested successfully.  What I'm getting at is this command will run 'test', 'build', and then it will 'sign'.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		cwd, err := os.Getwd()
@@ -47,14 +49,14 @@ Publish will upload your binaries to wherever it is you've configured them to go
 
 		defer os.RemoveAll(workDir)
 
-		gopath, err := mason.CreateGoPath(workDir)
+		gopath, err := gomason.CreateGoPath(workDir)
 		if err != nil {
 			log.Fatalf("Failed to create ephemeral GOPATH: %s", err)
 		}
 
-		meta, err := mason.ReadMetadata("metadata.json")
+		meta, err := gomason.ReadMetadata("metadata.json")
 
-		err = mason.GovendorInstall(gopath, verbose)
+		err = gomason.GovendorInstall(gopath, verbose)
 		if err != nil {
 			log.Fatalf("Failed to install Govendor: %s", err)
 		}
@@ -64,68 +66,52 @@ Publish will upload your binaries to wherever it is you've configured them to go
 
 		}
 
-		err = mason.Checkout(gopath, meta, branch, verbose)
+		err = gomason.Checkout(gopath, meta, branch, verbose)
 		if err != nil {
 			log.Fatalf("failed to checkout package %s at branch %s: %s", meta.Package, branch, err)
 		}
 
-		err = mason.GovendorSync(gopath, meta, verbose)
+		err = gomason.GovendorSync(gopath, meta, verbose)
 		if err != nil {
 			log.Fatalf("error running govendor sync: %s", err)
 		}
 
-		err = mason.GoTest(gopath, meta.Package, verbose)
+		err = gomason.GoTest(gopath, meta.Package, verbose)
 		if err != nil {
 			log.Fatalf("error running go test: %s", err)
 		}
 
 		log.Printf("Tests Succeeded!\n\n")
 
-		err = mason.Build(gopath, meta, branch, verbose)
+		err = gomason.Build(gopath, meta, branch, verbose)
 		if err != nil {
 			log.Fatalf("build failed: %s", err)
 		}
 
 		log.Printf("Build Succeeded!\n\n")
 
-		if meta.PublishInfo.SkipSigning {
-			if verbose {
-				log.Printf("Skipping signing due to 'skip-signing': true in metadata.json")
-			}
-			err = mason.PublishBuildTargets(meta, gopath, cwd, false, true, false, verbose)
-			if err != nil {
-				log.Fatalf("post-build processing failed: %s", err)
-			}
+		err = gomason.PublishBuildTargets(meta, gopath, cwd, true, false, true, verbose)
+		if err != nil {
+			log.Fatalf("signing failed: %s", err)
+		}
 
-			err = mason.PublishBuildExtras(meta, gopath, cwd, false, true, verbose)
-			if err != nil {
-				log.Fatalf("Extra artifact processing failed: %s", err)
-			}
-
-		} else {
-			err = mason.PublishBuildTargets(meta, gopath, cwd, true, true, false, verbose)
-			if err != nil {
-				log.Fatalf("post-build processing failed: %s", err)
-			}
-
-			err = mason.PublishBuildExtras(meta, gopath, cwd, true, true, verbose)
-			if err != nil {
-				log.Fatalf("Extra artifact processing failed: %s", err)
-			}
+		err = gomason.PublishBuildExtras(meta, gopath, cwd, true, false, verbose)
+		if err != nil {
+			log.Fatalf("Extra artifact processing failed: %s", err)
 		}
 	},
 }
 
 func init() {
-	RootCmd.AddCommand(publishCmd)
+	RootCmd.AddCommand(signCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// publishCmd.PersistentFlags().String("foo", "", "A help for foo")
+	// signCmd.PersistentFlags().String("foo", "", "A help for foo")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	// publishCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// signCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

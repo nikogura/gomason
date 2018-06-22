@@ -15,7 +15,7 @@
 package cmd
 
 import (
-	"github.com/nikogura/gomason/mason"
+	"github.com/nikogura/gomason/internal/app/gomason"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"log"
@@ -47,14 +47,14 @@ Binaries are dropped into the current working directory.
 
 		defer os.RemoveAll(workDir)
 
-		gopath, err := mason.CreateGoPath(workDir)
+		gopath, err := gomason.CreateGoPath(workDir)
 		if err != nil {
 			log.Fatalf("Failed to create ephemeral GOPATH: %s", err)
 		}
 
-		meta, err := mason.ReadMetadata("metadata.json")
+		meta, err := gomason.ReadMetadata("metadata.json")
 
-		err = mason.GovendorInstall(gopath, verbose)
+		err = gomason.GovendorInstall(gopath, verbose)
 		if err != nil {
 			log.Fatalf("Failed to install Govendor: %s", err)
 		}
@@ -64,24 +64,24 @@ Binaries are dropped into the current working directory.
 
 		}
 
-		err = mason.Checkout(gopath, meta, branch, verbose)
+		err = gomason.Checkout(gopath, meta, branch, verbose)
 		if err != nil {
 			log.Fatalf("failed to checkout package %s at branch %s: %s", meta.Package, branch, err)
 		}
 
-		err = mason.GovendorSync(gopath, meta, verbose)
+		err = gomason.GovendorSync(gopath, meta, verbose)
 		if err != nil {
 			log.Fatalf("error running govendor sync: %s", err)
 		}
 
-		err = mason.GoTest(gopath, meta.Package, verbose)
+		err = gomason.GoTest(gopath, meta.Package, verbose)
 		if err != nil {
 			log.Fatalf("error running go test: %s", err)
 		}
 
 		log.Printf("Tests Succeeded!\n\n")
 
-		err = mason.Build(gopath, meta, branch, verbose)
+		err = gomason.Build(gopath, meta, branch, verbose)
 		if err != nil {
 			log.Fatalf("build failed: %s", err)
 		}

@@ -1,4 +1,4 @@
-package mason
+package gomason
 
 import (
 	"github.com/phayes/freeport"
