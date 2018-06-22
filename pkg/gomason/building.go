@@ -148,8 +148,8 @@ func BuildExtras(meta Metadata, workdir string, verbose bool) (err error) {
 		executable := extra.Executable
 
 		if verbose {
-			fmt.Printf("Reading template from %s", templateName)
-			fmt.Printf("Writing to %s", outputFileName)
+			fmt.Printf("Reading template from %s\n", templateName)
+			fmt.Printf("Writing to %s\n", outputFileName)
 		}
 
 		var mode os.FileMode

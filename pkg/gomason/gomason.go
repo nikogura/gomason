@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"gopkg.in/ini.v1"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/user"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -86,9 +88,6 @@ type UserSignInfo struct {
 //
 // If not publishing, the binaries (and their optional signatures) are collected and dumped into the directory where gomason was called. (Typically the root of a go project).
 func PublishBuildTargets(meta Metadata, gopath string, cwd string, sign bool, publish bool, collect bool, verbose bool) (err error) {
-	parts := strings.Split(meta.Package, "/")
-	binaryPrefix := parts[len(parts)-1]
-
 	// loop through the built things for each type of build target
 	for _, arch := range meta.BuildInfo.Targets {
 		if verbose {
@@ -100,40 +99,57 @@ func PublishBuildTargets(meta Metadata, gopath string, cwd string, sign bool, pu
 		archname := archparts[1] // amd64 generally
 
 		workdir := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
-		filename := fmt.Sprintf("%s/%s_%s_%s", workdir, binaryPrefix, osname, archname)
 
-		if _, err := os.Stat(filename); os.IsNotExist(err) {
-			err = fmt.Errorf("failed to build binary: %s\n", filename)
+		files, err := ioutil.ReadDir(workdir)
+		if err != nil {
+			err = errors.Wrap(err, fmt.Sprintf("failed to read dir %s", workdir))
 			return err
 		}
 
-		// sign 'em if we're signing
-		if sign {
-			err = SignBinary(meta, filename, verbose)
-			if err != nil {
-				err = errors.Wrap(err, "failed to sign binary")
-				return err
+		targetSuffix := fmt.Sprintf(".+_%s_%s", osname, archname)
+		targetRegex := regexp.MustCompile(targetSuffix)
+
+		for _, file := range files {
+			matched := targetRegex.MatchString(file.Name())
+
+			if matched {
+				filename := fmt.Sprintf("%s/%s", workdir, file.Name())
+
+				if _, err := os.Stat(filename); os.IsNotExist(err) {
+					err = fmt.Errorf("failed to build binary: %s\n", filename)
+					return err
+				}
+
+				// sign 'em if we're signing
+				if sign {
+					err = SignBinary(meta, filename, verbose)
+					if err != nil {
+						err = errors.Wrap(err, "failed to sign binary")
+						return err
+					}
+				}
+
+				// publish and return if we're publishing
+				if publish {
+					err = PublishFile(meta, filename, verbose)
+					if err != nil {
+						err = errors.Wrap(err, "failed to publish binary")
+						return err
+					}
+
+				}
+
+				if collect {
+					// if we're not publishing, collect up the stuff we built, and dump 'em into the cwd where we called gomason
+					err := CollectFileAndSignature(cwd, filename, verbose)
+					if err != nil {
+						err = errors.Wrap(err, "failed to collect binaries")
+						return err
+					}
+				}
 			}
 		}
 
-		// publish and return if we're publishing
-		if publish {
-			err = PublishFile(meta, filename, verbose)
-			if err != nil {
-				err = errors.Wrap(err, "failed to publish binary")
-				return err
-			}
-
-		}
-
-		if collect {
-			// if we're not publishing, collect up the stuff we built, and dump 'em into the cwd where we called gomason
-			err := CollectFileAndSignature(cwd, filename, verbose)
-			if err != nil {
-				err = errors.Wrap(err, "failed to collect binaries")
-				return err
-			}
-		}
 	}
 
 	return err
