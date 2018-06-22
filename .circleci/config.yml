@@ -13,7 +13,6 @@ jobs:
 
       # specify any bash command here prefixed with `run: `
       - run: echo "[user]\n  email = gomason-tester@foo.com\n  username = gomason-tester\n[signing]\n  program = gpg" ~/.gomason
-      - run: go get -v -t -d ./...
       - run: go get github.com/kardianos/govendor
       - run: govendor sync
       - run: gpg-agent --daemon
