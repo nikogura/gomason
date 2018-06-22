@@ -1,4 +1,4 @@
-package mason
+package gomason
 
 import "fmt"
 

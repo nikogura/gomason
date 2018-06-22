@@ -1,4 +1,4 @@
-package mason
+package gomason
 
 import (
 	"fmt"
@@ -98,7 +98,7 @@ func Build(gopath string, meta Metadata, branch string, verbose bool) (err error
 	// This gets weird because go's exec shell doesn't like the arg format that gox expects
 	// Building it thusly keeps the various quoting levels straight
 
-	args := gox + ` -osarch="` + targetstring + `"`
+	args := gox + ` -osarch="` + targetstring + `"` + " ./..."
 
 	// Calling it through sh makes everything happy
 	cmd := exec.Command("sh", "-c", args)

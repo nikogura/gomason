@@ -1,4 +1,4 @@
-package mason
+package gomason
 
 func testMetadataObj() (metadata Metadata) {
 	metadata = Metadata{

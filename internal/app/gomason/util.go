@@ -1,4 +1,4 @@
-package mason
+package gomason
 
 import (
 	"bytes"
@@ -150,7 +150,7 @@ func GetFunc(shellCommand string, verbose bool) (result string, err error) {
 	cmd := exec.Command("sh", "-c", shellCommand)
 
 	if verbose {
-		fmt.Printf("Getting input with shell function %q", shellCommand)
+		fmt.Printf("Getting input with shell function %q\n", shellCommand)
 	}
 
 	stdout, err := cmd.StdoutPipe()
