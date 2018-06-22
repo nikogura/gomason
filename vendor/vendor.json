@@ -189,6 +189,12 @@
 			"revisionTime": "2018-05-20T16:02:21Z"
 		},
 		{
+			"checksumSHA1": "nv0VcXrE4cc3r10jK27JZYbr17E=",
+			"path": "gopkg.in/ini.v1",
+			"revision": "06f5f3d67269ccec1fe5fe4134ba6e982984f7f5",
+			"revisionTime": "2018-05-26T22:45:42Z"
+		},
+		{
 			"checksumSHA1": "ZSWoOPUNRr5+3dhkLK3C4cZAQPk=",
 			"path": "gopkg.in/yaml.v2",
 			"revision": "5420a8b6744d3b0345ab293f6fcba19c978f1183",
