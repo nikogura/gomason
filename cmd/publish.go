@@ -15,7 +15,7 @@
 package cmd
 
 import (
-	"github.com/nikogura/gomason/internal/app/gomason"
+	"github.com/nikogura/gomason/pkg/gomason"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"log"
