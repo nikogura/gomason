@@ -91,7 +91,7 @@ Binaries are dropped into the current working directory.
 }
 
 func init() {
-	RootCmd.AddCommand(buildCmd)
+	rootCmd.AddCommand(buildCmd)
 
 	// Here you will define your flags and configuration settings.
 

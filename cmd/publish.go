@@ -117,7 +117,7 @@ Publish will upload your binaries to wherever it is you've configured them to go
 }
 
 func init() {
-	RootCmd.AddCommand(publishCmd)
+	rootCmd.AddCommand(publishCmd)
 
 	// Here you will define your flags and configuration settings.
 

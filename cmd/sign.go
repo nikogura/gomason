@@ -103,7 +103,7 @@ Signing sorta implies something to sign, which in turn, implies that it built, w
 }
 
 func init() {
-	RootCmd.AddCommand(signCmd)
+	rootCmd.AddCommand(signCmd)
 
 	// Here you will define your flags and configuration settings.
 

@@ -88,7 +88,7 @@ Sometimes you need the benefits of a full system here.  Now.  Right at your fing
 }
 
 func init() {
-	RootCmd.AddCommand(testCmd)
+	rootCmd.AddCommand(testCmd)
 
 	// Here you will define your flags and configuration settings.
 

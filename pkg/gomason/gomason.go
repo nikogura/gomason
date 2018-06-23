@@ -13,6 +13,8 @@ import (
 	"strings"
 )
 
+const VERSION = "2.1.1"
+
 // Metadata type to represent the metadata.json file
 type Metadata struct {
 	Name        string                 `json:"name"`
