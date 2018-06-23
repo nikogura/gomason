@@ -15,6 +15,7 @@ import (
 
 // Metadata type to represent the metadata.json file
 type Metadata struct {
+	Name        string                 `json:"name"`
 	Version     string                 `json:"version"`
 	Package     string                 `json:"package"`
 	Description string                 `json:"description"`
