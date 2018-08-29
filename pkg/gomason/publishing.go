@@ -189,7 +189,7 @@ func Upload(client *http.Client, parsedDestination string, data io.Reader, md5su
 	}
 
 	if resp.StatusCode > 299 {
-		err = errors.Wrapf(err, "response code %d is not indicative of a successful publish")
+		err = errors.Wrap(err, "response code %d is not indicative of a successful publish")
 		return err
 	}
 

@@ -26,7 +26,7 @@ func Checkout(gopath string, meta Metadata, branch string, verbose bool) (err er
 		cmd = exec.Command(gocommand, "get", "-insecure", meta.Package)
 
 	} else {
-		cmd = exec.Command(gocommand, "get", meta.Package, "./...")
+		cmd = exec.Command(gocommand, "get", "-d", fmt.Sprintf("%s/...", meta.Package))
 	}
 
 	if verbose {
