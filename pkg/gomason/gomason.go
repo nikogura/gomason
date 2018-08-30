@@ -33,6 +33,7 @@ type Metadata struct {
 type BuildInfo struct {
 	Targets []string        `json:"targets,omitempty"`
 	Extras  []ExtraArtifact `json:"extras,omitempty"`
+	Cgo     bool            `json:"cgo,omitempty"`
 }
 
 // ExtraArtifact is an extra file built from a template at build time
