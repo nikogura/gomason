@@ -107,10 +107,10 @@ func Build(gopath string, meta Metadata, branch string, verbose bool) (err error
 		cgo = " -cgo"
 	}
 
-	for k, v := range meta.BuildInfo.CgoFlags {
+	for k, v := range meta.BuildInfo.Flags {
 		runenv = append(runenv, fmt.Sprintf("%s=%s", k, v))
 		if verbose {
-			log.Printf("CGO Flag: %s=%s", k, v)
+			log.Printf("Build Flag: %s=%s", k, v)
 		}
 	}
 
