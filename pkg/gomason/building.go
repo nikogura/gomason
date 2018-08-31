@@ -122,7 +122,7 @@ func Build(gopath string, meta Metadata, branch string, verbose bool) (err error
 	cmd.Env = runenv
 
 	if verbose {
-		log.Printf("Running gox....\n")
+		log.Printf("Running gox with: %s", args)
 	}
 
 	out, err := cmd.CombinedOutput()
