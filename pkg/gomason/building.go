@@ -102,14 +102,16 @@ func Build(gopath string, meta Metadata, branch string, verbose bool) (err error
 	runenv := append(os.Environ(), gopathenv)
 
 	cgo := ""
-
-	for k, v := range meta.BuildInfo.CgoFlags {
-		runenv = append(runenv, fmt.Sprintf("%s=%s", k, v))
-	}
-
 	// build with cgo if we're told to do so.
 	if meta.BuildInfo.Cgo {
 		cgo = " -cgo"
+	}
+
+	for k, v := range meta.BuildInfo.CgoFlags {
+		runenv = append(runenv, fmt.Sprintf("%s=%s", k, v))
+		if verbose {
+			log.Printf("CGO Flag: %s=%s", k, v)
+		}
 	}
 
 	args := gox + cgo + ` -osarch="` + targetstring + `"` + " ./..."
