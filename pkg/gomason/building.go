@@ -98,7 +98,14 @@ func Build(gopath string, meta Metadata, branch string, verbose bool) (err error
 	// This gets weird because go's exec shell doesn't like the arg format that gox expects
 	// Building it thusly keeps the various quoting levels straight
 
+	gopathenv := fmt.Sprintf("GOPATH=%s", gopath)
+	runenv := append(os.Environ(), gopathenv)
+
 	cgo := ""
+
+	for k, v := range meta.BuildInfo.CgoFlags {
+		runenv = append(runenv, fmt.Sprintf("%s=%s", k, v))
+	}
 
 	// build with cgo if we're told to do so.
 	if meta.BuildInfo.Cgo {
@@ -109,10 +116,6 @@ func Build(gopath string, meta Metadata, branch string, verbose bool) (err error
 
 	// Calling it through sh makes everything happy
 	cmd := exec.Command("sh", "-c", args)
-
-	gopathenv := fmt.Sprintf("GOPATH=%s", gopath)
-
-	runenv := append(os.Environ(), gopathenv)
 
 	cmd.Env = runenv
 

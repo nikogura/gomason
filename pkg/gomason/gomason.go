@@ -31,9 +31,10 @@ type Metadata struct {
 
 // BuildInfo stores information used for building the code.
 type BuildInfo struct {
-	Targets []string        `json:"targets,omitempty"`
-	Extras  []ExtraArtifact `json:"extras,omitempty"`
-	Cgo     bool            `json:"cgo,omitempty"`
+	Targets  []string          `json:"targets,omitempty"`
+	Extras   []ExtraArtifact   `json:"extras,omitempty"`
+	Cgo      bool              `json:"cgo,omitempty"`
+	CgoFlags map[string]string `json:"cgo_flags,omitempty"`
 }
 
 // ExtraArtifact is an extra file built from a template at build time
