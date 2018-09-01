@@ -431,6 +431,8 @@ For example, the following will build 64 bit binaries for MacOS and Linux:
       }
     ]
     
+This of course, assumes you have gcc built able to cross-compile with something like https://github.com/tpoechtrager/osxcross.  The above works fine with MacOSX10.11 for the author.
+    
 #### Extras
 
 Extra artifacts such as scripts and such you'd like built along side your go binaries.
