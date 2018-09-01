@@ -5,8 +5,12 @@
   "repository": "http://localhost:8081/artifactory/generic-local",
   "building": {
     "targets": [
-      "darwin/amd64",
-      "linux/amd64"
+      {
+        "name": "darwin/amd64"
+      },
+      {
+        "name": "linux/amd64"
+      }
     ]
   },
   "signing": {

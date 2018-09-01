@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strings"
 )
 
 // GoxInstall Installs github.com/mitchellh/gox, the go cross compiler
@@ -87,55 +86,54 @@ func Build(gopath string, meta Metadata, branch string, verbose bool) (err error
 		return err
 	}
 
-	targets := md.BuildInfo.Targets
-
-	targetstring := strings.Join(targets, " ")
-
-	if verbose {
-		log.Printf("Building with targets: %q\n", targetstring)
-	}
-
-	// This gets weird because go's exec shell doesn't like the arg format that gox expects
-	// Building it thusly keeps the various quoting levels straight
-
-	gopathenv := fmt.Sprintf("GOPATH=%s", gopath)
-	runenv := append(os.Environ(), gopathenv)
-
-	cgo := ""
-	// build with cgo if we're told to do so.
-	if meta.BuildInfo.Cgo {
-		cgo = " -cgo"
-	}
-
-	for k, v := range meta.BuildInfo.Flags {
-		runenv = append(runenv, fmt.Sprintf("%s=%s", k, v))
+	for _, target := range md.BuildInfo.Targets {
 		if verbose {
-			log.Printf("Build Flag: %s=%s", k, v)
+			log.Printf("Building target: %q\n", target.Name)
 		}
-	}
 
-	args := gox + cgo + ` -osarch="` + targetstring + `"` + " ./..."
+		// This gets weird because go's exec shell doesn't like the arg format that gox expects
+		// Building it thusly keeps the various quoting levels straight
 
-	// Calling it through sh makes everything happy
-	cmd := exec.Command("sh", "-c", args)
+		gopathenv := fmt.Sprintf("GOPATH=%s", gopath)
+		runenv := append(os.Environ(), gopathenv)
 
-	cmd.Env = runenv
+		cgo := ""
+		// build with cgo if we're told to do so.
+		if target.Cgo {
+			cgo = " -cgo"
+		}
 
-	if verbose {
-		log.Printf("Running gox with: %s", args)
-	}
+		for k, v := range target.Flags {
+			runenv = append(runenv, fmt.Sprintf("%s=%s", k, v))
+			if verbose {
+				log.Printf("Build Flag: %s=%s", k, v)
+			}
+		}
 
-	out, err := cmd.CombinedOutput()
+		args := gox + cgo + ` -osarch="` + target.Name + `"` + " ./..."
 
-	log.Printf("%s\n", string(out))
+		// Calling it through sh makes everything happy
+		cmd := exec.Command("sh", "-c", args)
 
-	if err != nil {
-		log.Printf("Build error: %s\n", err.Error())
-		return err
-	}
+		cmd.Env = runenv
 
-	if verbose {
-		log.Printf("Gox build complete and successful.\n\n")
+		if verbose {
+			log.Printf("Running gox with: %s", args)
+		}
+
+		out, err := cmd.CombinedOutput()
+
+		log.Printf("%s\n", string(out))
+
+		if err != nil {
+			log.Printf("Build error: %s\n", err.Error())
+			return err
+		}
+
+		if verbose {
+			log.Printf("Gox build complete and successful.\n\n")
+		}
+
 	}
 
 	err = BuildExtras(md, wd, verbose)

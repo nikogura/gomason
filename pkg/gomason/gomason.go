@@ -31,10 +31,15 @@ type Metadata struct {
 
 // BuildInfo stores information used for building the code.
 type BuildInfo struct {
-	Targets []string          `json:"targets,omitempty"`
-	Extras  []ExtraArtifact   `json:"extras,omitempty"`
-	Cgo     bool              `json:"cgo,omitempty"`
-	Flags   map[string]string `json:"flags,omitempty"`
+	Targets []BuildTarget   `json:"targets,omitempty"`
+	Extras  []ExtraArtifact `json:"extras,omitempty"`
+}
+
+// BuildTarget contains information on each build target
+type BuildTarget struct {
+	Name  string            `json:"string"`
+	Cgo   bool              `json:"cgo,omitempty"`
+	Flags map[string]string `json:"flags,omitempty"`
 }
 
 // ExtraArtifact is an extra file built from a template at build time
@@ -94,11 +99,11 @@ type UserSignInfo struct {
 // If not publishing, the binaries (and their optional signatures) are collected and dumped into the directory where gomason was called. (Typically the root of a go project).
 func PublishBuildTargets(meta Metadata, gopath string, cwd string, sign bool, publish bool, collect bool, verbose bool) (err error) {
 	// loop through the built things for each type of build target
-	for _, arch := range meta.BuildInfo.Targets {
+	for _, target := range meta.BuildInfo.Targets {
 		if verbose {
-			log.Printf("Processing build target: %s", arch)
+			log.Printf("Processing build target: %s", target.Name)
 		}
-		archparts := strings.Split(arch, "/")
+		archparts := strings.Split(target.Name, "/")
 
 		osname := archparts[0]   // linux or darwin generally
 		archname := archparts[1] // amd64 generally

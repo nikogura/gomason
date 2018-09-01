@@ -63,8 +63,16 @@ Example metadata.json:
       "insecure_get": false,
       "building": {
         "targets": [
-          "darwin/amd64",
-          "linux/amd64"
+          {
+            "name": "darwin/amd64",
+            "cgo": true,
+            "flags": {
+              "CC": "o64-gcc",
+              "CXX": "o64-g++"
+             }
+          {
+            "name": "linux/amd64"
+          }
         ]
       },
       "signing": {
@@ -139,8 +147,11 @@ Example Minimum Config:
       "description": "A tool for building and testing your project in a clean GOPATH.",
       "building": {
           "targets": [
-            "darwin/amd64",
-            "linux/amd64"
+            {
+              "name": "darwin/amd64",
+            {
+              "name": "linux/amd64"
+            }
           ]
       }
     }
@@ -217,8 +228,11 @@ Example Config (Personal Key Signing, Personal Credentials):
       "repository": "http://localhost:8081/artifactory/generic-local",
       "building": {
           "targets": [
-            "darwin/amd64",
-            "linux/amd64"
+            {
+              "name": "darwin/amd64",
+            {
+              "name": "linux/amd64"
+            }
           ]
       },
       "publishing": {
@@ -263,8 +277,11 @@ Example Config (Shared Key Signing, Shared Credentials):
       "repository": "http://localhost:8081/artifactory/generic-local",
       "building": {
           "targets": [
-            "darwin/amd64",
-            "linux/amd64"
+            {
+              "name": "darwin/amd64",
+            {
+              "name": "linux/amd64"
+            }
           ]
       },
       "signing": {
@@ -310,8 +327,11 @@ Example:
       "repository": "http://localhost:8081/artifactory/generic-local",
       "building": {
           "targets": [
-            "darwin/amd64",
-            "linux/amd64"
+            {
+              "name": "darwin/amd64",
+            {
+              "name": "linux/amd64"
+            }
           ]
       },
       "publishing": {
@@ -349,10 +369,13 @@ Example:
           "description": "A tool for building and testing your project in a clean GOPATH.",
       "repository": "http://localhost:8081/artifactory/generic-local",
           "building": {
-              "targets": [
-                "darwin/amd64",
-                "linux/amd64"
-              ]
+            "targets": [
+              {
+                "name": "darwin/amd64",
+              {
+                "name": "linux/amd64"
+              }
+            ]
           }
         }
 
@@ -389,11 +412,23 @@ Information specifically for building the project.
 
 This is used to determine which OSes and architectures to compile for. It's gotta be Gox's way of expressing the version and arch (os/arch), as the strings will simply be passed along to gox to build your toys.
 
+Targets can also take an optional 'cgo' flag to build with CGO, and a map of compiler flags that will be passed on to gox at build time.
+
+This can be useful for cross compiling for different OSes.
+
 For example, the following will build 64 bit binaries for MacOS and Linux:
 
     "targets": [
-          "darwin/amd64",
-          "linux/amd64"
+      {
+        "name": "darwin/amd64",
+        "cgo": true,
+        "flags": {
+          "CC": "o64-gcc",
+          "CXX": "o64-g++"
+         }
+      {
+        "name": "linux/amd64"
+      }
     ]
     
 #### Extras
