@@ -37,7 +37,7 @@ type BuildInfo struct {
 
 // BuildTarget contains information on each build target
 type BuildTarget struct {
-	Name  string            `json:"string"`
+	Name  string            `json:"name"`
 	Cgo   bool              `json:"cgo,omitempty"`
 	Flags map[string]string `json:"flags,omitempty"`
 }

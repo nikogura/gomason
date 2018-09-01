@@ -7,7 +7,9 @@ func testMetaDataJson() string {
 	"description": "A tool for building and testing your project in a clean GOPATH.",
 	"building": {
 		"targets": [
-			"linux/amd64"
+			{
+				"name": "linux/amd64"
+			}
 		]
 	},
 	"signing": {

@@ -414,7 +414,7 @@ This is used to determine which OSes and architectures to compile for. It's gott
 
 Targets can also take an optional 'cgo' flag to build with CGO, and a map of compiler flags that will be passed on to gox at build time.
 
-This can be useful for cross compiling for different OSes.
+This can be useful for cases where different targets require different options.
 
 For example, the following will build 64 bit binaries for MacOS and Linux:
 

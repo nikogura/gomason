@@ -131,7 +131,7 @@ func Build(gopath string, meta Metadata, branch string, verbose bool) (err error
 		}
 
 		if verbose {
-			log.Printf("Gox build complete and successful.\n\n")
+			log.Printf("Gox build of target %s complete and successful.\n\n", target.Name)
 		}
 
 	}
