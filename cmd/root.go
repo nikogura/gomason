@@ -31,7 +31,7 @@ var workdir string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "mason",
+	Use:   "gomason",
 	Short: "Tool for building Go binaries in a clean GOPATH.",
 	Long: `
 Tool for building Go binaries in a clean GOPATH.
