@@ -47,7 +47,7 @@ func TestBuild(t *testing.T) {
 	}
 
 	if _, err := os.Stat(fmt.Sprintf("%s/go/bin/govendor", tmpDir)); os.IsNotExist(err) {
-		log.Printf("Govendor vailed to install.")
+		log.Printf("Govendor failed to install.")
 		t.Fail()
 	}
 

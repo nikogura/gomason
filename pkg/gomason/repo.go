@@ -11,6 +11,12 @@ import (
 // Checkout  Actually checks out the code you're trying to test into your temporary GOPATH
 func Checkout(gopath string, meta Metadata, branch string, verbose bool) (err error) {
 
+	err = os.Chdir(gopath)
+	if err != nil {
+		err = errors.Wrapf(err, "failed to cwd to %s", gopath)
+		return err
+	}
+
 	// install the code via go get  after all, we don't really want to play if it's not in a repo.
 	gocommand, err := exec.LookPath("go")
 	if err != nil {
@@ -19,6 +25,7 @@ func Checkout(gopath string, meta Metadata, branch string, verbose bool) (err er
 	}
 
 	runenv := append(os.Environ(), fmt.Sprintf("GOPATH=%s", gopath))
+	//runenv = append(runenv, "GO111MODULE=on")
 
 	var cmd *exec.Cmd
 
@@ -30,10 +37,13 @@ func Checkout(gopath string, meta Metadata, branch string, verbose bool) (err er
 	}
 
 	if verbose {
-		log.Printf("Running %s", cmd.Args)
+		log.Printf("Running %s with GOPATH=%s", cmd.Args, gopath)
 	}
 
 	cmd.Env = runenv
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
 	err = cmd.Run()
 
