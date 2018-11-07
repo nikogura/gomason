@@ -389,7 +389,7 @@ Sure, it needs to be tested.  (Trust but verify, right?)  But it's really nice t
 
 ### Package
 
-The name of the Go package as used by 'go get' or 'govendor'.  Used to actually check out the code in the clean build environment.
+The name of the Go package as used by 'go get'.  Used to actually check out the code in the clean build environment.
 
 
 ### Description

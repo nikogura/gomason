@@ -25,7 +25,6 @@ func Checkout(gopath string, meta Metadata, branch string, verbose bool) (err er
 	}
 
 	runenv := append(os.Environ(), fmt.Sprintf("GOPATH=%s", gopath))
-	//runenv = append(runenv, "GO111MODULE=on")
 
 	var cmd *exec.Cmd
 

@@ -58,24 +58,9 @@ Sometimes you need the benefits of a full system here.  Now.  Right at your fing
 
 		meta, err := gomason.ReadMetadata("metadata.json")
 
-		err = gomason.GovendorInstall(gopath, verbose)
-		if err != nil {
-			log.Fatalf("Failed to install Govendor: %s", err)
-		}
-
-		if err != nil {
-			log.Fatalf("couldn't read package information from metadata.json: %s", err)
-
-		}
-
 		err = gomason.Checkout(gopath, meta, branch, verbose)
 		if err != nil {
 			log.Fatalf("failed to checkout package %s at branch %s: %s", meta.Package, branch, err)
-		}
-
-		err = gomason.GovendorSync(gopath, meta, verbose)
-		if err != nil {
-			log.Fatalf("error running govendor sync: %s", err)
 		}
 
 		err = gomason.GoTest(gopath, meta.Package, verbose)

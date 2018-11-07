@@ -96,6 +96,7 @@ func Build(gopath string, meta Metadata, branch string, verbose bool) (err error
 
 		gopathenv := fmt.Sprintf("GOPATH=%s", gopath)
 		runenv := append(os.Environ(), gopathenv)
+		runenv = append(runenv, "GO111MODULE=on")
 
 		cgo := ""
 		// build with cgo if we're told to do so.

@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func TestGoxInstall(t *testing.T) {
+func TestBuildGoxInstall(t *testing.T) {
 	log.Printf("Installing Go\n")
 	gopath, err := CreateGoPath(tmpDir)
 	if err != nil {
@@ -40,16 +40,16 @@ func TestBuild(t *testing.T) {
 	gomodule := "github.com/nikogura/gomason"
 	branch := "master"
 
-	err = GovendorInstall(gopath, true)
-	if err != nil {
-		log.Printf("Error installing Govendor: %s", err)
-		t.Fail()
-	}
+	//err = GovendorInstall(gopath, true)
+	//if err != nil {
+	//	log.Printf("Error installing Govendor: %s", err)
+	//	t.Fail()
+	//}
 
-	if _, err := os.Stat(fmt.Sprintf("%s/go/bin/govendor", tmpDir)); os.IsNotExist(err) {
-		log.Printf("Govendor failed to install.")
-		t.Fail()
-	}
+	//if _, err := os.Stat(fmt.Sprintf("%s/go/bin/govendor", tmpDir)); os.IsNotExist(err) {
+	//	log.Printf("Govendor failed to install.")
+	//	t.Fail()
+	//}
 
 	log.Printf("Checking out Master Branch")
 
@@ -64,11 +64,11 @@ func TestBuild(t *testing.T) {
 		t.Fail()
 	}
 
-	err = GovendorSync(gopath, testMetadataObj(), true)
-	if err != nil {
-		log.Printf("Error runnig govendor sync: %s", err)
-		t.Fail()
-	}
+	//err = GovendorSync(gopath, testMetadataObj(), true)
+	//if err != nil {
+	//	log.Printf("Error runnig govendor sync: %s", err)
+	//	t.Fail()
+	//}
 
 	err = Build(gopath, testMetadataObj(), branch, true)
 	if err != nil {
@@ -86,8 +86,12 @@ func TestBuild(t *testing.T) {
 	workdir := fmt.Sprintf("%s/src/%s", gopath, gomodule)
 	binary := fmt.Sprintf("%s/%s_%s_%s", workdir, binaryPrefix, osname, archname)
 
+	log.Printf("Looking for binary: %s", binary)
+
 	if _, err := os.Stat(binary); os.IsNotExist(err) {
 		log.Printf("Gox failed to build binary: %s.\n", binary)
 		t.Fail()
+	} else {
+		log.Printf("Binary found.")
 	}
 }
