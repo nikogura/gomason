@@ -6,6 +6,9 @@ func testMetaDataJson() string {
 	"package": "github.com/nikogura/gomason",
 	"description": "A tool for building and testing your project in a clean GOPATH.",
 	"building": {
+		"prepcommands": [
+			"echo \"GOPATH: ${GOPATH}\""
+		]
 		"targets": [
 			{
 				"name": "linux/amd64"
