@@ -26,6 +26,12 @@ func TestTest(t *testing.T) {
 		t.Fail()
 	}
 
+	err = Prep(gopath, testMetadataObj(), true)
+	if err != nil {
+		log.Printf("error running prep steps: %s", err)
+		t.Fail()
+	}
+
 	err = GoTest(gopath, testMetadataObj().Package, true)
 	if err != nil {
 		log.Printf("error running go test: %s", err)
