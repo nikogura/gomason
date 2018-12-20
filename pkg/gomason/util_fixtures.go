@@ -8,7 +8,7 @@ func testMetaDataJson() string {
 	"building": {
 		"prepcommands": [
 			"echo \"GOPATH: ${GOPATH}\""
-		]
+		],
 		"targets": [
 			{
 				"name": "linux/amd64"
