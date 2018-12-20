@@ -4,9 +4,6 @@
   "description": "A tool for testing, building, signing, and publishing your project from a clean workspace.",
   "repository": "http://localhost:8081/artifactory/generic-local",
   "building": {
-    "prepcommands": [
-      "echo \"GOPATH: ${GOPATH}\""
-    ],
     "targets": [
       {
         "name": "darwin/amd64"

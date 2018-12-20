@@ -6,7 +6,8 @@ func testMetadataObj() (metadata Metadata) {
 		Version:     "0.1.0",
 		Description: "A tool for building and testing your project in a clean GOPATH.",
 		BuildInfo: BuildInfo{
-			Targets: []BuildTarget{{Name: "linux/amd64"}},
+			PrepCommands: []string{"echo \"GOPATH: ${GOPATH}\""},
+			Targets:      []BuildTarget{{Name: "linux/amd64"}},
 		},
 		SignInfo: SignInfo{
 			Program: "gpg",
