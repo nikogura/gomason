@@ -51,7 +51,7 @@ func Build(gopath string, meta Metadata, branch string, verbose bool) (err error
 		}
 	}
 
-	if _, err := os.Stat(fmt.Sprintf("%s/%s/metadata.json", gopath, meta.Package)); os.IsNotExist(err) {
+	if _, err := os.Stat(fmt.Sprintf("%s/src/%s/metadata.json", gopath, meta.Package)); os.IsNotExist(err) {
 		err = Checkout(gopath, meta, branch, verbose)
 		if err != nil {
 			err = errors.Wrap(err, fmt.Sprintf("Failed to checkout module: %s branch: %s ", meta.Package, branch))

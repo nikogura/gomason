@@ -62,6 +62,11 @@ Example metadata.json:
       "repository": "http://localhost:8081/artifactory/generic-local",
       "insecure_get": false,
       "building": {
+        "prepcommands": [
+          "go get k8s.io/client-go/...",
+          "cd ${GOPATH}/src/k8s.io/client-go && git checkout v10.0.0",
+          "cd ${GOPATH}/src/k8s.io/client-go && godep restore ./..."
+        ],
         "targets": [
           {
             "name": "darwin/amd64",
@@ -369,6 +374,11 @@ Example:
           "description": "A tool for building and testing your project in a clean GOPATH.",
       "repository": "http://localhost:8081/artifactory/generic-local",
           "building": {
+            "prepcommands": [
+              "go get k8s.io/client-go/...",
+              "cd ${GOPATH}/src/k8s.io/client-go && git checkout v10.0.0",
+              "cd ${GOPATH}/src/k8s.io/client-go && godep restore ./..."
+            ],
             "targets": [
               {
                 "name": "darwin/amd64",
@@ -407,6 +417,14 @@ Sometimes you've got a code repo that has a self signed cert.  Set this to true,
 ### Building
 
 Information specifically for building the project.
+
+#### Prepcommands
+
+These are a list of bash commands that will be run prior to running any command that acutally uses your code, such as `go test'.
+
+These commands are run one at a time, in a bash shell via `bash -c "<command"`.  This can be dangerous.  Use it with care. Obviously, bash has to exist on the system for things to work.  
+
+This is primarily intended for situations like the Kubernetes Golang client, which needs special setup commands to pre-configure the dependencies in the GOPATH before actually testing and building your code.
 
 #### Targets
 

@@ -2,6 +2,7 @@ package gomason
 
 import (
 	"fmt"
+	"github.com/a8m/envsubst"
 	"github.com/pkg/errors"
 	"log"
 	"os"
@@ -25,6 +26,7 @@ func Checkout(gopath string, meta Metadata, branch string, verbose bool) (err er
 	}
 
 	runenv := append(os.Environ(), fmt.Sprintf("GOPATH=%s", gopath))
+	runenv = append(runenv, "GO111MODULE=off")
 
 	var cmd *exec.Cmd
 
@@ -80,6 +82,54 @@ func Checkout(gopath string, meta Metadata, branch string, verbose bool) (err er
 			if verbose {
 				log.Printf("Checkout of branch: %s complete.\n\n", branch)
 			}
+		}
+	}
+
+	return err
+}
+
+// Prep  Commands run pre-build/ pre-test the checked out code in your temporary GOPATH
+func Prep(gopath string, meta Metadata, verbose bool) (err error) {
+	codepath := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
+
+	err = os.Chdir(codepath)
+	if err != nil {
+		err = errors.Wrapf(err, "failed to cwd to %s", gopath)
+		return err
+	}
+
+	// set the gopath in the environment so that we can interpolate it below
+	os.Setenv("GOPATH", gopath)
+
+	for _, cmdString := range meta.BuildInfo.PrepCommands {
+
+		// interpolate any environment variables into the command string
+		cmdString, err = envsubst.String(cmdString)
+		if err != nil {
+			err = errors.Wrap(err, "failed to substitute env vars")
+			return err
+		}
+
+		cmd := exec.Command("bash", "-c", cmdString)
+
+		if verbose {
+			log.Printf("Running %q with GOPATH=%s", cmdString, gopath)
+		}
+
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+
+		err = cmd.Run()
+
+		if err != nil {
+			err = errors.Wrapf(err, "failed running %q", cmdString)
+			return err
+		}
+	}
+
+	if err == nil {
+		if verbose {
+			log.Printf("Prep steps for %s complete\n\n", meta.Package)
 		}
 	}
 

@@ -40,17 +40,6 @@ func TestBuild(t *testing.T) {
 	gomodule := "github.com/nikogura/gomason"
 	branch := "master"
 
-	//err = GovendorInstall(gopath, true)
-	//if err != nil {
-	//	log.Printf("Error installing Govendor: %s", err)
-	//	t.Fail()
-	//}
-
-	//if _, err := os.Stat(fmt.Sprintf("%s/go/bin/govendor", tmpDir)); os.IsNotExist(err) {
-	//	log.Printf("Govendor failed to install.")
-	//	t.Fail()
-	//}
-
 	log.Printf("Checking out Master Branch")
 
 	err = Checkout(gopath, testMetadataObj(), "master", true)
@@ -63,12 +52,6 @@ func TestBuild(t *testing.T) {
 		log.Printf("Failed to checkout module")
 		t.Fail()
 	}
-
-	//err = GovendorSync(gopath, testMetadataObj(), true)
-	//if err != nil {
-	//	log.Printf("Error runnig govendor sync: %s", err)
-	//	t.Fail()
-	//}
 
 	err = Build(gopath, testMetadataObj(), branch, true)
 	if err != nil {

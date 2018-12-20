@@ -63,6 +63,11 @@ Sometimes you need the benefits of a full system here.  Now.  Right at your fing
 			log.Fatalf("failed to checkout package %s at branch %s: %s", meta.Package, branch, err)
 		}
 
+		err = gomason.Prep(gopath, meta, verbose)
+		if err != nil {
+			log.Fatalf("error running prep steps: %s", err)
+		}
+
 		err = gomason.GoTest(gopath, meta.Package, verbose)
 		if err != nil {
 			log.Fatalf("error running go test: %s", err)

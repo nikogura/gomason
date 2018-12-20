@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-const VERSION = "2.5.0"
+const VERSION = "2.5.1"
 
 // Metadata type to represent the metadata.json file
 type Metadata struct {
@@ -31,8 +31,9 @@ type Metadata struct {
 
 // BuildInfo stores information used for building the code.
 type BuildInfo struct {
-	Targets []BuildTarget   `json:"targets,omitempty"`
-	Extras  []ExtraArtifact `json:"extras,omitempty"`
+	PrepCommands []string        `json:"prepcommands,omitempty"`
+	Targets      []BuildTarget   `json:"targets,omitempty"`
+	Extras       []ExtraArtifact `json:"extras,omitempty"`
 }
 
 // BuildTarget contains information on each build target
