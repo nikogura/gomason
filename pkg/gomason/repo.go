@@ -90,6 +90,9 @@ func Checkout(gopath string, meta Metadata, branch string, verbose bool) (err er
 
 // Prep  Commands run pre-build/ pre-test the checked out code in your temporary GOPATH
 func Prep(gopath string, meta Metadata, verbose bool) (err error) {
+	if verbose {
+		log.Print("Running Prep Commands")
+	}
 	codepath := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
 
 	err = os.Chdir(codepath)

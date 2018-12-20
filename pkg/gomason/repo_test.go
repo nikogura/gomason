@@ -35,7 +35,7 @@ func TestCheckoutBranch(t *testing.T) {
 		t.Fail()
 	}
 
-	err = Checkout(gopath, testMetadataObj(), "test_branch", true)
+	err = Checkout(gopath, testMetadataObj(), "testbranch", true)
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.Fail()

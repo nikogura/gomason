@@ -37,7 +37,7 @@ func TestBuild(t *testing.T) {
 		t.Fail()
 	}
 
-	gomodule := "github.com/nikogura/gomason"
+	gomodule := testMetadataObj().Package
 	branch := "master"
 
 	log.Printf("Checking out Master Branch")
@@ -50,6 +50,12 @@ func TestBuild(t *testing.T) {
 
 	if _, err := os.Stat(fmt.Sprintf("%s/src/%s/metadata.json", gopath, testModuleName())); os.IsNotExist(err) {
 		log.Printf("Failed to checkout module")
+		t.Fail()
+	}
+
+	err = Prep(gopath, testMetadataObj(), true)
+	if err != nil {
+		log.Printf("error running prep steps: %s", err)
 		t.Fail()
 	}
 
