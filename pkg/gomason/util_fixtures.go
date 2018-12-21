@@ -7,7 +7,7 @@ func testMetaDataJson() string {
 	"description": "Test Project for Gomason.",
 	"building": {
 		"prepcommands": [
-			"go get k8s.io/client-go/...",
+			"GO111MODULE=off go get k8s.io/client-go/...",
 			"cd ${GOPATH}/src/k8s.io/client-go && git checkout v10.0.0",
 			"cd ${GOPATH}/src/k8s.io/client-go && godep restore ./..."
 		],
