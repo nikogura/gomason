@@ -16,8 +16,34 @@ func testMetadataObj() (metadata Metadata) {
 			Email:   "gomason-tester@foo.com",
 		},
 		PublishInfo: PublishInfo{
-			Targets:    make([]PublishTarget, 0),
-			TargetsMap: make(map[string]PublishTarget),
+			Targets: []PublishTarget{
+				{
+					Source:      "testproject_darwin_amd64",
+					Destination: "{{.Repository}}/testproject/{{.Version}}/darwin/amd64/testproject",
+					Signature:   true,
+					Checksums:   true,
+				},
+				{
+					Source:      "testproject_linux_amd64",
+					Destination: "{{.Repository}}/testproject/{{.Version}}/linux/amd64/testproject",
+					Signature:   true,
+					Checksums:   true,
+				},
+			},
+			TargetsMap: map[string]PublishTarget{
+				"testproject_darwin_amd64": {
+					Source:      "testproject_darwin_amd64",
+					Destination: "{{.Repository}}/testproject/{{.Version}}/darwin/amd64/testproject",
+					Signature:   true,
+					Checksums:   true,
+				},
+				"testproject_linux_amd64": {
+					Source:      "testproject_linux_amd64",
+					Destination: "{{.Repository}}/testproject/{{.Version}}/linux/amd64/testproject",
+					Signature:   true,
+					Checksums:   true,
+				},
+			},
 		},
 	}
 

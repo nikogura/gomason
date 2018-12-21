@@ -21,6 +21,22 @@ func testMetaDataJson() string {
 	"signing": {
 		"program": "gpg",
 		"email": "gomason-tester@foo.com"
+	},
+	"publishing": {
+		"targets": [
+			{
+				"src": "testproject_darwin_amd64",
+				"dst": "{{.Repository}}/testproject/{{.Version}}/darwin/amd64/testproject",
+				"sig": true,
+				"checksums": true
+			},
+			{
+				"src": "testproject_linux_amd64",
+				"dst": "{{.Repository}}/testproject/{{.Version}}/linux/amd64/testproject",
+				"sig": true,
+				"checksums": true
+			}
+		]
 	}
 }`
 }
