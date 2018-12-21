@@ -8,7 +8,7 @@
 
 [![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](http://godoc.org/github.com/nikogura/gomason)
 
-[![Coverage Status](https://coveralls.io/repos/github/nikogura/gomason/badge.svg?branch=master&service=github)](https://coveralls.io/github/nikogura/gomason?branch=master&service=github)
+[![Coverage Status](https://img.shields.io/coveralls/github/nikogura/gomason/master.svg)](https://coveralls.io/github/nikogura/gomason?branch=master)
 
 Tool for testing, building, signing and publishing Go binaries in a clean Go workspace.  Think of it as an on premesis CI/CD system- that also performs code signing and publishing of artifacts.
 
