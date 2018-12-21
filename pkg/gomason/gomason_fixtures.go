@@ -7,9 +7,7 @@ func testMetadataObj() (metadata Metadata) {
 		Description: "Test Project for Gomason.",
 		BuildInfo: BuildInfo{
 			PrepCommands: []string{
-				"GO111MODULE=off go get k8s.io/client-go/...",
-				"cd ${GOPATH}/src/k8s.io/client-go && git checkout v10.0.0",
-				"cd ${GOPATH}/src/k8s.io/client-go && godep restore ./...",
+				"echo \"GOPATH is: ${GOPATH}\"",
 			},
 			Targets: []BuildTarget{{Name: "linux/amd64"}, {Name: "darwin/amd64"}},
 		},
