@@ -38,9 +38,10 @@ type BuildInfo struct {
 
 // BuildTarget contains information on each build target
 type BuildTarget struct {
-	Name  string            `json:"name"`
-	Cgo   bool              `json:"cgo,omitempty"`
-	Flags map[string]string `json:"flags,omitempty"`
+	Name   string            `json:"name"`
+	Cgo    bool              `json:"cgo,omitempty"`
+	Flags  map[string]string `json:"flags,omitempty"`
+	Legacy bool              `json:"legacy,omitempty"`
 }
 
 // ExtraArtifact is an extra file built from a template at build time
