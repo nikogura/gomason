@@ -22,6 +22,8 @@ import (
 	"os"
 )
 
+var buildSkipTests bool
+
 // buildCmd represents the build command
 var buildCmd = &cobra.Command{
 	Use:   "build",
@@ -69,12 +71,14 @@ Binaries are dropped into the current working directory.
 			log.Fatalf("error running prep steps: %s", err)
 		}
 
-		err = gomason.GoTest(gopath, meta.Package, verbose)
-		if err != nil {
-			log.Fatalf("error running go test: %s", err)
-		}
+		if !buildSkipTests {
+			err = gomason.GoTest(gopath, meta.Package, verbose)
+			if err != nil {
+				log.Fatalf("error running go test: %s", err)
+			}
 
-		log.Printf("Tests Succeeded!\n\n")
+			log.Printf("Tests Succeeded!\n\n")
+		}
 
 		err = gomason.Build(gopath, meta, branch, verbose)
 		if err != nil {
@@ -97,4 +101,5 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// buildCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	buildCmd.Flags().BoolVarP(&buildSkipTests, "skiptests", "s", false, "Skip tests when building.")
 }

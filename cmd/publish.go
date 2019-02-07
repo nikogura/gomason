@@ -22,6 +22,8 @@ import (
 	"os"
 )
 
+var pubSkipTests bool
+
 // publishCmd represents the publish command
 var publishCmd = &cobra.Command{
 	Use:   "publish",
@@ -64,12 +66,14 @@ Publish will upload your binaries to wherever it is you've configured them to go
 			log.Fatalf("error running prep steps: %s", err)
 		}
 
-		err = gomason.GoTest(gopath, meta.Package, verbose)
-		if err != nil {
-			log.Fatalf("error running go test: %s", err)
-		}
+		if !pubSkipTests {
+			err = gomason.GoTest(gopath, meta.Package, verbose)
+			if err != nil {
+				log.Fatalf("error running go test: %s", err)
+			}
 
-		log.Printf("Tests Succeeded!\n\n")
+			log.Printf("Tests Succeeded!\n\n")
+		}
 
 		err = gomason.Build(gopath, meta, branch, verbose)
 		if err != nil {
@@ -118,4 +122,5 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// publishCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	publishCmd.Flags().BoolVarP(&pubSkipTests, "skiptests", "s", false, "Skip tests when publishing.")
 }
