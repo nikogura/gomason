@@ -430,7 +430,9 @@ This is primarily intended for situations like the Kubernetes Golang client, whi
 
 This is used to determine which OSes and architectures to compile for. It's gotta be Gox's way of expressing the version and arch (os/arch), as the strings will simply be passed along to gox to build your toys.
 
-Targets can also take an optional 'cgo' flag to build with CGO, and a map of compiler flags that will be passed on to gox at build time.
+Targets can take an optional 'cgo' flag to build with CGO, and a map of compiler flags that will be passed on to gox at build time.
+
+Targets can also take an optional 'legacy' flag to build with GO111MODULE=off, for older projects that have not been converted yet.
 
 This can be useful for cases where different targets require different options.
 
