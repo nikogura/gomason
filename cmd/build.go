@@ -38,6 +38,10 @@ You could run 'test' separately, but 'build' is nice enough to do it for you.
 Binaries are dropped into the current working directory.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		cwd, err := os.Getwd()
+		if err != nil {
+			log.Fatalf("Failed to get current working directory: %s", err)
+		}
 		workDir, err := ioutil.TempDir("", "gomason")
 		if err != nil {
 			log.Fatalf("Failed to create temp dir: %s", err)
@@ -86,6 +90,16 @@ Binaries are dropped into the current working directory.
 		}
 
 		log.Printf("Build Succeeded!\n\n")
+
+		err = gomason.HandleArtifacts(meta, gopath, cwd, false, false, true, verbose)
+		if err != nil {
+			log.Fatalf("signing failed: %s", err)
+		}
+
+		err = gomason.HandleExtras(meta, gopath, cwd, false, false, verbose)
+		if err != nil {
+			log.Fatalf("Extra artifact processing failed: %s", err)
+		}
 	},
 }
 

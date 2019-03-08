@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-const VERSION = "2.5.4"
+const VERSION = "2.5.5"
 
 // Metadata type to represent the metadata.json file
 type Metadata struct {
@@ -96,10 +96,10 @@ type UserSignInfo struct {
 	Program string
 }
 
-// PublishBuildTargets loops over the expected files built by Build() and optionally signs them and publishes them along with their signatures (if signing).
+// HandleArtifacts loops over the expected files built by Build() and optionally signs them and publishes them along with their signatures (if signing).
 //
 // If not publishing, the binaries (and their optional signatures) are collected and dumped into the directory where gomason was called. (Typically the root of a go project).
-func PublishBuildTargets(meta Metadata, gopath string, cwd string, sign bool, publish bool, collect bool, verbose bool) (err error) {
+func HandleArtifacts(meta Metadata, gopath string, cwd string, sign bool, publish bool, collect bool, verbose bool) (err error) {
 	// loop through the built things for each type of build target
 	for _, target := range meta.BuildInfo.Targets {
 		if verbose {
@@ -167,10 +167,10 @@ func PublishBuildTargets(meta Metadata, gopath string, cwd string, sign bool, pu
 	return err
 }
 
-// PublishBuildExtras loops over the expected files built by Build() and optionally signs them and publishes them along with their signatures (if signing).
+// HandleExtras loops over the expected files built by Build() and optionally signs them and publishes them along with their signatures (if signing).
 //
 // If not publishing, the binaries (and their optional signatures) are collected and dumped into the directory where gomason was called. (Typically the root of a go project).
-func PublishBuildExtras(meta Metadata, gopath string, cwd string, sign bool, publish bool, verbose bool) (err error) {
+func HandleExtras(meta Metadata, gopath string, cwd string, sign bool, publish bool, verbose bool) (err error) {
 
 	// loop through the built things for each type of build target
 	for _, extra := range meta.BuildInfo.Extras {

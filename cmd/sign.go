@@ -80,12 +80,12 @@ Signing sorta implies something to sign, which in turn, implies that it built, w
 
 		log.Printf("Build Succeeded!\n\n")
 
-		err = gomason.PublishBuildTargets(meta, gopath, cwd, true, false, true, verbose)
+		err = gomason.HandleArtifacts(meta, gopath, cwd, true, false, true, verbose)
 		if err != nil {
 			log.Fatalf("signing failed: %s", err)
 		}
 
-		err = gomason.PublishBuildExtras(meta, gopath, cwd, true, false, verbose)
+		err = gomason.HandleExtras(meta, gopath, cwd, true, false, verbose)
 		if err != nil {
 			log.Fatalf("Extra artifact processing failed: %s", err)
 		}

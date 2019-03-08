@@ -157,12 +157,12 @@ Expire-Date: 0
 
 	fmt.Printf("Publishing\n")
 
-	err = PublishBuildTargets(meta, gopath, cwd, false, true, true, true)
+	err = HandleArtifacts(meta, gopath, cwd, false, true, true, true)
 	if err != nil {
 		log.Fatalf("post-build processing failed: %s", err)
 	}
 
-	err = PublishBuildExtras(meta, gopath, cwd, false, true, true)
+	err = HandleExtras(meta, gopath, cwd, false, true, true)
 	if err != nil {
 		log.Fatalf("Extra artifact processing failed: %s", err)
 	}
