@@ -57,6 +57,9 @@ Sometimes you need the benefits of a full system here.  Now.  Right at your fing
 		}
 
 		meta, err := gomason.ReadMetadata("metadata.json")
+		if err != nil {
+			log.Fatalf("failed to read metadata: %s", err)
+		}
 
 		err = gomason.Checkout(gopath, meta, branch, verbose)
 		if err != nil {

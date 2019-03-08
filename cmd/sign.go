@@ -55,6 +55,9 @@ Signing sorta implies something to sign, which in turn, implies that it built, w
 		}
 
 		meta, err := gomason.ReadMetadata("metadata.json")
+		if err != nil {
+			log.Fatalf("failed to read metadata: %s", err)
+		}
 
 		err = gomason.Checkout(gopath, meta, branch, verbose)
 		if err != nil {

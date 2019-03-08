@@ -55,6 +55,9 @@ Publish will upload your binaries to wherever it is you've configured them to go
 		}
 
 		meta, err := gomason.ReadMetadata("metadata.json")
+		if err != nil {
+			log.Fatalf("failed to read metadata: %s", err)
+		}
 
 		err = gomason.Checkout(gopath, meta, branch, verbose)
 		if err != nil {

@@ -132,7 +132,7 @@ Expire-Date: 0
 		err = SignBinary(meta, binary, true)
 		if err != nil {
 			err = errors.Wrap(err, "failed to sign binary")
-			log.Printf("Failed to sign binary %s", binary)
+			log.Printf("Failed to sign binary %s: %s", binary, err)
 			t.Fail()
 		}
 
