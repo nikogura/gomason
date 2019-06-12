@@ -10,6 +10,9 @@
 
 [![Coverage Status](https://img.shields.io/coveralls/github/nikogura/gomason/master.svg)](https://coveralls.io/github/nikogura/gomason?branch=master)
 
+[![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)  
+
+
 Tool for testing, building, signing and publishing Go binaries in a clean Go workspace.  Think of it as an on premesis CI/CD system- that also performs code signing and publishing of artifacts.
 
 You could do this via a CI/CD System and an artifact repository of some flavor.  But wiring that up properly takes time, experience, and tends to be very specific to your particular system and repository.  
