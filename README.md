@@ -50,6 +50,38 @@ Signing is currently done via GPG.  I intend to support other signing methods su
 
     go get github.com/nikogura/gomason
     
+## Usage
+
+Test the master branch in a clean GOPATH return success/failure:
+
+    gomason test
+    
+Test the master branch and see what's going on behind the scenes:
+
+    gomason test -v
+    
+Test another branch verbosely:
+
+    gomason test -v -b <branch name>
+    
+    
+Publish the master branch after building:
+
+    gomason publish -v
+    
+    
+Build and publish a branch without testing (I know, I know, don't test?!!?!)  
+
+This can be occasionally useful for publishing 3rd party tools internally when you need to make internal tweaks to support your use case.
+
+Sometimes you don't have the wherewithal to build and maintain a full test suite for a 3rd party tool.  
+
+    gomason publish -vs -b <branch name>
+    
+Other options can be found by running:
+
+    gomason help
+    
 ## Project Config
 
 Projects are configured by the file ```metadata.json``` in the root of the project being tested/built/published by gomason.  This file is intended to be checked into the project and contains information required for gomason to function.  See below for examples and [Project Config Reference](#project-config-reference) for full details.
