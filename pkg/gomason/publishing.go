@@ -166,10 +166,10 @@ func UploadSignature(client *http.Client, destination string, filename string, m
 
 // Upload actually does the upload.  It uploads pure data.
 func Upload(client *http.Client, parsedDestination string, data io.Reader, md5sum string, sha1sum string, sha256sum string, username string, password string, verbose bool) (err error) {
-
 	req, err := http.NewRequest("PUT", parsedDestination, data)
 	if err != nil {
 		err = errors.Wrap(err, fmt.Sprintf("failed to create http request for target %s", parsedDestination))
+		return err
 	}
 
 	// add headers  (Technically these are what Artifactory expects, but should be fine for any REST interface)
@@ -186,10 +186,11 @@ func Upload(client *http.Client, parsedDestination string, data io.Reader, md5su
 
 	if verbose {
 		log.Printf("Response: %s", resp.Status)
+		log.Printf("Response Code: %d", resp.StatusCode)
 	}
 
 	if resp.StatusCode > 299 {
-		err = errors.Wrap(err, "response code %d is not indicative of a successful publish")
+		err = errors.New(fmt.Sprintf("response code %d is not indicative of a successful publish", resp.StatusCode))
 		return err
 	}
 
