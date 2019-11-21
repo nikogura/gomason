@@ -170,6 +170,7 @@ func Upload(client *http.Client, parsedDestination string, data io.Reader, md5su
 	req, err := http.NewRequest("PUT", parsedDestination, data)
 	if err != nil {
 		err = errors.Wrap(err, fmt.Sprintf("failed to create http request for target %s", parsedDestination))
+		return err
 	}
 
 	// add headers  (Technically these are what Artifactory expects, but should be fine for any REST interface)
@@ -186,6 +187,7 @@ func Upload(client *http.Client, parsedDestination string, data io.Reader, md5su
 
 	if verbose {
 		log.Printf("Response: %s", resp.Status)
+		log.Printf("Response Code: %d", resp.StatusCode)
 	}
 
 	if resp.StatusCode > 299 {
