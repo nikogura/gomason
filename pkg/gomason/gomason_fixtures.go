@@ -1,8 +1,8 @@
 package gomason
 
-func testMetadataObj() (metadata Metadata) {
+func TestMetadataObj() (metadata Metadata) {
 	metadata = Metadata{
-		Package:     testModuleName(),
+		Package:     TestModuleName(),
 		Version:     "0.1.0",
 		Description: "Test Project for Gomason.",
 		BuildInfo: BuildInfo{
@@ -50,6 +50,6 @@ func testMetadataObj() (metadata Metadata) {
 	return metadata
 }
 
-func testModuleName() string {
+func TestModuleName() string {
 	return "github.com/nikogura/testproject"
 }

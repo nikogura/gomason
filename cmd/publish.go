@@ -15,11 +15,13 @@
 package cmd
 
 import (
-	"github.com/nikogura/gomason/pkg/gomason"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"log"
 	"os"
+
+	"github.com/nikogura/gomason/pkg/gomason"
+	"github.com/nikogura/gomason/pkg/gomason/languages"
+	"github.com/spf13/cobra"
 )
 
 var pubSkipTests bool
@@ -38,20 +40,14 @@ Publish will upload your binaries to wherever it is you've configured them to go
 		if err != nil {
 			log.Fatalf("Failed to get current working directory: %s", err)
 		}
-		workDir, err := ioutil.TempDir("", "gomason")
+		rootWorkDir, err := ioutil.TempDir("", "gomason")
 		if err != nil {
 			log.Fatalf("Failed to create temp dir: %s", err)
 		}
+		defer os.RemoveAll(rootWorkDir)
 
 		if verbose {
-			log.Printf("Created temp dir %s", workDir)
-		}
-
-		defer os.RemoveAll(workDir)
-
-		gopath, err := gomason.CreateGoPath(workDir)
-		if err != nil {
-			log.Fatalf("Failed to create ephemeral GOPATH: %s", err)
+			log.Printf("Created temp dir %s", rootWorkDir)
 		}
 
 		meta, err := gomason.ReadMetadata("metadata.json")
@@ -59,18 +55,28 @@ Publish will upload your binaries to wherever it is you've configured them to go
 			log.Fatalf("failed to read metadata: %s", err)
 		}
 
-		err = gomason.Checkout(gopath, meta, branch, verbose)
+		lang, err := languages.GetByName(meta.GetLanguage())
+		if err != nil {
+			log.Fatalf("Invalid language: %v", err)
+		}
+
+		workDir, err := lang.CreateWorkDir(rootWorkDir)
+		if err != nil {
+			log.Fatalf("Failed to create ephemeral working directory: %s", err)
+		}
+
+		err = lang.Checkout(workDir, meta, branch, verbose)
 		if err != nil {
 			log.Fatalf("failed to checkout package %s at branch %s: %s", meta.Package, branch, err)
 		}
 
-		err = gomason.Prep(gopath, meta, verbose)
+		err = lang.Prep(workDir, meta, verbose)
 		if err != nil {
 			log.Fatalf("error running prep steps: %s", err)
 		}
 
 		if !pubSkipTests {
-			err = gomason.GoTest(gopath, meta.Package, verbose)
+			err = lang.Test(workDir, meta.Package, verbose)
 			if err != nil {
 				log.Fatalf("error running go test: %s", err)
 			}
@@ -78,7 +84,7 @@ Publish will upload your binaries to wherever it is you've configured them to go
 			log.Printf("Tests Succeeded!\n\n")
 		}
 
-		err = gomason.Build(gopath, meta, branch, verbose)
+		err = lang.Build(workDir, meta, branch, verbose)
 		if err != nil {
 			log.Fatalf("build failed: %s", err)
 		}
@@ -89,23 +95,23 @@ Publish will upload your binaries to wherever it is you've configured them to go
 			if verbose {
 				log.Printf("Skipping signing due to 'skip-signing': true in metadata.json")
 			}
-			err = gomason.HandleArtifacts(meta, gopath, cwd, false, true, false, verbose)
+			err = gomason.HandleArtifacts(meta, workDir, cwd, false, true, false, verbose)
 			if err != nil {
 				log.Fatalf("post-build processing failed: %s", err)
 			}
 
-			err = gomason.HandleExtras(meta, gopath, cwd, false, true, verbose)
+			err = gomason.HandleExtras(meta, workDir, cwd, false, true, verbose)
 			if err != nil {
 				log.Fatalf("Extra artifact processing failed: %s", err)
 			}
 
 		} else {
-			err = gomason.HandleArtifacts(meta, gopath, cwd, true, true, false, verbose)
+			err = gomason.HandleArtifacts(meta, workDir, cwd, true, true, false, verbose)
 			if err != nil {
 				log.Fatalf("post-build processing failed: %s", err)
 			}
 
-			err = gomason.HandleExtras(meta, gopath, cwd, true, true, verbose)
+			err = gomason.HandleExtras(meta, workDir, cwd, true, true, verbose)
 			if err != nil {
 				log.Fatalf("Extra artifact processing failed: %s", err)
 			}

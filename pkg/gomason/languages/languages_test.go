@@ -1,14 +1,16 @@
-package gomason
+package languages
 
 import (
-	"github.com/phayes/freeport"
 	"io/ioutil"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/nikogura/gomason/pkg/gomason"
+	"github.com/phayes/freeport"
 )
 
-var tmpDir string
+var TestTmpDir string
 var servicePort int
 
 func TestMain(m *testing.M) {
@@ -27,9 +29,9 @@ func setUp() {
 		log.Fatal("Error creating temp dir\n")
 	}
 
-	tmpDir = dir
+	TestTmpDir = dir
 
-	log.Printf("Setting up temporary work dir %s", tmpDir)
+	log.Printf("Setting up temporary work dir %s", TestTmpDir)
 
 	freePort, err := freeport.GetFreePort()
 	if err != nil {
@@ -39,14 +41,14 @@ func setUp() {
 
 	servicePort = freePort
 
-	tr := TestRepo{}
+	tr := gomason.TestRepo{}
 
 	go tr.Run(servicePort)
 
 }
 
 func tearDown() {
-	if _, err := os.Stat(tmpDir); !os.IsNotExist(err) {
-		os.Remove(tmpDir)
+	if _, err := os.Stat(TestTmpDir); !os.IsNotExist(err) {
+		os.Remove(TestTmpDir)
 	}
 }

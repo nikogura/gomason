@@ -4,35 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"strings"
 	"text/template"
+
+	"github.com/pkg/errors"
 )
-
-// CreateGoPath Creates an empty but workable GOPATH in the directory specified.  Returns the full GOPATH
-func CreateGoPath(workDir string) (gopath string, err error) {
-	gopath = fmt.Sprintf("%s/%s", workDir, "go")
-
-	subdirs := []string{
-		gopath,
-		fmt.Sprintf("%s/%s", gopath, "src"),
-		fmt.Sprintf("%s/%s", gopath, "bin"),
-		fmt.Sprintf("%s/%s", gopath, "pkg"),
-	}
-
-	for _, dir := range subdirs {
-		err = mkdir(dir, 0755)
-		if err != nil {
-			return gopath, err
-		}
-	}
-
-	return gopath, err
-}
 
 func mkdir(dir string, perms os.FileMode) (err error) {
 	err = os.MkdirAll(dir, perms)
