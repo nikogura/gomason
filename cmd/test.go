@@ -15,11 +15,13 @@
 package cmd
 
 import (
-	"github.com/nikogura/gomason/pkg/gomason"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"log"
 	"os"
+
+	"github.com/nikogura/gomason/pkg/gomason"
+	"github.com/nikogura/gomason/pkg/gomason/languages"
+	"github.com/spf13/cobra"
 )
 
 // testCmd represents the test command
@@ -40,38 +42,43 @@ Sure, you could do the same thing with a CI or CD system.  But sometimes that's 
 Sometimes you need the benefits of a full system here.  Now.  Right at your fingertips.  You're welcome.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		workDir, err := ioutil.TempDir("", "gomason")
+		rootWorkDir, err := ioutil.TempDir("", "gomason")
 		if err != nil {
 			log.Fatalf("Failed to create temp dir: %s", err)
 		}
 
 		if verbose {
-			log.Printf("Created temp dir %s", workDir)
+			log.Printf("Created temp dir %s", rootWorkDir)
 		}
 
-		defer os.RemoveAll(workDir)
-
-		gopath, err := gomason.CreateGoPath(workDir)
-		if err != nil {
-			log.Fatalf("Failed to create ephemeral GOPATH: %s", err)
-		}
+		defer os.RemoveAll(rootWorkDir)
 
 		meta, err := gomason.ReadMetadata("metadata.json")
 		if err != nil {
 			log.Fatalf("failed to read metadata: %s", err)
 		}
 
-		err = gomason.Checkout(gopath, meta, branch, verbose)
+		lang, err := languages.GetByName(meta.GetLanguage())
+		if err != nil {
+			log.Fatalf("Invalid language: %v", err)
+		}
+
+		workDir, err := lang.CreateWorkDir(rootWorkDir)
+		if err != nil {
+			log.Fatalf("Failed to create ephemeral workDir: %s", err)
+		}
+
+		err = lang.Checkout(workDir, meta, branch, verbose)
 		if err != nil {
 			log.Fatalf("failed to checkout package %s at branch %s: %s", meta.Package, branch, err)
 		}
 
-		err = gomason.Prep(gopath, meta, verbose)
+		err = lang.Prep(workDir, meta, verbose)
 		if err != nil {
 			log.Fatalf("error running prep steps: %s", err)
 		}
 
-		err = gomason.GoTest(gopath, meta.Package, verbose)
+		err = lang.Test(workDir, meta.Package, verbose)
 		if err != nil {
 			log.Fatalf("error running go test: %s", err)
 		}

@@ -1,11 +1,13 @@
-package gomason
+package languages
 
 import (
-	"github.com/phayes/freeport"
 	"io/ioutil"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/nikogura/gomason/pkg/gomason"
+	"github.com/phayes/freeport"
 )
 
 var tmpDir string
@@ -39,7 +41,7 @@ func setUp() {
 
 	servicePort = freePort
 
-	tr := TestRepo{}
+	tr := gomason.TestRepo{}
 
 	go tr.Run(servicePort)
 

@@ -2,37 +2,14 @@ package gomason
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
-
-func TestCreateGoPath(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "gomason")
-	if err != nil {
-		log.Printf("Error creating temp dir\n")
-		t.Fail()
-	}
-
-	defer os.RemoveAll(tmpDir)
-
-	_, err = CreateGoPath(tmpDir)
-	if err != nil {
-		log.Printf("Error creating gopath in %q: %s", tmpDir, err)
-		t.Fail()
-	}
-
-	dirs := []string{"go", "go/src", "go/pkg", "go/bin"}
-
-	for _, dir := range dirs {
-		if _, err := os.Stat(fmt.Sprintf("%s/%s", tmpDir, dir)); os.IsNotExist(err) {
-			t.Fail()
-		}
-	}
-}
 
 func TestReadMetadata(t *testing.T) {
 	tmpDir, err := ioutil.TempDir("", "gomason")
@@ -40,7 +17,6 @@ func TestReadMetadata(t *testing.T) {
 		log.Printf("Error creating temp dir\n")
 		t.Fail()
 	}
-
 	defer os.RemoveAll(tmpDir)
 
 	fileName := fmt.Sprintf("%s/%s", tmpDir, testMetadataFileName())
@@ -51,7 +27,7 @@ func TestReadMetadata(t *testing.T) {
 		t.Fail()
 	}
 
-	expected := testMetadataObj()
+	expected := TestMetadataObj()
 
 	actual, err := ReadMetadata(fileName)
 	if err != nil {
@@ -71,7 +47,7 @@ func TestGitSSHUrlFromPackage(t *testing.T) {
 }
 
 func TestParseStringForMetadata(t *testing.T) {
-	meta, err := ReadMetadata("metadata.json")
+	meta, err := ReadMetadata("../../metadata.json")
 	if err != nil {
 		log.Printf("Error reading metadata file: %s", err)
 		t.Fail()
@@ -91,7 +67,7 @@ func TestParseStringForMetadata(t *testing.T) {
 }
 
 func TestGetCredentials(t *testing.T) {
-	username, password, err := GetCredentials(testMetadataObj(), true)
+	username, password, err := GetCredentials(TestMetadataObj(), true)
 	if err != nil {
 		log.Printf("Error getting credentials: %s", err)
 		t.Fail()

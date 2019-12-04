@@ -2,10 +2,12 @@ package gomason
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"log"
+	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBytesMd5(t *testing.T) {
@@ -21,8 +23,14 @@ func TestBytesMd5(t *testing.T) {
 }
 
 func TestFileMd5(t *testing.T) {
+	tmpDir, err := ioutil.TempDir("", "checksum")
+	if err != nil {
+		log.Fatal("Failed to create temp dir for testing")
+	}
+	defer os.RemoveAll(tmpDir)
+
 	tmpFile := fmt.Sprintf("%s/testfile", tmpDir)
-	err := ioutil.WriteFile(tmpFile, []byte(testFileContent()), 0644)
+	err = ioutil.WriteFile(tmpFile, []byte(testFileContent()), 0644)
 	if err != nil {
 		log.Printf("Failed to write temp file: %s", err)
 		t.Fail()
@@ -52,8 +60,14 @@ func TestBytesSha1(t *testing.T) {
 }
 
 func TestFileSha1(t *testing.T) {
+	tmpDir, err := ioutil.TempDir("", "checksum")
+	if err != nil {
+		log.Fatal("Failed to create temp dir for testing")
+	}
+	defer os.RemoveAll(tmpDir)
+
 	tmpFile := fmt.Sprintf("%s/testfile", tmpDir)
-	err := ioutil.WriteFile(tmpFile, []byte(testFileContent()), 0644)
+	err = ioutil.WriteFile(tmpFile, []byte(testFileContent()), 0644)
 	if err != nil {
 		log.Printf("Failed to write temp file: %s", err)
 		t.Fail()
@@ -84,8 +98,14 @@ func TestBytesSha256(t *testing.T) {
 }
 
 func TestFileSha256(t *testing.T) {
+	tmpDir, err := ioutil.TempDir("", "checksum")
+	if err != nil {
+		log.Fatal("Failed to create temp dir for testing")
+	}
+	defer os.RemoveAll(tmpDir)
+
 	tmpFile := fmt.Sprintf("%s/testfile", tmpDir)
-	err := ioutil.WriteFile(tmpFile, []byte(testFileContent()), 0644)
+	err = ioutil.WriteFile(tmpFile, []byte(testFileContent()), 0644)
 	if err != nil {
 		log.Printf("Failed to write temp file: %s", err)
 		t.Fail()
