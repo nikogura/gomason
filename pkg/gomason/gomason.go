@@ -15,7 +15,7 @@ import (
 )
 
 // VERSION is the current gomason version
-const VERSION = "2.5.6"
+const VERSION = "2.5.7"
 
 // Metadata type to represent the metadata.json file
 type Metadata struct {
