@@ -2,8 +2,6 @@ package gomason
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
-	"gopkg.in/ini.v1"
 	"io/ioutil"
 	"log"
 	"os"
@@ -11,6 +9,9 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/pkg/errors"
+	"gopkg.in/ini.v1"
 )
 
 // VERSION is the current gomason version
@@ -24,10 +25,19 @@ type Metadata struct {
 	Description string                 `json:"description"`
 	Repository  string                 `json:"repository"`
 	InsecureGet bool                   `json:"insecure_get"`
+	Language    string                 `json:"language,omitempty"`
 	BuildInfo   BuildInfo              `json:"building,omitempty"`
 	SignInfo    SignInfo               `json:"signing,omitempty"`
 	PublishInfo PublishInfo            `json:"publishing,omitempty"`
 	Options     map[string]interface{} `json:"options,omitempty"`
+}
+
+func (m Metadata) GetLanguage() string {
+	if m.Language == "" {
+		return "golang"
+	} else {
+		return m.Language
+	}
 }
 
 // BuildInfo stores information used for building the code.
