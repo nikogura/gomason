@@ -68,9 +68,7 @@ func (Golang) Checkout(gopath string, meta gomason.Metadata, branch string, verb
 		cmd = exec.Command(gocommand, "get", "-v", "-d", fmt.Sprintf("%s/...", meta.Package))
 	}
 
-	if verbose {
-		log.Printf("Running %s with GOPATH=%s", cmd.Args, gopath)
-	}
+	verboseOutput(verbose, "Running %s with GOPATH=%s", cmd.Args, gopath)
 
 	cmd.Env = runenv
 
@@ -80,9 +78,7 @@ func (Golang) Checkout(gopath string, meta gomason.Metadata, branch string, verb
 	err = cmd.Run()
 
 	if err == nil {
-		if verbose {
-			log.Printf("Checkout of %s complete\n\n", meta.Package)
-		}
+		verboseOutput(verbose, "Checkout of %s complete\n\n", meta.Package)
 	}
 
 	git, err := exec.LookPath("git")
@@ -101,18 +97,14 @@ func (Golang) Checkout(gopath string, meta gomason.Metadata, branch string, verb
 	}
 
 	if branch != "" {
-		if verbose {
-			log.Printf("Checking out branch: %s\n\n", branch)
-		}
+		verboseOutput(verbose, "Checking out branch: %s\n\n", branch)
 
 		cmd := exec.Command(git, "checkout", branch)
 
 		err = cmd.Run()
 
 		if err == nil {
-			if verbose {
-				log.Printf("Checkout of branch: %s complete.\n\n", branch)
-			}
+			verboseOutput(verbose, "Checkout of branch: %s complete.\n\n", branch)
 		}
 	}
 
@@ -121,9 +113,7 @@ func (Golang) Checkout(gopath string, meta gomason.Metadata, branch string, verb
 
 // Prep  Commands run pre-build/ pre-test the checked out code in your temporary GOPATH
 func (Golang) Prep(gopath string, meta gomason.Metadata, verbose bool) (err error) {
-	if verbose {
-		log.Print("Running Prep Commands")
-	}
+	verboseOutput(verbose, "Running Prep Commands")
 	codepath := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
 
 	err = os.Chdir(codepath)
@@ -146,9 +136,7 @@ func (Golang) Prep(gopath string, meta gomason.Metadata, verbose bool) (err erro
 
 		cmd := exec.Command("bash", "-c", cmdString)
 
-		if verbose {
-			log.Printf("Running %q with GOPATH=%s", cmdString, gopath)
-		}
+		verboseOutput(verbose, "Running %q with GOPATH=%s", cmdString, gopath)
 
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -161,9 +149,7 @@ func (Golang) Prep(gopath string, meta gomason.Metadata, verbose bool) (err erro
 		}
 	}
 
-	if verbose {
-		log.Printf("Prep steps for %s complete\n\n", meta.Package)
-	}
+	verboseOutput(verbose, "Prep steps for %s complete\n\n", meta.Package)
 
 	return err
 }
@@ -172,9 +158,7 @@ func (Golang) Prep(gopath string, meta gomason.Metadata, verbose bool) (err erro
 func (Golang) Test(gopath string, gomodule string, verbose bool) (err error) {
 	wd := fmt.Sprintf("%s/src/%s", gopath, gomodule)
 
-	if verbose {
-		log.Printf("Changing working directory to %s.\n", wd)
-	}
+	verboseOutput(verbose, "Changing working directory to %s.\n", wd)
 
 	err = os.Chdir(wd)
 
@@ -183,9 +167,7 @@ func (Golang) Test(gopath string, gomodule string, verbose bool) (err error) {
 		return err
 	}
 
-	if verbose {
-		log.Printf("Running 'go test -v ./...'.\n\n")
-	}
+	verboseOutput(verbose, "Running 'go test -v ./...'.\n\n")
 
 	cmd := exec.Command("go", "test", "-v", "./...")
 
@@ -198,18 +180,15 @@ func (Golang) Test(gopath string, gomodule string, verbose bool) (err error) {
 
 	log.Printf(string(output))
 
-	if verbose {
-		log.Printf("Done with go test.\n\n")
-	}
+	verboseOutput(verbose, "Done with go test.\n\n")
 
 	return err
 }
 
 // Build uses `gox` to build binaries per metadata.json
 func (g Golang) Build(gopath string, meta gomason.Metadata, branch string, verbose bool) (err error) {
-	if verbose {
-		log.Printf("Checking to see that gox is installed.\n")
-	}
+	verboseOutput(verbose, "Checking to see that gox is installed.\n")
+
 	// Install gox if it's not already there
 	if _, err := os.Stat(filepath.Join(gopath, "bin/gox")); os.IsNotExist(err) {
 		err = GoxInstall(gopath, verbose)
@@ -229,9 +208,7 @@ func (g Golang) Build(gopath string, meta gomason.Metadata, branch string, verbo
 
 	wd := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
 
-	if verbose {
-		log.Printf("Changing working directory to: %s", wd)
-	}
+	verboseOutput(verbose, "Changing working directory to: %s", wd)
 
 	err = os.Chdir(wd)
 
@@ -242,9 +219,7 @@ func (g Golang) Build(gopath string, meta gomason.Metadata, branch string, verbo
 
 	gox := fmt.Sprintf("%s/bin/gox", gopath)
 
-	if verbose {
-		log.Printf("Gox is: %s", gox)
-	}
+	verboseOutput(verbose, "Gox is: %s", gox)
 
 	metadatapath := fmt.Sprintf("%s/src/%s/metadata.json", gopath, meta.Package)
 
@@ -255,9 +230,7 @@ func (g Golang) Build(gopath string, meta gomason.Metadata, branch string, verbo
 	}
 
 	for _, target := range md.BuildInfo.Targets {
-		if verbose {
-			log.Printf("Building target: %q\n", target.Name)
-		}
+		verboseOutput(verbose, "Building target: %q\n", target.Name)
 
 		// This gets weird because go's exec shell doesn't like the arg format that gox expects
 		// Building it thusly keeps the various quoting levels straight
@@ -278,9 +251,7 @@ func (g Golang) Build(gopath string, meta gomason.Metadata, branch string, verbo
 
 		for k, v := range target.Flags {
 			runenv = append(runenv, fmt.Sprintf("%s=%s", k, v))
-			if verbose {
-				log.Printf("Build Flag: %s=%s", k, v)
-			}
+			verboseOutput(verbose, "Build Flag: %s=%s", k, v)
 		}
 
 		args := gox + cgo + ` -osarch="` + target.Name + `"` + " ./..."
@@ -290,9 +261,7 @@ func (g Golang) Build(gopath string, meta gomason.Metadata, branch string, verbo
 
 		cmd.Env = runenv
 
-		if verbose {
-			log.Printf("Running gox with: %s", args)
-		}
+		verboseOutput(verbose, "Running gox with: %s", args)
 
 		out, err := cmd.CombinedOutput()
 
@@ -303,9 +272,7 @@ func (g Golang) Build(gopath string, meta gomason.Metadata, branch string, verbo
 			return err
 		}
 
-		if verbose {
-			log.Printf("Gox build of target %s complete and successful.\n\n", target.Name)
-		}
+		verboseOutput(verbose, "Gox build of target %s complete and successful.\n\n", target.Name)
 
 	}
 
@@ -321,9 +288,7 @@ func (g Golang) Build(gopath string, meta gomason.Metadata, branch string, verbo
 
 // GoxInstall Installs github.com/mitchellh/gox, the go cross compiler
 func GoxInstall(gopath string, verbose bool) (err error) {
-	if verbose {
-		log.Printf("Installing gox with GOPATH=%s\n", gopath)
-	}
+	verboseOutput(verbose, "Installing gox with GOPATH=%s\n", gopath)
 
 	gocommand, err := exec.LookPath("go")
 	if err != nil {
@@ -341,9 +306,7 @@ func GoxInstall(gopath string, verbose bool) (err error) {
 
 	err = cmd.Run()
 	if err == nil {
-		if verbose {
-			log.Printf("Gox successfully installed.\n\n")
-		}
+		verboseOutput(verbose, "Gox successfully installed.\n\n")
 	}
 
 	return err
@@ -351,19 +314,15 @@ func GoxInstall(gopath string, verbose bool) (err error) {
 
 // BuildExtras builds the extra artifacts specified in the metadata.json
 func BuildExtras(meta gomason.Metadata, workdir string, verbose bool) (err error) {
-	if verbose {
-		log.Printf("Building Extra Artifacts")
-	}
+	verboseOutput(verbose, "Building Extra Artifacts")
 
 	for _, extra := range meta.BuildInfo.Extras {
 		templateName := filepath.Join(workdir, extra.Template)
 		outputFileName := filepath.Join(workdir, extra.FileName)
 		executable := extra.Executable
 
-		if verbose {
-			fmt.Printf("Reading template from %s\n", templateName)
-			fmt.Printf("Writing to %s\n", outputFileName)
-		}
+		verboseOutput(verbose, "Reading template from %s\n", templateName)
+		verboseOutput(verbose, "Writing to %s\n", outputFileName)
 
 		var mode os.FileMode
 
@@ -393,4 +352,16 @@ func BuildExtras(meta gomason.Metadata, workdir string, verbose bool) (err error
 	}
 
 	return err
+}
+
+func verboseOutput(verbose bool, message string, args ...interface{}) {
+	if verbose {
+		if len(args) == 0 {
+			log.Printf("%s\n", message)
+			return
+		}
+
+		msg := fmt.Sprintf(message, args...)
+		log.Printf("%s\n", msg)
+	}
 }
