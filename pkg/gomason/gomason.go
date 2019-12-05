@@ -32,12 +32,15 @@ type Metadata struct {
 	Options     map[string]interface{} `json:"options,omitempty"`
 }
 
-func (m Metadata) GetLanguage() string {
-	if m.Language == "" {
-		return "golang"
-	} else {
-		return m.Language
+// GetLanguage returns the language set in metadata.json, or the default 'golang'.
+func (m Metadata) GetLanguage() (lang string) {
+	lang = m.Language
+
+	if lang == "" {
+		lang = "golang"
 	}
+
+	return lang
 }
 
 // BuildInfo stores information used for building the code.

@@ -1,5 +1,6 @@
 package gomason
 
+// TestMetadataObj returns a Metadata object suitable for testing
 func TestMetadataObj() (metadata Metadata) {
 	metadata = Metadata{
 		Package:     TestModuleName(),
@@ -50,6 +51,7 @@ func TestMetadataObj() (metadata Metadata) {
 	return metadata
 }
 
+// TestModuleName returns the name of the test module
 func TestModuleName() string {
 	return "github.com/nikogura/testproject"
 }
