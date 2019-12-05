@@ -20,7 +20,6 @@ import (
 	"os"
 
 	"github.com/nikogura/gomason/pkg/gomason"
-	"github.com/nikogura/gomason/pkg/gomason/languages"
 	"github.com/spf13/cobra"
 )
 
@@ -58,7 +57,7 @@ Sometimes you need the benefits of a full system here.  Now.  Right at your fing
 			log.Fatalf("failed to read metadata: %s", err)
 		}
 
-		lang, err := languages.GetByName(meta.GetLanguage())
+		lang, err := gomason.GetByName(meta.GetLanguage())
 		if err != nil {
 			log.Fatalf("Invalid language: %v", err)
 		}

@@ -1,4 +1,4 @@
-package languages
+package gomason
 
 import (
 	"fmt"
@@ -11,7 +11,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/nikogura/gomason/pkg/gomason"
 	"github.com/pkg/errors"
 )
 
@@ -41,13 +40,13 @@ func TestCheckoutDefault(t *testing.T) {
 	}
 
 	log.Printf("Checking out Master Branch")
-	err = lang.Checkout(gopath, gomason.TestMetadataObj(), "master", true)
+	err = lang.Checkout(gopath, TestMetadataObj(), "master", true)
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.FailNow()
 	}
 
-	metaPath := filepath.Join(gopath, "src", gomason.TestModuleName(), "metadata.json")
+	metaPath := filepath.Join(gopath, "src", TestModuleName(), "metadata.json")
 	if _, err := os.Stat(metaPath); os.IsNotExist(err) {
 		log.Printf("Failed to checkout module")
 		t.FailNow()
@@ -71,13 +70,13 @@ func TestCheckoutBranch(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = lang.Checkout(gopath, gomason.TestMetadataObj(), "testbranch", true)
+	err = lang.Checkout(gopath, TestMetadataObj(), "testbranch", true)
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.FailNow()
 	}
 
-	testFilePath := filepath.Join(gopath, "src", gomason.TestModuleName(), "test_file")
+	testFilePath := filepath.Join(gopath, "src", TestModuleName(), "test_file")
 	if _, err := os.Stat(testFilePath); os.IsNotExist(err) {
 		log.Printf("Failed to checkout branch")
 		t.FailNow()
@@ -93,19 +92,19 @@ func TestPrep(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = lang.Checkout(gopath, gomason.TestMetadataObj(), "master", true)
+	err = lang.Checkout(gopath, TestMetadataObj(), "master", true)
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.FailNow()
 	}
 
-	metaPath := filepath.Join(gopath, "src", gomason.TestModuleName(), "metadata.json")
+	metaPath := filepath.Join(gopath, "src", TestModuleName(), "metadata.json")
 	if _, err := os.Stat(metaPath); os.IsNotExist(err) {
 		log.Printf("Failed to checkout module")
 		t.FailNow()
 	}
 
-	err = lang.Prep(gopath, gomason.TestMetadataObj(), true)
+	err = lang.Prep(gopath, TestMetadataObj(), true)
 	if err != nil {
 		log.Printf("error running prep steps: %s", err)
 		t.FailNow()
@@ -144,30 +143,30 @@ func TestBuild(t *testing.T) {
 		t.FailNow()
 	}
 
-	gomodule := gomason.TestMetadataObj().Package
+	gomodule := TestMetadataObj().Package
 	branch := "master"
 
 	log.Printf("Checking out Master Branch")
 
-	err = lang.Checkout(gopath, gomason.TestMetadataObj(), "master", true)
+	err = lang.Checkout(gopath, TestMetadataObj(), "master", true)
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.FailNow()
 	}
 
-	metaPath := filepath.Join(gopath, "src", gomason.TestModuleName(), "metadata.json")
+	metaPath := filepath.Join(gopath, "src", TestModuleName(), "metadata.json")
 	if _, err := os.Stat(metaPath); os.IsNotExist(err) {
 		log.Printf("Failed to checkout module")
 		t.FailNow()
 	}
 
-	err = lang.Prep(gopath, gomason.TestMetadataObj(), true)
+	err = lang.Prep(gopath, TestMetadataObj(), true)
 	if err != nil {
 		log.Printf("error running prep steps: %s", err)
 		t.FailNow()
 	}
 
-	err = lang.Build(gopath, gomason.TestMetadataObj(), branch, true)
+	err = lang.Build(gopath, TestMetadataObj(), branch, true)
 	if err != nil {
 		log.Printf("Error building: %s", err)
 		t.FailNow()
@@ -203,25 +202,25 @@ func TestTest(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = lang.Checkout(gopath, gomason.TestMetadataObj(), "master", true)
+	err = lang.Checkout(gopath, TestMetadataObj(), "master", true)
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.FailNow()
 	}
 
-	metaPath := filepath.Join(gopath, "src", gomason.TestModuleName(), "metadata.json")
+	metaPath := filepath.Join(gopath, "src", TestModuleName(), "metadata.json")
 	if _, err := os.Stat(metaPath); os.IsNotExist(err) {
 		log.Printf("Failed to checkout module")
 		t.FailNow()
 	}
 
-	err = lang.Prep(gopath, gomason.TestMetadataObj(), true)
+	err = lang.Prep(gopath, TestMetadataObj(), true)
 	if err != nil {
 		log.Printf("error running prep steps: %s", err)
 		t.FailNow()
 	}
 
-	err = lang.Test(gopath, gomason.TestMetadataObj().Package, true)
+	err = lang.Test(gopath, TestMetadataObj().Package, true)
 	if err != nil {
 		log.Printf("error running go test: %s", err)
 		t.FailNow()
@@ -244,33 +243,33 @@ func TestSignVerifyBinary(t *testing.T) {
 		t.FailNow()
 	}
 
-	meta := gomason.TestMetadataObj()
+	meta := TestMetadataObj()
 
 	meta.Repository = fmt.Sprintf("http://localhost:%d/repo/tool", servicePort)
 
-	darwin := gomason.PublishTarget{
+	darwin := PublishTarget{
 		Source:      "gomason_darwin_amd64",
 		Destination: "{{.Repository}}/gomason/{{.Version}}/darwin/amd64/gomason",
 		Signature:   true,
 		Checksums:   true,
 	}
 
-	linux := gomason.PublishTarget{
+	linux := PublishTarget{
 		Source:      "gomason_linux_amd64",
 		Destination: "{{.Repository}}/gomason/{{.Version}}/linux/amd64/gomason",
 		Signature:   true,
 		Checksums:   true,
 	}
 
-	targets := []gomason.PublishTarget{darwin, linux}
+	targets := []PublishTarget{darwin, linux}
 
-	targetsMap := make(map[string]gomason.PublishTarget)
+	targetsMap := make(map[string]PublishTarget)
 
 	for _, target := range targets {
 		targetsMap[target.Source] = target
 	}
 
-	pubInfo := gomason.PublishInfo{
+	pubInfo := PublishInfo{
 		Targets:    targets,
 		TargetsMap: targetsMap,
 	}
@@ -348,7 +347,7 @@ Expire-Date: 0
 			t.FailNow()
 		}
 
-		err = gomason.SignBinary(meta, binary, true)
+		err = SignBinary(meta, binary, true)
 		if err != nil {
 			err = errors.Wrap(err, "failed to sign binary")
 			log.Printf("Failed to sign binary %s: %s", binary, err)
@@ -356,7 +355,7 @@ Expire-Date: 0
 		}
 
 		// verify binaries
-		ok, err := gomason.VerifyBinary(binary, meta, true)
+		ok, err := VerifyBinary(binary, meta, true)
 		if err != nil {
 			log.Printf("Error verifying signature: %s", err)
 			//t.Fail()
@@ -376,12 +375,12 @@ Expire-Date: 0
 
 	fmt.Printf("Publishing\n")
 
-	err = gomason.HandleArtifacts(meta, gopath, cwd, false, true, true, true)
+	err = HandleArtifacts(meta, gopath, cwd, false, true, true, true)
 	if err != nil {
 		log.Fatalf("post-build processing failed: %s", err)
 	}
 
-	err = gomason.HandleExtras(meta, gopath, cwd, false, true, true)
+	err = HandleExtras(meta, gopath, cwd, false, true, true)
 	if err != nil {
 		log.Fatalf("Extra artifact processing failed: %s", err)
 	}
