@@ -13,7 +13,7 @@
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)  
 
 
-Tool for testing, building, signing and publishing Go binaries in a clean Go workspace.  Think of it as an on premesis CI/CD system- that also performs code signing and publishing of artifacts.
+Tool for testing, building, signing and publishing binaries.  Think of it as an on premesis CI/CD system- that also performs code signing and publishing of artifacts.
 
 You could do this via a CI/CD System and an artifact repository of some flavor.  But wiring that up properly takes time, experience, and tends to be very specific to your particular system and repository.  
 
@@ -45,6 +45,13 @@ Code is downloaded via ```go get```.  If you have your VCS configured so that yo
 
 Signing is currently done via GPG.  I intend to support other signing methods such as Keybase.io, but at the moment, gpg is all you get.  If your signing keys are in gpg, and you have the gpg-agent running, it should *just work*.
 
+## Language Suppport
+
+At present, `gomason` only supports golang, but it turns out automating the whole test/build/sign/publish steps and making the UX painless is a really attractive thing, and it would be nice to have when working in other languages.
+
+Basically, the authors have gotten so used to the painless UX that when we have to do things in other languages, we found ourselves missing `gomason`.  
+
+Necessity being the mother of invention, stay tuned...
 
 ## Installation
 
@@ -96,6 +103,7 @@ Example metadata.json:
       "description": "A tool for testing, building, signing, and publishing your project from a clean workspace.",
       "repository": "http://localhost:8081/artifactory/generic-local",
       "insecure_get": false,
+      "language": "golang",
       "building": {
         "prepcommands": [
           "go get k8s.io/client-go/...",
@@ -352,7 +360,7 @@ Run:
 
     gomason publish
     
-### Publishing without signing.
+### Publishing without Signing.
     
 Occasionally, it might be useful to test and publish, but not sign.  Internal use for instance, where you don't really have a web of trust set up.
 
@@ -403,26 +411,28 @@ The metadata.json contains such information as the version. (Yes, I'm old fashio
 
 Example:
 
-        {
-          "version": "0.1.0",
-          "package": "github.com/nikogura/gomason",
-          "description": "A tool for building and testing your project in a clean GOPATH.",
-      "repository": "http://localhost:8081/artifactory/generic-local",
-          "building": {
-            "prepcommands": [
+    {
+       "version": "0.1.0",
+       "package": "github.com/nikogura/gomason",
+       "description": "A tool for building and testing your project in a clean GOPATH.",
+       "repository": "http://localhost:8081/artifactory/generic-local",
+       "language": "golang",
+       "building": {
+         "prepcommands": [
               "go get k8s.io/client-go/...",
               "cd ${GOPATH}/src/k8s.io/client-go && git checkout v10.0.0",
               "cd ${GOPATH}/src/k8s.io/client-go && godep restore ./..."
-            ],
-            "targets": [
-              {
+         ],
+         "targets": [
+           {
                 "name": "darwin/amd64",
-              {
+           },
+           {
                 "name": "linux/amd64"
-              }
-            ]
-          }
-        }
+           }
+         ]
+       }
+    }
 
 ### Version
 
@@ -448,6 +458,10 @@ The url of the repository to which you're planning to publish your binaries.
 ### Insecure_Get
 
 Sometimes you've got a code repo that has a self signed cert.  Set this to true, and it'll pass ```-insecure``` to ```go get``` and ```govendor sync``` so you can still run- even if your internal repo has a self signed cert on it.
+
+### Language
+
+Optional at this point, and the only legal value is `golang`.  We plan to support other languages that can compile to single binaries in the future.
 
 ### Building
 
