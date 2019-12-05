@@ -18,10 +18,10 @@ func init() {
 	languagesMap["golang"] = Golang{}
 }
 
-// For golang, workdir is GOPATH
+// Golang struct.  For golang, workdir is GOPATH
 type Golang struct{}
 
-// Creates an empty but workable GOPATH in the directory specified. Returns
+// CreateWorkDir Creates an empty but workable GOPATH in the directory specified. Returns
 // the full GOPATH
 func (Golang) CreateWorkDir(workDir string) (gopath string, err error) {
 	gopath = filepath.Join(workDir, "go")
@@ -133,7 +133,7 @@ func (Golang) Prep(gopath string, meta gomason.Metadata, verbose bool) (err erro
 	}
 
 	// set the gopath in the environment so that we can interpolate it below
-	os.Setenv("GOPATH", gopath)
+	_ = os.Setenv("GOPATH", gopath)
 
 	for _, cmdString := range meta.BuildInfo.PrepCommands {
 
@@ -161,16 +161,14 @@ func (Golang) Prep(gopath string, meta gomason.Metadata, verbose bool) (err erro
 		}
 	}
 
-	if err == nil {
-		if verbose {
-			log.Printf("Prep steps for %s complete\n\n", meta.Package)
-		}
+	if verbose {
+		log.Printf("Prep steps for %s complete\n\n", meta.Package)
 	}
 
 	return err
 }
 
-// Runs 'go test -v ./...' in the checked out code directory
+// Test Runs 'go test -v ./...' in the checked out code directory
 func (Golang) Test(gopath string, gomodule string, verbose bool) (err error) {
 	wd := fmt.Sprintf("%s/src/%s", gopath, gomodule)
 
@@ -207,6 +205,7 @@ func (Golang) Test(gopath string, gomodule string, verbose bool) (err error) {
 	return err
 }
 
+// Build uses `gox` to build binaries per metadata.json
 func (g Golang) Build(gopath string, meta gomason.Metadata, branch string, verbose bool) (err error) {
 	if verbose {
 		log.Printf("Checking to see that gox is installed.\n")
