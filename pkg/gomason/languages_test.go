@@ -1,4 +1,4 @@
-package languages
+package gomason
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -8,7 +8,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/nikogura/gomason/pkg/gomason"
 	"github.com/phayes/freeport"
 )
 
@@ -43,7 +42,7 @@ func setUp() {
 
 	servicePort = freePort
 
-	tr := gomason.TestRepo{}
+	tr := TestRepo{}
 
 	go tr.Run(servicePort)
 
@@ -61,16 +60,16 @@ func TestNoLanguage(t *testing.T) {
 	_, err := nl.CreateWorkDir("")
 	assert.True(t, err == nil, "Create work dir returned an error")
 
-	err = nl.Checkout("", gomason.Metadata{}, "", true)
+	err = nl.Checkout("", Metadata{}, "", true)
 	assert.True(t, err == nil, "Checkout returned an error")
 
-	err = nl.Prep("", gomason.Metadata{}, true)
+	err = nl.Prep("", Metadata{}, true)
 	assert.True(t, err == nil, "Prep returned an error")
 
 	err = nl.Test("", "", true)
 	assert.True(t, err == nil, "Test returned an error")
 
-	err = nl.Build("", gomason.Metadata{}, "", true)
+	err = nl.Build("", Metadata{}, "", true)
 	assert.True(t, err == nil, "Build returned an error")
 
 }

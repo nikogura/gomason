@@ -47,7 +47,7 @@ func TestGitSSHUrlFromPackage(t *testing.T) {
 }
 
 func TestParseStringForMetadata(t *testing.T) {
-	meta, err := ReadMetadata("../../metadata.json")
+	meta, err := ReadMetadata("metadata.json")
 	if err != nil {
 		log.Printf("Error reading metadata file: %s", err)
 		t.Fail()

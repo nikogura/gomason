@@ -1,4 +1,4 @@
-package languages
+package gomason
 
 import (
 	"fmt"
@@ -10,8 +10,6 @@ import (
 
 	"github.com/a8m/envsubst"
 	"github.com/pkg/errors"
-
-	"github.com/nikogura/gomason/pkg/gomason"
 )
 
 func init() {
@@ -43,7 +41,7 @@ func (Golang) CreateWorkDir(workDir string) (gopath string, err error) {
 }
 
 // Checkout  Actually checks out the code you're trying to test into your temporary GOPATH
-func (Golang) Checkout(gopath string, meta gomason.Metadata, branch string, verbose bool) (err error) {
+func (Golang) Checkout(gopath string, meta Metadata, branch string, verbose bool) (err error) {
 	err = os.Chdir(gopath)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to cwd to %s", gopath)
@@ -112,7 +110,7 @@ func (Golang) Checkout(gopath string, meta gomason.Metadata, branch string, verb
 }
 
 // Prep  Commands run pre-build/ pre-test the checked out code in your temporary GOPATH
-func (Golang) Prep(gopath string, meta gomason.Metadata, verbose bool) (err error) {
+func (Golang) Prep(gopath string, meta Metadata, verbose bool) (err error) {
 	verboseOutput(verbose, "Running Prep Commands")
 	codepath := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
 
@@ -186,7 +184,7 @@ func (Golang) Test(gopath string, gomodule string, verbose bool) (err error) {
 }
 
 // Build uses `gox` to build binaries per metadata.json
-func (g Golang) Build(gopath string, meta gomason.Metadata, branch string, verbose bool) (err error) {
+func (g Golang) Build(gopath string, meta Metadata, branch string, verbose bool) (err error) {
 	verboseOutput(verbose, "Checking to see that gox is installed.\n")
 
 	// Install gox if it's not already there
@@ -223,7 +221,7 @@ func (g Golang) Build(gopath string, meta gomason.Metadata, branch string, verbo
 
 	metadatapath := fmt.Sprintf("%s/src/%s/metadata.json", gopath, meta.Package)
 
-	md, err := gomason.ReadMetadata(metadatapath)
+	md, err := ReadMetadata(metadatapath)
 	if err != nil {
 		err = errors.Wrap(err, "Failed to read metadata.json from checked out code")
 		return err
@@ -313,7 +311,7 @@ func GoxInstall(gopath string, verbose bool) (err error) {
 }
 
 // BuildExtras builds the extra artifacts specified in the metadata.json
-func BuildExtras(meta gomason.Metadata, workdir string, verbose bool) (err error) {
+func BuildExtras(meta Metadata, workdir string, verbose bool) (err error) {
 	verboseOutput(verbose, "Building Extra Artifacts")
 
 	for _, extra := range meta.BuildInfo.Extras {
@@ -338,7 +336,7 @@ func BuildExtras(meta gomason.Metadata, workdir string, verbose bool) (err error
 			return err
 		}
 
-		output, err := gomason.ParseTemplateForMetadata(string(tmplBytes), meta)
+		output, err := ParseTemplateForMetadata(string(tmplBytes), meta)
 		if err != nil {
 			err = errors.Wrapf(err, "failed to inject metadata into template text")
 			return err

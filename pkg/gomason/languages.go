@@ -1,18 +1,16 @@
-package languages
+package gomason
 
 import (
 	"fmt"
-
-	"github.com/nikogura/gomason/pkg/gomason"
 )
 
 // Language is a generic interface for doing what gomason does - abstracting build, test, signing, and publishing of binaries
 type Language interface {
 	CreateWorkDir(string) (string, error)
-	Checkout(string, gomason.Metadata, string, bool) error
-	Prep(string, gomason.Metadata, bool) error
+	Checkout(string, Metadata, string, bool) error
+	Prep(string, Metadata, bool) error
 	Test(string, string, bool) error
-	Build(string, gomason.Metadata, string, bool) error
+	Build(string, Metadata, string, bool) error
 }
 
 // NoLanguage essentially an abstract class for the Language interface
@@ -24,12 +22,12 @@ func (NoLanguage) CreateWorkDir(string) (string, error) {
 }
 
 // Checkout Stub for the Checkout action
-func (NoLanguage) Checkout(string, gomason.Metadata, string, bool) error {
+func (NoLanguage) Checkout(string, Metadata, string, bool) error {
 	return nil
 }
 
 // Prep stub for the Prep action
-func (NoLanguage) Prep(string, gomason.Metadata, bool) error {
+func (NoLanguage) Prep(string, Metadata, bool) error {
 	return nil
 }
 
@@ -39,7 +37,7 @@ func (NoLanguage) Test(string, string, bool) error {
 }
 
 // Build Stub for the Build Action
-func (NoLanguage) Build(string, gomason.Metadata, string, bool) error {
+func (NoLanguage) Build(string, Metadata, string, bool) error {
 	return nil
 }
 
