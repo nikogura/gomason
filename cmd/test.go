@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -80,7 +81,7 @@ Sometimes you need the benefits of a full system here.  Now.  Right at your fing
 			log.Fatalf("error running go test: %s", err)
 		}
 
-		log.Printf("Success!\n\n")
+		fmt.Print("Success!\n\n")
 	},
 }
 
