@@ -4,13 +4,17 @@ import (
 	"fmt"
 )
 
+const (
+	LanguageGolang = "golang"
+)
+
 // Language is a generic interface for doing what gomason does - abstracting build, test, signing, and publishing of binaries
 type Language interface {
 	CreateWorkDir(string) (string, error)
-	Checkout(string, Metadata, string, bool) error
-	Prep(string, Metadata, bool) error
-	Test(string, string, bool) error
-	Build(string, Metadata, string, bool) error
+	Checkout(string, Metadata, string) error
+	Prep(string, Metadata) error
+	Test(string, string) error
+	Build(string, Metadata, string) error
 }
 
 // NoLanguage essentially an abstract class for the Language interface
@@ -22,22 +26,22 @@ func (NoLanguage) CreateWorkDir(string) (string, error) {
 }
 
 // Checkout Stub for the Checkout action
-func (NoLanguage) Checkout(string, Metadata, string, bool) error {
+func (NoLanguage) Checkout(string, Metadata, string) error {
 	return nil
 }
 
 // Prep stub for the Prep action
-func (NoLanguage) Prep(string, Metadata, bool) error {
+func (NoLanguage) Prep(string, Metadata) error {
 	return nil
 }
 
 // Test Stub for the Test action
-func (NoLanguage) Test(string, string, bool) error {
+func (NoLanguage) Test(string, string) error {
 	return nil
 }
 
 // Build Stub for the Build Action
-func (NoLanguage) Build(string, Metadata, string, bool) error {
+func (NoLanguage) Build(string, Metadata, string) error {
 	return nil
 }
 

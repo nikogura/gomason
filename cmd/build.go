@@ -48,9 +48,7 @@ Binaries are dropped into the current working directory.
 			log.Fatalf("Failed to create temp dir: %s", err)
 		}
 
-		if verbose {
-			log.Printf("Created temp dir %s", rootWorkDir)
-		}
+		log.Printf("[DEBUG] Created temp dir %s", rootWorkDir)
 
 		defer os.RemoveAll(rootWorkDir)
 
@@ -69,18 +67,18 @@ Binaries are dropped into the current working directory.
 			log.Fatalf("Failed to create ephemeral workDir: %s", err)
 		}
 
-		err = lang.Checkout(workDir, meta, branch, verbose)
+		err = lang.Checkout(workDir, meta, branch)
 		if err != nil {
 			log.Fatalf("failed to checkout package %s at branch %s: %s", meta.Package, branch, err)
 		}
 
-		err = lang.Prep(workDir, meta, verbose)
+		err = lang.Prep(workDir, meta)
 		if err != nil {
 			log.Fatalf("error running prep steps: %s", err)
 		}
 
 		if !buildSkipTests {
-			err = lang.Test(workDir, meta.Package, verbose)
+			err = lang.Test(workDir, meta.Package)
 			if err != nil {
 				log.Fatalf("error running go test: %s", err)
 			}
@@ -88,19 +86,19 @@ Binaries are dropped into the current working directory.
 			log.Printf("Tests Succeeded!\n\n")
 		}
 
-		err = lang.Build(workDir, meta, branch, verbose)
+		err = lang.Build(workDir, meta, branch)
 		if err != nil {
 			log.Fatalf("build failed: %s", err)
 		}
 
 		log.Printf("Build Succeeded!\n\n")
 
-		err = gomason.HandleArtifacts(meta, workDir, cwd, false, false, true, verbose)
+		err = gomason.HandleArtifacts(meta, workDir, cwd, false, false, true)
 		if err != nil {
 			log.Fatalf("signing failed: %s", err)
 		}
 
-		err = gomason.HandleExtras(meta, workDir, cwd, false, false, verbose)
+		err = gomason.HandleExtras(meta, workDir, cwd, false, false)
 		if err != nil {
 			log.Fatalf("Extra artifact processing failed: %s", err)
 		}

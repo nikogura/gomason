@@ -15,7 +15,7 @@ import (
 )
 
 func TestCreateGoPath(t *testing.T) {
-	lang, _ := GetByName("golang")
+	lang, _ := GetByName(LanguageGolang)
 	_, err := lang.CreateWorkDir(TestTmpDir)
 	if err != nil {
 		log.Printf("Error creating gopath in %q: %s", TestTmpDir, err)
@@ -32,7 +32,7 @@ func TestCreateGoPath(t *testing.T) {
 }
 
 func TestCheckoutDefault(t *testing.T) {
-	lang, _ := GetByName("golang")
+	lang, _ := GetByName(LanguageGolang)
 	gopath, err := lang.CreateWorkDir(TestTmpDir)
 	if err != nil {
 		log.Printf("Error creating GOPATH in %s: %s", TestTmpDir, err)
@@ -40,7 +40,7 @@ func TestCheckoutDefault(t *testing.T) {
 	}
 
 	log.Printf("Checking out Master Branch")
-	err = lang.Checkout(gopath, TestMetadataObj(), "master", true)
+	err = lang.Checkout(gopath, TestMetadataObj(), "master")
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.FailNow()
@@ -63,14 +63,14 @@ func TestCheckoutBranch(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 
-	lang, _ := GetByName("golang")
+	lang, _ := GetByName(LanguageGolang)
 	gopath, err := lang.CreateWorkDir(dir)
 	if err != nil {
 		log.Printf("Error creating GOPATH in %s: %s", dir, err)
 		t.FailNow()
 	}
 
-	err = lang.Checkout(gopath, TestMetadataObj(), "testbranch", true)
+	err = lang.Checkout(gopath, TestMetadataObj(), "testbranch")
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.FailNow()
@@ -85,14 +85,14 @@ func TestCheckoutBranch(t *testing.T) {
 
 func TestPrep(t *testing.T) {
 	log.Printf("Checking out Master Branch")
-	lang, _ := GetByName("golang")
+	lang, _ := GetByName(LanguageGolang)
 	gopath, err := lang.CreateWorkDir(TestTmpDir)
 	if err != nil {
 		log.Printf("Error creating GOPATH in %s: %s", TestTmpDir, err)
 		t.FailNow()
 	}
 
-	err = lang.Checkout(gopath, TestMetadataObj(), "master", true)
+	err = lang.Checkout(gopath, TestMetadataObj(), "master")
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.FailNow()
@@ -104,7 +104,7 @@ func TestPrep(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = lang.Prep(gopath, TestMetadataObj(), true)
+	err = lang.Prep(gopath, TestMetadataObj())
 	if err != nil {
 		log.Printf("error running prep steps: %s", err)
 		t.FailNow()
@@ -112,7 +112,7 @@ func TestPrep(t *testing.T) {
 }
 
 func TestBuildGoxInstall(t *testing.T) {
-	lang, _ := GetByName("golang")
+	lang, _ := GetByName(LanguageGolang)
 
 	log.Printf("Installing Gox\n")
 	gopath, err := lang.CreateWorkDir(TestTmpDir)
@@ -121,7 +121,7 @@ func TestBuildGoxInstall(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = GoxInstall(gopath, true)
+	err = GoxInstall(gopath)
 	if err != nil {
 		log.Printf("Error installing Gox: %s\n", err)
 		t.FailNow()
@@ -134,7 +134,7 @@ func TestBuildGoxInstall(t *testing.T) {
 }
 
 func TestBuild(t *testing.T) {
-	lang, _ := GetByName("golang")
+	lang, _ := GetByName(LanguageGolang)
 
 	log.Printf("Running Build\n")
 	gopath, err := lang.CreateWorkDir(TestTmpDir)
@@ -148,7 +148,7 @@ func TestBuild(t *testing.T) {
 
 	log.Printf("Checking out Master Branch")
 
-	err = lang.Checkout(gopath, TestMetadataObj(), "master", true)
+	err = lang.Checkout(gopath, TestMetadataObj(), "master")
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.FailNow()
@@ -160,13 +160,13 @@ func TestBuild(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = lang.Prep(gopath, TestMetadataObj(), true)
+	err = lang.Prep(gopath, TestMetadataObj())
 	if err != nil {
 		log.Printf("error running prep steps: %s", err)
 		t.FailNow()
 	}
 
-	err = lang.Build(gopath, TestMetadataObj(), branch, true)
+	err = lang.Build(gopath, TestMetadataObj(), branch)
 	if err != nil {
 		log.Printf("Error building: %s", err)
 		t.FailNow()
@@ -193,7 +193,7 @@ func TestBuild(t *testing.T) {
 }
 
 func TestTest(t *testing.T) {
-	lang, _ := GetByName("golang")
+	lang, _ := GetByName(LanguageGolang)
 
 	log.Printf("Checking out Master Branch")
 	gopath, err := lang.CreateWorkDir(TestTmpDir)
@@ -202,7 +202,7 @@ func TestTest(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = lang.Checkout(gopath, TestMetadataObj(), "master", true)
+	err = lang.Checkout(gopath, TestMetadataObj(), "master")
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.FailNow()
@@ -214,13 +214,13 @@ func TestTest(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = lang.Prep(gopath, TestMetadataObj(), true)
+	err = lang.Prep(gopath, TestMetadataObj())
 	if err != nil {
 		log.Printf("error running prep steps: %s", err)
 		t.FailNow()
 	}
 
-	err = lang.Test(gopath, TestMetadataObj().Package, true)
+	err = lang.Test(gopath, TestMetadataObj().Package)
 	if err != nil {
 		log.Printf("error running go test: %s", err)
 		t.FailNow()
@@ -234,7 +234,7 @@ func TestSignVerifyBinary(t *testing.T) {
 		t.FailNow()
 	}
 
-	lang, _ := GetByName("golang")
+	lang, _ := GetByName(LanguageGolang)
 
 	// create workspace
 	gopath, err := lang.CreateWorkDir(TestTmpDir)
@@ -280,7 +280,7 @@ func TestSignVerifyBinary(t *testing.T) {
 
 	// build artifacts
 	log.Printf("Running Build\n")
-	err = lang.Build(gopath, meta, branch, true)
+	err = lang.Build(gopath, meta, branch)
 	if err != nil {
 		log.Printf("Error building: %s", err)
 		t.FailNow()
@@ -347,7 +347,7 @@ Expire-Date: 0
 			t.FailNow()
 		}
 
-		err = SignBinary(meta, binary, true)
+		err = SignBinary(meta, binary)
 		if err != nil {
 			err = errors.Wrap(err, "failed to sign binary")
 			log.Printf("Failed to sign binary %s: %s", binary, err)
@@ -355,7 +355,7 @@ Expire-Date: 0
 		}
 
 		// verify binaries
-		ok, err := VerifyBinary(binary, meta, true)
+		ok, err := VerifyBinary(binary, meta)
 		if err != nil {
 			log.Printf("Error verifying signature: %s", err)
 			//t.Fail()
@@ -375,12 +375,12 @@ Expire-Date: 0
 
 	fmt.Printf("Publishing\n")
 
-	err = HandleArtifacts(meta, gopath, cwd, false, true, true, true)
+	err = HandleArtifacts(meta, gopath, cwd, false, true, true)
 	if err != nil {
 		log.Fatalf("post-build processing failed: %s", err)
 	}
 
-	err = HandleExtras(meta, gopath, cwd, false, true, true)
+	err = HandleExtras(meta, gopath, cwd, false, true)
 	if err != nil {
 		log.Fatalf("Extra artifact processing failed: %s", err)
 	}

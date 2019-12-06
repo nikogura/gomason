@@ -1,58 +1,11 @@
 package gomason
 
 import (
-	"github.com/stretchr/testify/assert"
-	"io/ioutil"
-	"log"
-	"os"
 	"reflect"
 	"testing"
 
-	"github.com/phayes/freeport"
+	"github.com/stretchr/testify/assert"
 )
-
-var TestTmpDir string
-var servicePort int
-
-func TestMain(m *testing.M) {
-	setUp()
-
-	code := m.Run()
-
-	tearDown()
-
-	os.Exit(code)
-}
-
-func setUp() {
-	dir, err := ioutil.TempDir("", "gomason")
-	if err != nil {
-		log.Fatal("Error creating temp dir\n")
-	}
-
-	TestTmpDir = dir
-
-	log.Printf("Setting up temporary work dir %s", TestTmpDir)
-
-	freePort, err := freeport.GetFreePort()
-	if err != nil {
-		log.Printf("Error getting a free port: %s", err)
-		os.Exit(1)
-	}
-
-	servicePort = freePort
-
-	tr := TestRepo{}
-
-	go tr.Run(servicePort)
-
-}
-
-func tearDown() {
-	if _, err := os.Stat(TestTmpDir); !os.IsNotExist(err) {
-		os.Remove(TestTmpDir)
-	}
-}
 
 func TestNoLanguage(t *testing.T) {
 	nl := NoLanguage{}
@@ -60,16 +13,16 @@ func TestNoLanguage(t *testing.T) {
 	_, err := nl.CreateWorkDir("")
 	assert.True(t, err == nil, "Create work dir returned an error")
 
-	err = nl.Checkout("", Metadata{}, "", true)
+	err = nl.Checkout("", Metadata{}, "")
 	assert.True(t, err == nil, "Checkout returned an error")
 
-	err = nl.Prep("", Metadata{}, true)
+	err = nl.Prep("", Metadata{})
 	assert.True(t, err == nil, "Prep returned an error")
 
-	err = nl.Test("", "", true)
+	err = nl.Test("", "")
 	assert.True(t, err == nil, "Test returned an error")
 
-	err = nl.Build("", Metadata{}, "", true)
+	err = nl.Build("", Metadata{}, "")
 	assert.True(t, err == nil, "Build returned an error")
 
 }

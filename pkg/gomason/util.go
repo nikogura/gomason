@@ -57,16 +57,14 @@ func GitSSHUrlFromPackage(packageName string) (gitpath string) {
 }
 
 // GetCredentials gets credentials, first from the metadata.json, and then from the user config in ~/.gomason if it exists.  If no credentials are found in any of the places, it returns the empty stings for usernames and passwords.  This is not recommended, but it might be useful in some cases.  Who knows?  We makes the tools, we don't tell you how to use them.  (we do, however make suggestions.) :D
-func GetCredentials(meta Metadata, verbose bool) (username, password string, err error) {
-	if verbose {
-		log.Printf("Getting credentials")
-	}
+func GetCredentials(meta Metadata) (username, password string, err error) {
+	log.Print("[DEBUG] Getting credentials")
 
 	// get creds from metadata
 	// usernamefunc takes precedence over username
 	if meta.PublishInfo.UsernameFunc != "" {
 		log.Printf("Getting username from function")
-		username, err = GetFunc(meta.PublishInfo.UsernameFunc, verbose)
+		username, err = GetFunc(meta.PublishInfo.UsernameFunc)
 		if err != nil {
 			err = errors.Wrapf(err, "failed to get username from shell function %q", meta.PublishInfo.UsernameFunc)
 			return username, password, err
@@ -79,7 +77,7 @@ func GetCredentials(meta Metadata, verbose bool) (username, password string, err
 	// passwordfunc takes precedence over password
 	if meta.PublishInfo.PasswordFunc != "" {
 		log.Printf("Getting password from function")
-		password, err = GetFunc(meta.PublishInfo.PasswordFunc, verbose)
+		password, err = GetFunc(meta.PublishInfo.PasswordFunc)
 		if err != nil {
 			err = errors.Wrapf(err, "failed to get password from shell function %q", meta.PublishInfo.PasswordFunc)
 			return username, password, err
@@ -98,7 +96,7 @@ func GetCredentials(meta Metadata, verbose bool) (username, password string, err
 
 	// usernamefunc takes precedence over username
 	if config.User.UsernameFunc != "" {
-		username, err = GetFunc(config.User.UsernameFunc, verbose)
+		username, err = GetFunc(config.User.UsernameFunc)
 		if err != nil {
 			err = errors.Wrapf(err, "failed to get username from shell function %q", meta.PublishInfo.UsernameFunc)
 			return username, password, err
@@ -109,7 +107,7 @@ func GetCredentials(meta Metadata, verbose bool) (username, password string, err
 
 	// passwordfunc takes precedence over password
 	if config.User.PasswordFunc != "" {
-		password, err = GetFunc(config.User.PasswordFunc, verbose)
+		password, err = GetFunc(config.User.PasswordFunc)
 		if err != nil {
 			err = errors.Wrapf(err, "failed to get password from shell function %q", meta.PublishInfo.UsernameFunc)
 			return username, password, err
@@ -126,12 +124,10 @@ func GetCredentials(meta Metadata, verbose bool) (username, password string, err
 }
 
 // GetFunc runs a shell command that is a getter function.  This could certainly be dangerous, so be careful how you use it.
-func GetFunc(shellCommand string, verbose bool) (result string, err error) {
+func GetFunc(shellCommand string) (result string, err error) {
 	cmd := exec.Command("sh", "-c", shellCommand)
 
-	if verbose {
-		fmt.Printf("Getting input with shell function %q\n", shellCommand)
-	}
+	fmt.Printf("[DEBUG] Getting input with shell function %q\n", shellCommand)
 
 	stdout, err := cmd.StdoutPipe()
 

@@ -113,12 +113,10 @@ type UserSignInfo struct {
 // HandleArtifacts loops over the expected files built by Build() and optionally signs them and publishes them along with their signatures (if signing).
 //
 // If not publishing, the binaries (and their optional signatures) are collected and dumped into the directory where gomason was called. (Typically the root of a go project).
-func HandleArtifacts(meta Metadata, gopath string, cwd string, sign bool, publish bool, collect bool, verbose bool) (err error) {
+func HandleArtifacts(meta Metadata, gopath string, cwd string, sign bool, publish bool, collect bool) (err error) {
 	// loop through the built things for each type of build target
 	for _, target := range meta.BuildInfo.Targets {
-		if verbose {
-			log.Printf("Processing build target: %s", target.Name)
-		}
+		log.Printf("[DEBUG] Processing build target: %s", target.Name)
 		archparts := strings.Split(target.Name, "/")
 
 		osname := archparts[0]   // linux or darwin generally
@@ -148,7 +146,7 @@ func HandleArtifacts(meta Metadata, gopath string, cwd string, sign bool, publis
 
 				// sign 'em if we're signing
 				if sign {
-					err = SignBinary(meta, filename, verbose)
+					err = SignBinary(meta, filename)
 					if err != nil {
 						err = errors.Wrap(err, "failed to sign binary")
 						return err
@@ -157,7 +155,7 @@ func HandleArtifacts(meta Metadata, gopath string, cwd string, sign bool, publis
 
 				// publish and return if we're publishing
 				if publish {
-					err = PublishFile(meta, filename, verbose)
+					err = PublishFile(meta, filename)
 					if err != nil {
 						err = errors.Wrap(err, "failed to publish binary")
 						return err
@@ -167,7 +165,7 @@ func HandleArtifacts(meta Metadata, gopath string, cwd string, sign bool, publis
 
 				if collect {
 					// if we're not publishing, collect up the stuff we built, and dump 'em into the cwd where we called gomason
-					err := CollectFileAndSignature(cwd, filename, verbose)
+					err := CollectFileAndSignature(cwd, filename)
 					if err != nil {
 						err = errors.Wrap(err, "failed to collect binaries")
 						return err
@@ -184,13 +182,11 @@ func HandleArtifacts(meta Metadata, gopath string, cwd string, sign bool, publis
 // HandleExtras loops over the expected files built by Build() and optionally signs them and publishes them along with their signatures (if signing).
 //
 // If not publishing, the binaries (and their optional signatures) are collected and dumped into the directory where gomason was called. (Typically the root of a go project).
-func HandleExtras(meta Metadata, gopath string, cwd string, sign bool, publish bool, verbose bool) (err error) {
+func HandleExtras(meta Metadata, gopath string, cwd string, sign bool, publish bool) (err error) {
 
 	// loop through the built things for each type of build target
 	for _, extra := range meta.BuildInfo.Extras {
-		if verbose {
-			log.Printf("Processing build extra: %s", extra.Template)
-		}
+		log.Printf("[DEBUG] Processing build extra: %s", extra.Template)
 
 		workdir := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
 		filename := fmt.Sprintf("%s/%s", workdir, extra.FileName)
@@ -202,7 +198,7 @@ func HandleExtras(meta Metadata, gopath string, cwd string, sign bool, publish b
 
 		// sign 'em if we're signing
 		if sign {
-			err = SignBinary(meta, filename, verbose)
+			err = SignBinary(meta, filename)
 			if err != nil {
 				err = errors.Wrap(err, "failed to sign extra artifact")
 				return err
@@ -211,7 +207,7 @@ func HandleExtras(meta Metadata, gopath string, cwd string, sign bool, publish b
 
 		// publish and return if we're publishing
 		if publish {
-			err = PublishFile(meta, filename, verbose)
+			err = PublishFile(meta, filename)
 			if err != nil {
 				err = errors.Wrap(err, "failed to publish extra artifact")
 				return err
@@ -219,7 +215,7 @@ func HandleExtras(meta Metadata, gopath string, cwd string, sign bool, publish b
 
 		} else {
 			// if we're not publishing, collect up the stuff we built, and dump 'em into the cwd where we called gomason
-			err := CollectFileAndSignature(cwd, filename, verbose)
+			err := CollectFileAndSignature(cwd, filename)
 			if err != nil {
 				err = errors.Wrap(err, "failed to collect binaries")
 				return err
@@ -231,12 +227,10 @@ func HandleExtras(meta Metadata, gopath string, cwd string, sign bool, publish b
 }
 
 // CollectFileAndSignature grabs a file and the signature if it exists and moves it from the temp workspace into the CWD where gomason was called.
-func CollectFileAndSignature(cwd string, filename string, verbose bool) (err error) {
+func CollectFileAndSignature(cwd string, filename string) (err error) {
 	binaryDestinationPath := fmt.Sprintf("%s/%s", cwd, filepath.Base(filename))
 
-	if verbose {
-		log.Printf("Collecting Binaries and Signatures (if signing)")
-	}
+	log.Printf("[DEBUG] Collecting Binaries and Signatures (if signing)")
 
 	err = os.Rename(filename, binaryDestinationPath)
 	if err != nil {

@@ -45,9 +45,7 @@ Publish will upload your binaries to wherever it is you've configured them to go
 		}
 		defer os.RemoveAll(rootWorkDir)
 
-		if verbose {
-			log.Printf("Created temp dir %s", rootWorkDir)
-		}
+		log.Printf("[DEBUG] Created temp dir %s", rootWorkDir)
 
 		meta, err := gomason.ReadMetadata("metadata.json")
 		if err != nil {
@@ -64,18 +62,18 @@ Publish will upload your binaries to wherever it is you've configured them to go
 			log.Fatalf("Failed to create ephemeral working directory: %s", err)
 		}
 
-		err = lang.Checkout(workDir, meta, branch, verbose)
+		err = lang.Checkout(workDir, meta, branch)
 		if err != nil {
 			log.Fatalf("failed to checkout package %s at branch %s: %s", meta.Package, branch, err)
 		}
 
-		err = lang.Prep(workDir, meta, verbose)
+		err = lang.Prep(workDir, meta)
 		if err != nil {
 			log.Fatalf("error running prep steps: %s", err)
 		}
 
 		if !pubSkipTests {
-			err = lang.Test(workDir, meta.Package, verbose)
+			err = lang.Test(workDir, meta.Package)
 			if err != nil {
 				log.Fatalf("error running go test: %s", err)
 			}
@@ -83,7 +81,7 @@ Publish will upload your binaries to wherever it is you've configured them to go
 			log.Printf("Tests Succeeded!\n\n")
 		}
 
-		err = lang.Build(workDir, meta, branch, verbose)
+		err = lang.Build(workDir, meta, branch)
 		if err != nil {
 			log.Fatalf("build failed: %s", err)
 		}
@@ -91,26 +89,24 @@ Publish will upload your binaries to wherever it is you've configured them to go
 		log.Printf("Build Succeeded!\n\n")
 
 		if meta.PublishInfo.SkipSigning {
-			if verbose {
-				log.Printf("Skipping signing due to 'skip-signing': true in metadata.json")
-			}
-			err = gomason.HandleArtifacts(meta, workDir, cwd, false, true, false, verbose)
+			log.Printf("[DEBUG] Skipping signing due to 'skip-signing': true in metadata.json")
+			err = gomason.HandleArtifacts(meta, workDir, cwd, false, true, false)
 			if err != nil {
 				log.Fatalf("post-build processing failed: %s", err)
 			}
 
-			err = gomason.HandleExtras(meta, workDir, cwd, false, true, verbose)
+			err = gomason.HandleExtras(meta, workDir, cwd, false, true)
 			if err != nil {
 				log.Fatalf("Extra artifact processing failed: %s", err)
 			}
 
 		} else {
-			err = gomason.HandleArtifacts(meta, workDir, cwd, true, true, false, verbose)
+			err = gomason.HandleArtifacts(meta, workDir, cwd, true, true, false)
 			if err != nil {
 				log.Fatalf("post-build processing failed: %s", err)
 			}
 
-			err = gomason.HandleExtras(meta, workDir, cwd, true, true, verbose)
+			err = gomason.HandleExtras(meta, workDir, cwd, true, true)
 			if err != nil {
 				log.Fatalf("Extra artifact processing failed: %s", err)
 			}
