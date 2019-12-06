@@ -46,9 +46,7 @@ Sometimes you need the benefits of a full system here.  Now.  Right at your fing
 			log.Fatalf("Failed to create temp dir: %s", err)
 		}
 
-		if verbose {
-			log.Printf("Created temp dir %s", rootWorkDir)
-		}
+		log.Printf("[DEBUG] Created temp dir %s", rootWorkDir)
 
 		defer os.RemoveAll(rootWorkDir)
 
@@ -67,17 +65,17 @@ Sometimes you need the benefits of a full system here.  Now.  Right at your fing
 			log.Fatalf("Failed to create ephemeral workDir: %s", err)
 		}
 
-		err = lang.Checkout(workDir, meta, branch, verbose)
+		err = lang.Checkout(workDir, meta, branch)
 		if err != nil {
 			log.Fatalf("failed to checkout package %s at branch %s: %s", meta.Package, branch, err)
 		}
 
-		err = lang.Prep(workDir, meta, verbose)
+		err = lang.Prep(workDir, meta)
 		if err != nil {
 			log.Fatalf("error running prep steps: %s", err)
 		}
 
-		err = lang.Test(workDir, meta.Package, verbose)
+		err = lang.Test(workDir, meta.Package)
 		if err != nil {
 			log.Fatalf("error running go test: %s", err)
 		}

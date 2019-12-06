@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	languagesMap["golang"] = Golang{}
+	languagesMap[LanguageGolang] = Golang{}
 }
 
 // Golang struct.  For golang, workdir is GOPATH
@@ -41,7 +41,7 @@ func (Golang) CreateWorkDir(workDir string) (gopath string, err error) {
 }
 
 // Checkout  Actually checks out the code you're trying to test into your temporary GOPATH
-func (Golang) Checkout(gopath string, meta Metadata, branch string, verbose bool) (err error) {
+func (Golang) Checkout(gopath string, meta Metadata, branch string) (err error) {
 	err = os.Chdir(gopath)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to cwd to %s", gopath)
@@ -66,7 +66,7 @@ func (Golang) Checkout(gopath string, meta Metadata, branch string, verbose bool
 		cmd = exec.Command(gocommand, "get", "-v", "-d", fmt.Sprintf("%s/...", meta.Package))
 	}
 
-	verboseOutput(verbose, "Running %s with GOPATH=%s", cmd.Args, gopath)
+	log.Printf("[DEBUG] Running %s with GOPATH=%s", cmd.Args, gopath)
 
 	cmd.Env = runenv
 
@@ -76,7 +76,7 @@ func (Golang) Checkout(gopath string, meta Metadata, branch string, verbose bool
 	err = cmd.Run()
 
 	if err == nil {
-		verboseOutput(verbose, "Checkout of %s complete\n\n", meta.Package)
+		log.Printf("[DEBUG] Checkout of %s complete\n\n", meta.Package)
 	}
 
 	git, err := exec.LookPath("git")
@@ -95,14 +95,14 @@ func (Golang) Checkout(gopath string, meta Metadata, branch string, verbose bool
 	}
 
 	if branch != "" {
-		verboseOutput(verbose, "Checking out branch: %s\n\n", branch)
+		log.Printf("[DEBUG] Checking out branch: %s\n\n", branch)
 
 		cmd := exec.Command(git, "checkout", branch)
 
 		err = cmd.Run()
 
 		if err == nil {
-			verboseOutput(verbose, "Checkout of branch: %s complete.\n\n", branch)
+			log.Printf("[DEBUG] Checkout of branch: %s complete.\n\n", branch)
 		}
 	}
 
@@ -110,8 +110,8 @@ func (Golang) Checkout(gopath string, meta Metadata, branch string, verbose bool
 }
 
 // Prep  Commands run pre-build/ pre-test the checked out code in your temporary GOPATH
-func (Golang) Prep(gopath string, meta Metadata, verbose bool) (err error) {
-	verboseOutput(verbose, "Running Prep Commands")
+func (Golang) Prep(gopath string, meta Metadata) (err error) {
+	log.Print("[DEBUG] Running Prep Commands")
 	codepath := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
 
 	err = os.Chdir(codepath)
@@ -134,7 +134,7 @@ func (Golang) Prep(gopath string, meta Metadata, verbose bool) (err error) {
 
 		cmd := exec.Command("bash", "-c", cmdString)
 
-		verboseOutput(verbose, "Running %q with GOPATH=%s", cmdString, gopath)
+		log.Printf("[DEBUG] Running %q with GOPATH=%s", cmdString, gopath)
 
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -147,16 +147,16 @@ func (Golang) Prep(gopath string, meta Metadata, verbose bool) (err error) {
 		}
 	}
 
-	verboseOutput(verbose, "Prep steps for %s complete\n\n", meta.Package)
+	log.Printf("[DEBUG] Prep steps for %s complete\n\n", meta.Package)
 
 	return err
 }
 
 // Test Runs 'go test -v ./...' in the checked out code directory
-func (Golang) Test(gopath string, gomodule string, verbose bool) (err error) {
+func (Golang) Test(gopath string, gomodule string) (err error) {
 	wd := fmt.Sprintf("%s/src/%s", gopath, gomodule)
 
-	verboseOutput(verbose, "Changing working directory to %s.\n", wd)
+	log.Printf("[DEBUG] Changing working directory to %s.\n", wd)
 
 	err = os.Chdir(wd)
 
@@ -165,7 +165,7 @@ func (Golang) Test(gopath string, gomodule string, verbose bool) (err error) {
 		return err
 	}
 
-	verboseOutput(verbose, "Running 'go test -v ./...'.\n\n")
+	log.Printf("[DEBUG] Running 'go test -v ./...'.\n\n")
 
 	cmd := exec.Command("go", "test", "-v", "./...")
 
@@ -178,18 +178,18 @@ func (Golang) Test(gopath string, gomodule string, verbose bool) (err error) {
 
 	log.Printf(string(output))
 
-	verboseOutput(verbose, "Done with go test.\n\n")
+	log.Printf("[DEBUG] Done with go test.\n\n")
 
 	return err
 }
 
 // Build uses `gox` to build binaries per metadata.json
-func (g Golang) Build(gopath string, meta Metadata, branch string, verbose bool) (err error) {
-	verboseOutput(verbose, "Checking to see that gox is installed.\n")
+func (g Golang) Build(gopath string, meta Metadata, branch string) (err error) {
+	log.Print("[DEBUG] Checking to see that gox is installed.\n")
 
 	// Install gox if it's not already there
 	if _, err := os.Stat(filepath.Join(gopath, "bin/gox")); os.IsNotExist(err) {
-		err = GoxInstall(gopath, verbose)
+		err = GoxInstall(gopath)
 		if err != nil {
 			err = errors.Wrap(err, "Failed to install gox")
 			return err
@@ -197,7 +197,7 @@ func (g Golang) Build(gopath string, meta Metadata, branch string, verbose bool)
 	}
 
 	if _, err := os.Stat(fmt.Sprintf("%s/src/%s/metadata.json", gopath, meta.Package)); os.IsNotExist(err) {
-		err = g.Checkout(gopath, meta, branch, verbose)
+		err = g.Checkout(gopath, meta, branch)
 		if err != nil {
 			err = errors.Wrap(err, fmt.Sprintf("Failed to checkout module: %s branch: %s ", meta.Package, branch))
 			return err
@@ -206,7 +206,7 @@ func (g Golang) Build(gopath string, meta Metadata, branch string, verbose bool)
 
 	wd := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
 
-	verboseOutput(verbose, "Changing working directory to: %s", wd)
+	log.Printf("[DEBUG] Changing working directory to: %s", wd)
 
 	err = os.Chdir(wd)
 
@@ -217,7 +217,7 @@ func (g Golang) Build(gopath string, meta Metadata, branch string, verbose bool)
 
 	gox := fmt.Sprintf("%s/bin/gox", gopath)
 
-	verboseOutput(verbose, "Gox is: %s", gox)
+	log.Printf("[DEBUG] Gox is: %s", gox)
 
 	metadatapath := fmt.Sprintf("%s/src/%s/metadata.json", gopath, meta.Package)
 
@@ -228,7 +228,7 @@ func (g Golang) Build(gopath string, meta Metadata, branch string, verbose bool)
 	}
 
 	for _, target := range md.BuildInfo.Targets {
-		verboseOutput(verbose, "Building target: %q\n", target.Name)
+		log.Printf("[DEBUG] Building target: %q\n", target.Name)
 
 		// This gets weird because go's exec shell doesn't like the arg format that gox expects
 		// Building it thusly keeps the various quoting levels straight
@@ -249,7 +249,7 @@ func (g Golang) Build(gopath string, meta Metadata, branch string, verbose bool)
 
 		for k, v := range target.Flags {
 			runenv = append(runenv, fmt.Sprintf("%s=%s", k, v))
-			verboseOutput(verbose, "Build Flag: %s=%s", k, v)
+			log.Printf("[DEBUG] Build Flag: %s=%s", k, v)
 		}
 
 		args := gox + cgo + ` -osarch="` + target.Name + `"` + " ./..."
@@ -259,7 +259,7 @@ func (g Golang) Build(gopath string, meta Metadata, branch string, verbose bool)
 
 		cmd.Env = runenv
 
-		verboseOutput(verbose, "Running gox with: %s", args)
+		log.Printf("[DEBUG] Running gox with: %s", args)
 
 		out, err := cmd.CombinedOutput()
 
@@ -270,11 +270,10 @@ func (g Golang) Build(gopath string, meta Metadata, branch string, verbose bool)
 			return err
 		}
 
-		verboseOutput(verbose, "Gox build of target %s complete and successful.\n\n", target.Name)
-
+		log.Printf("[DEBUG] Gox build of target %s complete and successful.\n\n", target.Name)
 	}
 
-	err = BuildExtras(md, wd, verbose)
+	err = BuildExtras(md, wd)
 	if err != nil {
 		err = errors.Wrapf(err, "Failed to build extras")
 		return err
@@ -285,8 +284,8 @@ func (g Golang) Build(gopath string, meta Metadata, branch string, verbose bool)
 }
 
 // GoxInstall Installs github.com/mitchellh/gox, the go cross compiler
-func GoxInstall(gopath string, verbose bool) (err error) {
-	verboseOutput(verbose, "Installing gox with GOPATH=%s\n", gopath)
+func GoxInstall(gopath string) (err error) {
+	log.Printf("[DEBUG] Installing gox with GOPATH=%s\n", gopath)
 
 	gocommand, err := exec.LookPath("go")
 	if err != nil {
@@ -304,23 +303,23 @@ func GoxInstall(gopath string, verbose bool) (err error) {
 
 	err = cmd.Run()
 	if err == nil {
-		verboseOutput(verbose, "Gox successfully installed.\n\n")
+		log.Print("[DEBUG] Gox successfully installed.\n\n")
 	}
 
 	return err
 }
 
 // BuildExtras builds the extra artifacts specified in the metadata.json
-func BuildExtras(meta Metadata, workdir string, verbose bool) (err error) {
-	verboseOutput(verbose, "Building Extra Artifacts")
+func BuildExtras(meta Metadata, workdir string) (err error) {
+	log.Print("[DEBUG] Building Extra Artifacts")
 
 	for _, extra := range meta.BuildInfo.Extras {
 		templateName := filepath.Join(workdir, extra.Template)
 		outputFileName := filepath.Join(workdir, extra.FileName)
 		executable := extra.Executable
 
-		verboseOutput(verbose, "Reading template from %s\n", templateName)
-		verboseOutput(verbose, "Writing to %s\n", outputFileName)
+		log.Printf("[DEBUG] Reading template from %s\n", templateName)
+		log.Printf("[DEBUG] Writing to %s\n", outputFileName)
 
 		var mode os.FileMode
 
@@ -350,16 +349,4 @@ func BuildExtras(meta Metadata, workdir string, verbose bool) (err error) {
 	}
 
 	return err
-}
-
-func verboseOutput(verbose bool, message string, args ...interface{}) {
-	if verbose {
-		if len(args) == 0 {
-			log.Printf("%s\n", message)
-			return
-		}
-
-		msg := fmt.Sprintf(message, args...)
-		log.Printf("%s\n", msg)
-	}
 }

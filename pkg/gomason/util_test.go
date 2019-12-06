@@ -67,7 +67,7 @@ func TestParseStringForMetadata(t *testing.T) {
 }
 
 func TestGetCredentials(t *testing.T) {
-	username, password, err := GetCredentials(TestMetadataObj(), true)
+	username, password, err := GetCredentials(TestMetadataObj())
 	if err != nil {
 		log.Printf("Error getting credentials: %s", err)
 		t.Fail()
@@ -93,7 +93,7 @@ func TestGetFunc(t *testing.T) {
 	expected := "foo"
 	command := "echo 'foo'"
 
-	actual, err := GetFunc(command, true)
+	actual, err := GetFunc(command)
 	if err != nil {
 		log.Printf("Error calling test func: %s", err)
 		t.Fail()
