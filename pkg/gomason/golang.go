@@ -90,7 +90,7 @@ func (Golang) Checkout(gopath string, meta Metadata, branch string) (err error) 
 	err = os.Chdir(codepath)
 
 	if err != nil {
-		log.Printf("Error changing working dir to %q: %s", codepath, err)
+		log.Printf("[ERROR] changing working dir to %q: %s", codepath, err)
 		return err
 	}
 
@@ -154,18 +154,18 @@ func (Golang) Prep(gopath string, meta Metadata) (err error) {
 
 // Test Runs 'go test -v ./...' in the checked out code directory
 func (Golang) Test(gopath string, gomodule string) (err error) {
-	wd := fmt.Sprintf("%s/src/%s", gopath, gomodule)
+	wd := filepath.Join(gopath, "src", gomodule)
 
 	log.Printf("[DEBUG] Changing working directory to %s.\n", wd)
 
 	err = os.Chdir(wd)
 
 	if err != nil {
-		log.Printf("Error changing working dir to %q: %s", wd, err)
+		log.Printf("[ERROR] changing working dir to %q: %s", wd, err)
 		return err
 	}
 
-	log.Printf("[DEBUG] Running 'go test -v ./...'.\n\n")
+	log.Print("[DEBUG] Running 'go test -v ./...'.\n\n")
 
 	cmd := exec.Command("go", "test", "-v", "./...")
 
@@ -176,9 +176,9 @@ func (Golang) Test(gopath string, gomodule string) (err error) {
 
 	output, err := cmd.CombinedOutput()
 
-	log.Printf(string(output))
+	fmt.Print(string(output))
 
-	log.Printf("[DEBUG] Done with go test.\n\n")
+	log.Print("[DEBUG] Done with go test.\n\n")
 
 	return err
 }
@@ -211,7 +211,7 @@ func (g Golang) Build(gopath string, meta Metadata, branch string) (err error) {
 	err = os.Chdir(wd)
 
 	if err != nil {
-		log.Printf("Error changing working dir to %q: %s", wd, err)
+		log.Printf("[ERROR] changing working dir to %q: %s", wd, err)
 		return err
 	}
 
@@ -263,10 +263,10 @@ func (g Golang) Build(gopath string, meta Metadata, branch string) (err error) {
 
 		out, err := cmd.CombinedOutput()
 
-		log.Printf("%s\n", string(out))
+		fmt.Printf("%s\n", string(out))
 
 		if err != nil {
-			log.Printf("Build error: %s\n", err.Error())
+			log.Printf("[ERROR] Build error: %s\n", err.Error())
 			return err
 		}
 

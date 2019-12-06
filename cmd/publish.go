@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -78,7 +79,7 @@ Publish will upload your binaries to wherever it is you've configured them to go
 				log.Fatalf("error running go test: %s", err)
 			}
 
-			log.Printf("Tests Succeeded!\n\n")
+			fmt.Print("Tests Succeeded!\n\n")
 		}
 
 		err = lang.Build(workDir, meta, branch)
@@ -86,7 +87,7 @@ Publish will upload your binaries to wherever it is you've configured them to go
 			log.Fatalf("build failed: %s", err)
 		}
 
-		log.Printf("Build Succeeded!\n\n")
+		fmt.Print("Build Succeeded!\n\n")
 
 		if meta.PublishInfo.SkipSigning {
 			log.Printf("[DEBUG] Skipping signing due to 'skip-signing': true in metadata.json")

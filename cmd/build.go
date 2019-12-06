@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -83,7 +84,7 @@ Binaries are dropped into the current working directory.
 				log.Fatalf("error running go test: %s", err)
 			}
 
-			log.Printf("Tests Succeeded!\n\n")
+			fmt.Print("Tests Succeeded!\n\n")
 		}
 
 		err = lang.Build(workDir, meta, branch)
@@ -91,7 +92,7 @@ Binaries are dropped into the current working directory.
 			log.Fatalf("build failed: %s", err)
 		}
 
-		log.Printf("Build Succeeded!\n\n")
+		fmt.Print("Build Succeeded!\n\n")
 
 		err = gomason.HandleArtifacts(meta, workDir, cwd, false, false, true)
 		if err != nil {
