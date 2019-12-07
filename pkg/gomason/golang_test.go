@@ -247,35 +247,6 @@ func TestSignVerifyBinary(t *testing.T) {
 
 	meta.Repository = fmt.Sprintf("http://localhost:%d/repo/tool", servicePort)
 
-	darwin := PublishTarget{
-		Source:      "gomason_darwin_amd64",
-		Destination: "{{.Repository}}/gomason/{{.Version}}/darwin/amd64/gomason",
-		Signature:   true,
-		Checksums:   true,
-	}
-
-	linux := PublishTarget{
-		Source:      "gomason_linux_amd64",
-		Destination: "{{.Repository}}/gomason/{{.Version}}/linux/amd64/gomason",
-		Signature:   true,
-		Checksums:   true,
-	}
-
-	targets := []PublishTarget{darwin, linux}
-
-	targetsMap := make(map[string]PublishTarget)
-
-	for _, target := range targets {
-		targetsMap[target.Source] = target
-	}
-
-	pubInfo := PublishInfo{
-		Targets:    targets,
-		TargetsMap: targetsMap,
-	}
-
-	meta.PublishInfo = pubInfo
-
 	branch := "master"
 
 	// build artifacts
