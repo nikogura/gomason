@@ -8,7 +8,7 @@
 
 [![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](http://godoc.org/github.com/nikogura/gomason)
 
-[![Coverage Status](https://img.shields.io/coveralls/github/nikogura/gomason/master.svg)](https://coveralls.io/github/nikogura/gomason?branch=master)
+[![Coverage Status](https://codecov.io/gh/nikogura/gomason/branch/master/graph/badge.svg)](https://codecov.io/gh/nikogura/gomason)
 
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)  
 
