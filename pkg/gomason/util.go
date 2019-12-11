@@ -14,16 +14,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-func mkdir(dir string, perms os.FileMode) (err error) {
-	err = os.MkdirAll(dir, perms)
-	if err != nil {
-		err = errors.Wrap(err, fmt.Sprintf("failed to create dir %q: %s", dir, err))
-		return err
-	}
-
-	return err
-}
-
 // ReadMetadata  Reads a metadata.json and returns the Metadata object thus described
 func ReadMetadata(filename string) (metadata Metadata, err error) {
 	mdBytes, err := ioutil.ReadFile(filename)
