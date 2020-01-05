@@ -5,6 +5,7 @@ import (
 )
 
 const (
+	// LanguageGolang a canonical string representation of the golang language
 	LanguageGolang = "golang"
 )
 
