@@ -16,6 +16,7 @@ func init() {
 	log.SetOutput(filter)
 }
 
+// Init Sets the logging levels
 func Init(verbose bool) {
 	minLevel := logutils.LogLevel("WARN")
 	if verbose {

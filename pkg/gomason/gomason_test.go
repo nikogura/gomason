@@ -52,6 +52,62 @@ func setUp() {
 
 func tearDown() {
 	if _, err := os.Stat(TestTmpDir); !os.IsNotExist(err) {
-		os.Remove(TestTmpDir)
+		_ = os.Remove(TestTmpDir)
 	}
+}
+
+// testMetadataObj returns a Metadata object suitable for testing
+func testMetadataObj() (metadata Metadata) {
+	metadata = Metadata{
+		Package:     testModuleName(),
+		Version:     "0.1.0",
+		Description: "Test Project for Gomason.",
+		BuildInfo: BuildInfo{
+			PrepCommands: []string{
+				"echo \"GOPATH is: ${GOPATH}\"",
+			},
+			Targets: []BuildTarget{{Name: "linux/amd64"}, {Name: "darwin/amd64"}},
+		},
+		SignInfo: SignInfo{
+			Program: "gpg",
+			Email:   "gomason-tester@foo.com",
+		},
+		PublishInfo: PublishInfo{
+			Targets: []PublishTarget{
+				{
+					Source:      "testproject_darwin_amd64",
+					Destination: "{{.Repository}}/testproject/{{.Version}}/darwin/amd64/testproject",
+					Signature:   true,
+					Checksums:   true,
+				},
+				{
+					Source:      "testproject_linux_amd64",
+					Destination: "{{.Repository}}/testproject/{{.Version}}/linux/amd64/testproject",
+					Signature:   true,
+					Checksums:   true,
+				},
+			},
+			TargetsMap: map[string]PublishTarget{
+				"testproject_darwin_amd64": {
+					Source:      "testproject_darwin_amd64",
+					Destination: "{{.Repository}}/testproject/{{.Version}}/darwin/amd64/testproject",
+					Signature:   true,
+					Checksums:   true,
+				},
+				"testproject_linux_amd64": {
+					Source:      "testproject_linux_amd64",
+					Destination: "{{.Repository}}/testproject/{{.Version}}/linux/amd64/testproject",
+					Signature:   true,
+					Checksums:   true,
+				},
+			},
+		},
+	}
+
+	return metadata
+}
+
+// testModuleName returns the name of the test module
+func testModuleName() string {
+	return "github.com/nikogura/testproject"
 }

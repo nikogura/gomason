@@ -40,13 +40,13 @@ func TestCheckoutDefault(t *testing.T) {
 	}
 
 	log.Printf("Checking out Master Branch")
-	err = lang.Checkout(gopath, TestMetadataObj(), "master")
+	err = lang.Checkout(gopath, testMetadataObj(), "master")
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.FailNow()
 	}
 
-	metaPath := filepath.Join(gopath, "src", TestModuleName(), "metadata.json")
+	metaPath := filepath.Join(gopath, "src", testModuleName(), "metadata.json")
 	if _, err := os.Stat(metaPath); os.IsNotExist(err) {
 		log.Printf("Failed to checkout module")
 		t.FailNow()
@@ -70,13 +70,13 @@ func TestCheckoutBranch(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = lang.Checkout(gopath, TestMetadataObj(), "testbranch")
+	err = lang.Checkout(gopath, testMetadataObj(), "testbranch")
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.FailNow()
 	}
 
-	testFilePath := filepath.Join(gopath, "src", TestModuleName(), "test_file")
+	testFilePath := filepath.Join(gopath, "src", testModuleName(), "test_file")
 	if _, err := os.Stat(testFilePath); os.IsNotExist(err) {
 		log.Printf("Failed to checkout branch")
 		t.FailNow()
@@ -92,19 +92,19 @@ func TestPrep(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = lang.Checkout(gopath, TestMetadataObj(), "master")
+	err = lang.Checkout(gopath, testMetadataObj(), "master")
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.FailNow()
 	}
 
-	metaPath := filepath.Join(gopath, "src", TestModuleName(), "metadata.json")
+	metaPath := filepath.Join(gopath, "src", testModuleName(), "metadata.json")
 	if _, err := os.Stat(metaPath); os.IsNotExist(err) {
 		log.Printf("Failed to checkout module")
 		t.FailNow()
 	}
 
-	err = lang.Prep(gopath, TestMetadataObj())
+	err = lang.Prep(gopath, testMetadataObj())
 	if err != nil {
 		log.Printf("error running prep steps: %s", err)
 		t.FailNow()
@@ -143,30 +143,30 @@ func TestBuild(t *testing.T) {
 		t.FailNow()
 	}
 
-	gomodule := TestMetadataObj().Package
+	gomodule := testMetadataObj().Package
 	branch := "master"
 
 	log.Printf("Checking out Master Branch")
 
-	err = lang.Checkout(gopath, TestMetadataObj(), "master")
+	err = lang.Checkout(gopath, testMetadataObj(), "master")
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.FailNow()
 	}
 
-	metaPath := filepath.Join(gopath, "src", TestModuleName(), "metadata.json")
+	metaPath := filepath.Join(gopath, "src", testModuleName(), "metadata.json")
 	if _, err := os.Stat(metaPath); os.IsNotExist(err) {
 		log.Printf("Failed to checkout module")
 		t.FailNow()
 	}
 
-	err = lang.Prep(gopath, TestMetadataObj())
+	err = lang.Prep(gopath, testMetadataObj())
 	if err != nil {
 		log.Printf("error running prep steps: %s", err)
 		t.FailNow()
 	}
 
-	err = lang.Build(gopath, TestMetadataObj(), branch)
+	err = lang.Build(gopath, testMetadataObj(), branch)
 	if err != nil {
 		log.Printf("Error building: %s", err)
 		t.FailNow()
@@ -202,25 +202,25 @@ func TestTest(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = lang.Checkout(gopath, TestMetadataObj(), "master")
+	err = lang.Checkout(gopath, testMetadataObj(), "master")
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.FailNow()
 	}
 
-	metaPath := filepath.Join(gopath, "src", TestModuleName(), "metadata.json")
+	metaPath := filepath.Join(gopath, "src", testModuleName(), "metadata.json")
 	if _, err := os.Stat(metaPath); os.IsNotExist(err) {
 		log.Printf("Failed to checkout module")
 		t.FailNow()
 	}
 
-	err = lang.Prep(gopath, TestMetadataObj())
+	err = lang.Prep(gopath, testMetadataObj())
 	if err != nil {
 		log.Printf("error running prep steps: %s", err)
 		t.FailNow()
 	}
 
-	err = lang.Test(gopath, TestMetadataObj().Package)
+	err = lang.Test(gopath, testMetadataObj().Package)
 	if err != nil {
 		log.Printf("error running go test: %s", err)
 		t.FailNow()
@@ -243,7 +243,7 @@ func TestSignVerifyBinary(t *testing.T) {
 		t.FailNow()
 	}
 
-	meta := TestMetadataObj()
+	meta := testMetadataObj()
 
 	meta.Repository = fmt.Sprintf("http://localhost:%d/repo/tool", servicePort)
 

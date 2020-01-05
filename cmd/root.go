@@ -25,6 +25,8 @@ import (
 )
 
 var cfgFile string
+
+// Verbose sets verbose output
 var Verbose bool
 var branch string
 var dryrun bool
