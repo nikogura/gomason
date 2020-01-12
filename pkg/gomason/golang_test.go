@@ -228,6 +228,7 @@ func TestTest(t *testing.T) {
 }
 
 func TestSignVerifyBinary(t *testing.T) {
+	os.Setenv(NO_USER_CONFIG_ENV, "true")
 	shellCmd, err := exec.LookPath("gpg")
 	if err != nil {
 		log.Printf("Failed to check if gpg is installed:%s", err)

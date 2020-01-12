@@ -17,6 +17,9 @@ import (
 // VERSION is the current gomason version
 const VERSION = "2.5.7"
 
+// NO_USER_CONFIG_ENV is an env var GOMASON_NO_USER_CONFIG that if set, blocks per user config loading.  Primarily useful for tests that leverage gomason.
+const NO_USER_CONFIG_ENV = "GOMASON_NO_USER_CONFIG"
+
 // Metadata type to represent the metadata.json file
 type Metadata struct {
 	Name        string                 `json:"name"`
@@ -254,6 +257,9 @@ func CollectFileAndSignature(cwd string, filename string) (err error) {
 
 // GetUserConfig reads ~/.gomason if present, and returns a struct with its data.
 func GetUserConfig() (config UserConfig, err error) {
+	if os.Getenv(NO_USER_CONFIG_ENV) != "" {
+		return config, err
+	}
 	// pull per-user signing info out of ~/.gomason if present
 	userObj, err := user.Current()
 	if err != nil {
