@@ -87,7 +87,7 @@ Binaries are dropped into the current working directory.
 			fmt.Print("Tests Succeeded!\n\n")
 		}
 
-		err = lang.Build(workDir, meta, branch)
+		err = lang.Build(workDir, meta)
 		if err != nil {
 			log.Fatalf("build failed: %s", err)
 		}

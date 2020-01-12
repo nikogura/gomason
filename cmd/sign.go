@@ -80,7 +80,7 @@ Signing sorta implies something to sign, which in turn, implies that it built, w
 
 		log.Printf("Tests Succeeded!\n\n")
 
-		err = lang.Build(workDir, meta, branch)
+		err = lang.Build(workDir, meta)
 		if err != nil {
 			log.Fatalf("build failed: %s", err)
 		}

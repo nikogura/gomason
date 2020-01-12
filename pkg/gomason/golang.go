@@ -184,7 +184,7 @@ func (Golang) Test(gopath string, gomodule string) (err error) {
 }
 
 // Build uses `gox` to build binaries per metadata.json
-func (g Golang) Build(gopath string, meta Metadata, branch string) (err error) {
+func (g Golang) Build(gopath string, meta Metadata) (err error) {
 	log.Print("[DEBUG] Checking to see that gox is installed.\n")
 
 	// Install gox if it's not already there
@@ -196,13 +196,13 @@ func (g Golang) Build(gopath string, meta Metadata, branch string) (err error) {
 		}
 	}
 
-	if _, err := os.Stat(fmt.Sprintf("%s/src/%s/metadata.json", gopath, meta.Package)); os.IsNotExist(err) {
-		err = g.Checkout(gopath, meta, branch)
-		if err != nil {
-			err = errors.Wrap(err, fmt.Sprintf("Failed to checkout module: %s branch: %s ", meta.Package, branch))
-			return err
-		}
-	}
+	//if _, err := os.Stat(fmt.Sprintf("%s/src/%s/metadata.json", gopath, meta.Package)); os.IsNotExist(err) {
+	//	err = g.Checkout(gopath, meta, branch)
+	//	if err != nil {
+	//		err = errors.Wrap(err, fmt.Sprintf("Failed to checkout module: %s branch: %s ", meta.Package, branch))
+	//		return err
+	//	}
+	//}
 
 	wd := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
 
