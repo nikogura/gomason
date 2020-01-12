@@ -144,7 +144,6 @@ func TestBuild(t *testing.T) {
 	}
 
 	gomodule := testMetadataObj().Package
-	branch := "master"
 
 	log.Printf("Checking out Master Branch")
 
@@ -166,7 +165,7 @@ func TestBuild(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = lang.Build(gopath, testMetadataObj(), branch)
+	err = lang.Build(gopath, testMetadataObj())
 	if err != nil {
 		log.Printf("Error building: %s", err)
 		t.FailNow()
@@ -228,7 +227,7 @@ func TestTest(t *testing.T) {
 }
 
 func TestSignVerifyBinary(t *testing.T) {
-	os.Setenv(NO_USER_CONFIG_ENV, "true")
+	_ = os.Setenv(NO_USER_CONFIG_ENV, "true")
 	shellCmd, err := exec.LookPath("gpg")
 	if err != nil {
 		log.Printf("Failed to check if gpg is installed:%s", err)
@@ -248,11 +247,9 @@ func TestSignVerifyBinary(t *testing.T) {
 
 	meta.Repository = fmt.Sprintf("http://localhost:%d/repo/tool", servicePort)
 
-	branch := "master"
-
 	// build artifacts
 	log.Printf("Running Build\n")
-	err = lang.Build(gopath, meta, branch)
+	err = lang.Build(gopath, meta)
 	if err != nil {
 		log.Printf("Error building: %s", err)
 		t.FailNow()

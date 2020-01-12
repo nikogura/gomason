@@ -12,37 +12,37 @@ const (
 // Language is a generic interface for doing what gomason does - abstracting build, test, signing, and publishing of binaries
 type Language interface {
 	CreateWorkDir(string) (string, error)
-	Checkout(string, Metadata, string) error
-	Prep(string, Metadata) error
-	Test(string, string) error
-	Build(string, Metadata, string) error
+	Checkout(workdir string, meta Metadata, branch string) error
+	Prep(workdir string, meta Metadata) error
+	Test(workdir string, module string) error
+	Build(workdir string, meta Metadata) error
 }
 
 // NoLanguage essentially an abstract class for the Language interface
 type NoLanguage struct{}
 
 // CreateWorkDir Stub for the CreateWorkDir action
-func (NoLanguage) CreateWorkDir(string) (string, error) {
-	return "", nil
+func (NoLanguage) CreateWorkDir(string) (workdir string, err error) {
+	return workdir, err
 }
 
 // Checkout Stub for the Checkout action
-func (NoLanguage) Checkout(string, Metadata, string) error {
+func (NoLanguage) Checkout(workdir string, meta Metadata, branch string) error {
 	return nil
 }
 
 // Prep stub for the Prep action
-func (NoLanguage) Prep(string, Metadata) error {
+func (NoLanguage) Prep(workdir string, meta Metadata) error {
 	return nil
 }
 
 // Test Stub for the Test action
-func (NoLanguage) Test(string, string) error {
+func (NoLanguage) Test(workdir string, module string) error {
 	return nil
 }
 
 // Build Stub for the Build Action
-func (NoLanguage) Build(string, Metadata, string) error {
+func (NoLanguage) Build(workdor string, meta Metadata) error {
 	return nil
 }
 
