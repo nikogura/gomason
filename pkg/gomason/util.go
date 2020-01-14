@@ -117,8 +117,6 @@ func GetCredentials(meta Metadata) (username, password string, err error) {
 func GetFunc(shellCommand string) (result string, err error) {
 	cmd := exec.Command("sh", "-c", shellCommand)
 
-	fmt.Printf("[DEBUG] Getting input with shell function %q\n", shellCommand)
-
 	stdout, err := cmd.StdoutPipe()
 
 	cmd.Stdin = os.Stdin
