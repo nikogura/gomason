@@ -2,6 +2,9 @@ package gomason
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/nikogura/gomason/pkg/s3"
 	"io"
 	"log"
 	"net/http"
@@ -159,32 +162,63 @@ func UploadSignature(client *http.Client, destination string, filename string, m
 }
 
 // Upload actually does the upload.  It uploads pure data.
-func Upload(client *http.Client, parsedDestination string, data io.Reader, md5sum string, sha1sum string, sha256sum string, username string, password string) (err error) {
-	req, err := http.NewRequest("PUT", parsedDestination, data)
-	if err != nil {
-		err = errors.Wrap(err, fmt.Sprintf("failed to create http request for target %s", parsedDestination))
+func Upload(client *http.Client, url string, data io.Reader, md5sum string, sha1sum string, sha256sum string, username string, password string) (err error) {
+
+	// Check to see if this is an S3 URL
+	isS3, s3Meta := s3.S3Url(url)
+
+	if isS3 {
+		sess, err := s3.DefaultSession()
+		if err != nil {
+			err = errors.Wrap(err, "Failed to create AWS session")
+			return err
+		}
+
+		uploader := s3manager.NewUploader(sess)
+
+		uploadOptions := &s3manager.UploadInput{
+			Body:   data,
+			Bucket: aws.String(s3Meta.Bucket),
+			Key:    aws.String(s3Meta.Key),
+		}
+
+		_, err = uploader.Upload(uploadOptions)
+		if err != nil {
+			err = errors.Wrapf(err, "failed uploading to %s", url)
+			return err
+		}
+
+		return err
+
+	} else { // do a normal http upload
+		// TODO Check if destination exists
+		// TODO Create path if not
+		req, err := http.NewRequest("PUT", url, data)
+		if err != nil {
+			err = errors.Wrap(err, fmt.Sprintf("failed to create http request for target %s", url))
+			return err
+		}
+
+		// add headers  (Technically these are what Artifactory expects, but should be fine for any REST interface)
+		req.Header.Add("X-Checksum-Md5", md5sum)
+		req.Header.Add("X-Checksum-Sha1", sha1sum)
+		req.Header.Add("X-Checksum-Sha256", sha256sum)
+		req.SetBasicAuth(username, password)
+
+		resp, err := client.Do(req)
+		if err != nil {
+			err = errors.Wrap(err, fmt.Sprintf("Failed to PUT to url %s", url))
+			return err
+		}
+
+		log.Printf("[DEBUG] Response: %s", resp.Status)
+		log.Printf("[DEBUG] Response Code: %d", resp.StatusCode)
+
+		if resp.StatusCode > 299 {
+			err = errors.New(fmt.Sprintf("response code %d is not indicative of a successful publish", resp.StatusCode))
+			return err
+		}
+
 		return err
 	}
-
-	// add headers  (Technically these are what Artifactory expects, but should be fine for any REST interface)
-	req.Header.Add("X-Checksum-Md5", md5sum)
-	req.Header.Add("X-Checksum-Sha1", sha1sum)
-	req.Header.Add("X-Checksum-Sha256", sha256sum)
-	req.SetBasicAuth(username, password)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		err = errors.Wrap(err, fmt.Sprintf("Failed to PUT to url %s", parsedDestination))
-		return err
-	}
-
-	log.Printf("[DEBUG] Response: %s", resp.Status)
-	log.Printf("[DEBUG] Response Code: %d", resp.StatusCode)
-
-	if resp.StatusCode > 299 {
-		err = errors.New(fmt.Sprintf("response code %d is not indicative of a successful publish", resp.StatusCode))
-		return err
-	}
-
-	return err
 }

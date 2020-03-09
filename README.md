@@ -93,6 +93,8 @@ Other options can be found by running:
 
 Projects are configured by the file ```metadata.json``` in the root of the project being tested/built/published by gomason.  This file is intended to be checked into the project and contains information required for gomason to function.  See below for examples and [Project Config Reference](#project-config-reference) for full details.
 
+As of v2.6.1, `gomason` supports S3 urls of the 'virtual host' variety.  (i.e. `https://<bucket>.s3.<region>.amazonaws.com/<key>`).  It's assumed AWS credentials are configured in the environment used to run `gomason`.   If other AWS programs and tools work, `gomason` should too - so long as you have permission to write to the configured bucket(s).
+
 Some information in ```metadata.json```, such as signing info can be overwritten by the [User Config](#user-config) detailed below.
 
 Example metadata.json:
