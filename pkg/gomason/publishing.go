@@ -3,8 +3,8 @@ package gomason
 import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/nikogura/gomason/pkg/s3"
 	"io"
 	"log"
 	"net/http"
@@ -163,12 +163,11 @@ func UploadSignature(client *http.Client, destination string, filename string, m
 
 // Upload actually does the upload.  It uploads pure data.
 func Upload(client *http.Client, url string, data io.Reader, md5sum string, sha1sum string, sha256sum string, username string, password string) (err error) {
-
 	// Check to see if this is an S3 URL
-	isS3, s3Meta := s3.S3Url(url)
+	isS3, s3Meta := S3Url(url)
 
 	if isS3 {
-		sess, err := s3.DefaultSession()
+		sess, err := DefaultSession()
 		if err != nil {
 			err = errors.Wrap(err, "Failed to create AWS session")
 			return err
@@ -186,6 +185,41 @@ func Upload(client *http.Client, url string, data io.Reader, md5sum string, sha1
 		if err != nil {
 			err = errors.Wrapf(err, "failed uploading to %s", url)
 			return err
+		}
+
+		// make the directory paths in s3
+		dirs, err := DirsForURL(s3Meta.Key)
+		if err != nil {
+			err = errors.Wrapf(err, "failed to parse dirs for %s", s3Meta.Key)
+		}
+
+		headSvc := s3.New(sess)
+		s3Client := s3.New(sess)
+
+		// create the 'folders' (0 byte objects) in s3
+		for _, d := range dirs {
+			if d != "." {
+				path := fmt.Sprintf("%s/", d)
+				// check to see if it doesn't already exist
+				headOptions := &s3.HeadObjectInput{
+					Bucket: aws.String(s3Meta.Bucket),
+					Key:    aws.String(path),
+				}
+
+				_, err = headSvc.HeadObject(headOptions)
+				// if there's an error, it doesn't exist
+				if err != nil {
+					// so create it
+					_, err = s3Client.PutObject(&s3.PutObjectInput{
+						Bucket: aws.String(s3Meta.Bucket),
+						Key:    aws.String(path),
+					})
+					if err != nil {
+						err = errors.Wrapf(err, "Failed to create %s in s3", path)
+						return err
+					}
+				}
+			}
 		}
 
 		return err
