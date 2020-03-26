@@ -19,6 +19,15 @@ import (
 	"github.com/pkg/errors"
 )
 
+// AWS_ID_ENV_VAR Default env var for AWS access key
+const AWS_ID_ENV_VAR = "AWS_ACCESS_KEY_ID"
+
+// AWS_SECRET_ENV_VAR Default env var for AWS secret key
+const AWS_SECRET_ENV_VAR = "AWS_SECRET_ACCESS_KEY"
+
+// AWS_REGION_ENV_VAR Default env var for AWS region.
+const AWS_REGION_ENV_VAR = "AWS_DEFAULT_REGION"
+
 // ReadMetadata  Reads a metadata.json and returns the Metadata object thus described
 func ReadMetadata(filename string) (metadata Metadata, err error) {
 	mdBytes, err := ioutil.ReadFile(filename)
@@ -201,10 +210,6 @@ func DirsForURL(uri string) (dirs []string, err error) {
 	return dirs, err
 }
 
-const AWS_ID_ENV_VAR = "AWS_ACCESS_KEY_ID"
-const AWS_SECRET_ENV_VAR = "AWS_SECRET_ACCESS_KEY"
-const AWS_REGION_ENV_VAR = "AWS_DEFAULT_REGION"
-
 // DefaultSession creates a default AWS session from local config path.  Hooks directly into credentials if present, or Credentials Provider if configured.
 func DefaultSession() (awssession *session.Session, err error) {
 	if os.Getenv(AWS_ID_ENV_VAR) == "" && os.Getenv(AWS_SECRET_ENV_VAR) == "" {
@@ -216,7 +221,7 @@ func DefaultSession() (awssession *session.Session, err error) {
 		log.Fatalf("Failed to create aws session")
 	}
 
-	// For some reason this doesn't get picked up automatically, but we'll set it if it's present in the enviornment.
+	// For some reason this doesn't get picked up automatically, but we'll set it if it's present in the environment.
 	if os.Getenv(AWS_REGION_ENV_VAR) != "" {
 		awssession.Config.Region = aws.String(os.Getenv(AWS_REGION_ENV_VAR))
 	}
