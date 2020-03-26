@@ -105,9 +105,8 @@ func UploadChecksums(client *http.Client, destination, filename string, meta Met
 
 // UploadChecksum uploads the checksum of the given type for the given file
 func UploadChecksum(parsedDestination, checksum, sumtype, fileName string, client *http.Client, username, password string) (err error) {
-	// upload Md5 sum
 	target := fmt.Sprintf("%s.%s", parsedDestination, sumtype)
-	contents := fmt.Sprintf("%s %s\n", checksum, fileName)
+	contents := checksum
 
 	sumMd5, sumSha1, sumSha256, err := AllChecksumsForBytes([]byte(contents))
 	if err != nil {
