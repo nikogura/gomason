@@ -104,6 +104,7 @@ Example metadata.json:
       "package": "github.com/nikogura/gomason",
       "description": "A tool for testing, building, signing, and publishing your project from a clean workspace.",
       "repository": "http://localhost:8081/artifactory/generic-local",
+      "tool-repository": "http://localhost:8081/artifactory/generic-local-tools",
       "insecure_get": false,
       "language": "golang",
       "building": {
@@ -418,6 +419,7 @@ Example:
        "package": "github.com/nikogura/gomason",
        "description": "A tool for building and testing your project in a clean GOPATH.",
        "repository": "http://localhost:8081/artifactory/generic-local",
+       "tool-repository": "http://localhost:8081/artifactory/generic-local-tools",
        "language": "golang",
        "building": {
          "prepcommands": [
@@ -456,6 +458,10 @@ A nice, human readable description for your module, cos that's really nice.  Hav
 ### Repository
 
 The url of the repository to which you're planning to publish your binaries.
+
+### Tool-Repository
+
+The url of a secondary repository to which you're planning to publish your binaries.  Primarily intended for use by (dbt)[https://github.com/nikogura/dbt].  
 
 ### Insecure_Get
 

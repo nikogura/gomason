@@ -15,24 +15,25 @@ import (
 )
 
 // VERSION is the current gomason version
-const VERSION = "2.6.3"
+const VERSION = "2.6.4"
 
 // NO_USER_CONFIG_ENV is an env var GOMASON_NO_USER_CONFIG that if set, blocks per user config loading.  Primarily useful for tests that leverage gomason.
 const NO_USER_CONFIG_ENV = "GOMASON_NO_USER_CONFIG"
 
 // Metadata type to represent the metadata.json file
 type Metadata struct {
-	Name        string                 `json:"name"`
-	Version     string                 `json:"version"`
-	Package     string                 `json:"package"`
-	Description string                 `json:"description"`
-	Repository  string                 `json:"repository"`
-	InsecureGet bool                   `json:"insecure_get"`
-	Language    string                 `json:"language,omitempty"`
-	BuildInfo   BuildInfo              `json:"building,omitempty"`
-	SignInfo    SignInfo               `json:"signing,omitempty"`
-	PublishInfo PublishInfo            `json:"publishing,omitempty"`
-	Options     map[string]interface{} `json:"options,omitempty"`
+	Name           string                 `json:"name"`
+	Version        string                 `json:"version"`
+	Package        string                 `json:"package"`
+	Description    string                 `json:"description"`
+	Repository     string                 `json:"repository"`
+	ToolRepository string                 `json:"tool-repository"`
+	InsecureGet    bool                   `json:"insecure_get"`
+	Language       string                 `json:"language,omitempty"`
+	BuildInfo      BuildInfo              `json:"building,omitempty"`
+	SignInfo       SignInfo               `json:"signing,omitempty"`
+	PublishInfo    PublishInfo            `json:"publishing,omitempty"`
+	Options        map[string]interface{} `json:"options,omitempty"`
 }
 
 // GetLanguage returns the language set in metadata.json, or the default 'golang'.
