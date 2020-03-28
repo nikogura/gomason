@@ -61,7 +61,7 @@ func GitSSHUrlFromPackage(packageName string) (gitpath string) {
 }
 
 // GetCredentials gets credentials, first from the metadata.json, and then from the user config in ~/.gomason if it exists.  If no credentials are found in any of the places, it returns the empty stings for usernames and passwords.  This is not recommended, but it might be useful in some cases.  Who knows?  We makes the tools, we don't tell you how to use them.  (we do, however make suggestions.) :D
-func GetCredentials(meta Metadata) (username, password string, err error) {
+func (g *Gomason) GetCredentials(meta Metadata) (username, password string, err error) {
 	log.Print("[DEBUG] Getting credentials")
 
 	// get creds from metadata
@@ -91,12 +91,7 @@ func GetCredentials(meta Metadata) (username, password string, err error) {
 		password = meta.PublishInfo.Password
 	}
 
-	// get creds from user config
-	config, err := GetUserConfig()
-	if err != nil {
-		err = errors.Wrapf(err, "failed to get user config from ~/.gomason")
-		return username, password, err
-	}
+	config := g.Config
 
 	// usernamefunc takes precedence over username
 	if config.User.UsernameFunc != "" {

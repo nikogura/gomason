@@ -112,7 +112,13 @@ func TestParseStringForMetadata(t *testing.T) {
 }
 
 func TestGetCredentials(t *testing.T) {
-	username, password, err := GetCredentials(testMetadataObj())
+	g := Gomason{
+		Config: UserConfig{
+			User:    UserInfo{},
+			Signing: UserSignInfo{},
+		},
+	}
+	username, password, err := g.GetCredentials(testMetadataObj())
 	if err != nil {
 		log.Printf("Error getting credentials: %s", err)
 		t.Fail()
@@ -188,6 +194,47 @@ func TestS3Url(t *testing.T) {
 			assert.True(t, tc.bucket == meta.Bucket, fmt.Sprintf("Bucket %q doesn't look right", meta.Bucket))
 			assert.True(t, tc.region == meta.Region, fmt.Sprintf("Region %q doesn't look right.", meta.Region))
 			assert.True(t, tc.key == meta.Key, fmt.Sprintf("Key %q doesn't look right.", meta.Key))
+		})
+	}
+}
+
+func TestDirsForURL(t *testing.T) {
+	inputs := []struct {
+		name   string
+		input  string
+		output []string
+	}{
+		{
+			"s3 reposerver url",
+			"https://foo.com/dbt-tools/catalog/1.2.3/darwin/amd64/catalog",
+			[]string{
+				"dbt-tools",
+				"dbt-tools/catalog",
+				"dbt-tools/catalog/1.2.3",
+				"dbt-tools/catalog/1.2.3/darwin",
+				"dbt-tools/catalog/1.2.3/darwin/amd64",
+			},
+		},
+		{
+			"s3 catalog url",
+			"https://dbt-tools.s3.us-east-1.amazonaws.com/catalog/1.2.3/darwin/amd64/catalog",
+			[]string{
+				"catalog",
+				"catalog/1.2.3",
+				"catalog/1.2.3/darwin",
+				"catalog/1.2.3/darwin/amd64",
+			},
+		},
+	}
+
+	for _, tc := range inputs {
+		t.Run(tc.name, func(t *testing.T) {
+			dirs, err := DirsForURL(tc.input)
+			if err != nil {
+				t.Error(err)
+			}
+
+			assert.Equal(t, tc.output, dirs, "Parsed directories meet expectations")
 		})
 	}
 }

@@ -36,6 +36,11 @@ Test, build, sign and publish your code.
 Publish will upload your binaries to wherever it is you've configured them to go in whatever way you like.  The detached signatures will likewise be uploaded.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		gm, err := gomason.NewGomason()
+		if err != nil {
+			log.Fatalf("error creating gomason object")
+		}
+
 		cwd, err := os.Getwd()
 		if err != nil {
 			log.Fatalf("Failed to get current working directory: %s", err)
@@ -91,23 +96,23 @@ Publish will upload your binaries to wherever it is you've configured them to go
 
 		if meta.PublishInfo.SkipSigning {
 			log.Printf("[DEBUG] Skipping signing due to 'skip-signing': true in metadata.json")
-			err = gomason.HandleArtifacts(meta, workDir, cwd, false, true, false)
+			err = gm.HandleArtifacts(meta, workDir, cwd, false, true, false)
 			if err != nil {
 				log.Fatalf("post-build processing failed: %s", err)
 			}
 
-			err = gomason.HandleExtras(meta, workDir, cwd, false, true)
+			err = gm.HandleExtras(meta, workDir, cwd, false, true)
 			if err != nil {
 				log.Fatalf("Extra artifact processing failed: %s", err)
 			}
 
 		} else {
-			err = gomason.HandleArtifacts(meta, workDir, cwd, true, true, false)
+			err = gm.HandleArtifacts(meta, workDir, cwd, true, true, false)
 			if err != nil {
 				log.Fatalf("post-build processing failed: %s", err)
 			}
 
-			err = gomason.HandleExtras(meta, workDir, cwd, true, true)
+			err = gm.HandleExtras(meta, workDir, cwd, true, true)
 			if err != nil {
 				log.Fatalf("Extra artifact processing failed: %s", err)
 			}
@@ -118,14 +123,5 @@ Publish will upload your binaries to wherever it is you've configured them to go
 func init() {
 	rootCmd.AddCommand(publishCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// publishCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// publishCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	publishCmd.Flags().BoolVarP(&pubSkipTests, "skiptests", "s", false, "Skip tests when publishing.")
 }

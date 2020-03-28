@@ -1,6 +1,8 @@
 package gomason
 
 import (
+	"fmt"
+	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"log"
 	"os"
@@ -110,4 +112,88 @@ func testMetadataObj() (metadata Metadata) {
 // testModuleName returns the name of the test module
 func testModuleName() string {
 	return "github.com/nikogura/testproject"
+}
+
+func TestMetadata_GetLanguage(t *testing.T) {
+	cases := []struct {
+		name     string
+		meta     Metadata
+		expected string
+	}{
+		{
+			"golang",
+			Metadata{
+				Language: "golang",
+			},
+			"golang",
+		},
+		{
+			"python",
+			Metadata{
+				Language: "python",
+			},
+			"python",
+		},
+		{
+			"default",
+			Metadata{
+				Language: "",
+			},
+			"golang",
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			actual := c.meta.GetLanguage()
+
+			assert.Equal(t, c.expected, actual, "returned language meets expectations")
+		})
+	}
+}
+
+func testUserConfig() string {
+	return `[user]
+  email = nik.ogura@gmail.com
+  username = nikogura
+  usernamefunc = echo 'foo bar baz'
+  password = changeit
+  passwordfunc = echo 'seecret!'
+
+[signing]
+  program = gpg
+`
+}
+
+func TestGetUserConfig(t *testing.T) {
+	homeDir := fmt.Sprintf("%s/user", TestTmpDir)
+
+	err := os.Mkdir(homeDir, 0755)
+	if err != nil {
+		t.Errorf("Failed creating %s", homeDir)
+	}
+
+	userFile := fmt.Sprintf("%s/.gomason", homeDir)
+
+	err = ioutil.WriteFile(userFile, []byte(testUserConfig()), 0644)
+
+	actual, err := GetUserConfig(homeDir)
+	if err != nil {
+		t.Errorf("Error getting user config: %s", err)
+	}
+
+	expected := UserConfig{
+		User: UserInfo{
+			Email:        "nik.ogura@gmail.com",
+			Username:     "nikogura",
+			UsernameFunc: "echo 'foo bar baz'",
+			Password:     "changeit",
+			PasswordFunc: "echo 'seecret!'",
+		},
+		Signing: UserSignInfo{
+			Program: "gpg",
+		},
+	}
+
+	assert.Equal(t, expected, actual, "loaded config meets expectations")
 }

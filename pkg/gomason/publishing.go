@@ -16,9 +16,9 @@ import (
 )
 
 // PublishFile publishes the binary to wherever you have it configured to go
-func PublishFile(meta Metadata, filePath string) (err error) {
+func (g *Gomason) PublishFile(meta Metadata, filePath string) (err error) {
 	// get creds
-	username, password, err := GetCredentials(meta)
+	username, password, err := g.GetCredentials(meta)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to get credentials")
 		return err
@@ -71,10 +71,6 @@ func UploadChecksums(client *http.Client, destination, filename string, meta Met
 		err = errors.Wrapf(err, "failed to calculate checksum for %s", filename)
 		return err
 	}
-	// write each checksum file
-	// checksum format: <sum> <filename>\n
-
-	base := filepath.Base(filename)
 
 	parsedDestination, err := ParseTemplateForMetadata(destination, meta)
 	if err != nil {
@@ -83,19 +79,19 @@ func UploadChecksums(client *http.Client, destination, filename string, meta Met
 	}
 
 	// upload Md5Sum
-	err = UploadChecksum(parsedDestination, md5sum, "md5", base, client, username, password)
+	err = UploadChecksum(parsedDestination, md5sum, "md5", client, username, password)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to upload md5sum file for %s", filename)
 	}
 
 	// upload Sha1Sum
-	err = UploadChecksum(parsedDestination, sha1sum, "sha1", base, client, username, password)
+	err = UploadChecksum(parsedDestination, sha1sum, "sha1", client, username, password)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to upload sha1sum file for %s", filename)
 	}
 
 	// upload Sha256Sum
-	err = UploadChecksum(parsedDestination, sha256sum, "sha256", base, client, username, password)
+	err = UploadChecksum(parsedDestination, sha256sum, "sha256", client, username, password)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to upload sha256sum file for %s", filename)
 	}
@@ -104,7 +100,7 @@ func UploadChecksums(client *http.Client, destination, filename string, meta Met
 }
 
 // UploadChecksum uploads the checksum of the given type for the given file
-func UploadChecksum(parsedDestination, checksum, sumtype, fileName string, client *http.Client, username, password string) (err error) {
+func UploadChecksum(parsedDestination, checksum, sumtype string, client *http.Client, username, password string) (err error) {
 	target := fmt.Sprintf("%s.%s", parsedDestination, sumtype)
 	contents := checksum
 

@@ -13,12 +13,11 @@ import (
 const defaultSigningProgram = "gpg"
 
 // SignBinary  signs the given binary based on the entity and program given in metadata.json, possibly overridden by information in ~/.gomason
-func SignBinary(meta Metadata, binary string) (err error) {
+func (g *Gomason) SignBinary(meta Metadata, binary string) (err error) {
 	log.Printf("[DEBUG] Preparing to sign binary %s", binary)
 
 	// pull signing info out of metadata.json
 	signInfo := meta.SignInfo
-
 	signProg := signInfo.Program
 	if signProg == "" {
 		signProg = defaultSigningProgram
@@ -28,10 +27,7 @@ func SignBinary(meta Metadata, binary string) (err error) {
 
 	signEntity := signInfo.Email
 
-	config, err := GetUserConfig()
-	if err != nil {
-		err = errors.Wrapf(err, "failed to get per-user config from ~/.gomason")
-	}
+	config := g.Config
 
 	// email from .gomason overrides metadata
 	if config.User.Email != "" {

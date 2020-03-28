@@ -1,4 +1,4 @@
-// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2017 Nik Ogura <nik.ogura@gmail.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,6 +35,11 @@ Artists sign their work, you should too.
 Signing sorta implies something to sign, which in turn, implies that it built, which means it tested successfully.  What I'm getting at is this command will run 'test', 'build', and then it will 'sign'.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		gm, err := gomason.NewGomason()
+		if err != nil {
+			log.Fatalf("error creating gomason object")
+		}
+
 		cwd, err := os.Getwd()
 		if err != nil {
 			log.Fatalf("Failed to get current working directory: %s", err)
@@ -87,12 +92,12 @@ Signing sorta implies something to sign, which in turn, implies that it built, w
 
 		log.Printf("Build Succeeded!\n\n")
 
-		err = gomason.HandleArtifacts(meta, workDir, cwd, true, false, true)
+		err = gm.HandleArtifacts(meta, workDir, cwd, true, false, true)
 		if err != nil {
 			log.Fatalf("signing failed: %s", err)
 		}
 
-		err = gomason.HandleExtras(meta, workDir, cwd, true, false)
+		err = gm.HandleExtras(meta, workDir, cwd, true, false)
 		if err != nil {
 			log.Fatalf("Extra artifact processing failed: %s", err)
 		}
@@ -101,14 +106,4 @@ Signing sorta implies something to sign, which in turn, implies that it built, w
 
 func init() {
 	rootCmd.AddCommand(signCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// signCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// signCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

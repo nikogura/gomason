@@ -1,4 +1,4 @@
-// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2017 Nik Ogura <nik.ogura@gmail.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,12 +16,11 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/nikogura/gomason/pkg/gomason"
+	"github.com/spf13/cobra"
 	"io/ioutil"
 	"log"
 	"os"
-
-	"github.com/nikogura/gomason/pkg/gomason"
-	"github.com/spf13/cobra"
 )
 
 // testCmd represents the test command
@@ -42,6 +41,11 @@ Sure, you could do the same thing with a CI or CD system.  But sometimes that's 
 Sometimes you need the benefits of a full system here.  Now.  Right at your fingertips.  You're welcome.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		_, err := gomason.NewGomason()
+		if err != nil {
+			log.Fatalf("error creating gomason object")
+		}
+
 		rootWorkDir, err := ioutil.TempDir("", "gomason")
 		if err != nil {
 			log.Fatalf("Failed to create temp dir: %s", err)
@@ -87,14 +91,4 @@ Sometimes you need the benefits of a full system here.  Now.  Right at your fing
 
 func init() {
 	rootCmd.AddCommand(testCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// testCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// testCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

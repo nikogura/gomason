@@ -227,7 +227,12 @@ func TestTest(t *testing.T) {
 }
 
 func TestSignVerifyBinary(t *testing.T) {
-	_ = os.Setenv(NO_USER_CONFIG_ENV, "true")
+	g := Gomason{
+		Config: UserConfig{
+			User:    UserInfo{},
+			Signing: UserSignInfo{},
+		},
+	}
 	shellCmd, err := exec.LookPath("gpg")
 	if err != nil {
 		log.Printf("Failed to check if gpg is installed:%s", err)
@@ -316,7 +321,7 @@ Expire-Date: 0
 			t.FailNow()
 		}
 
-		err = SignBinary(meta, binary)
+		err = g.SignBinary(meta, binary)
 		if err != nil {
 			err = errors.Wrap(err, "failed to sign binary")
 			log.Printf("Failed to sign binary %s: %s", binary, err)
@@ -344,12 +349,12 @@ Expire-Date: 0
 
 	fmt.Printf("Publishing\n")
 
-	err = HandleArtifacts(meta, gopath, cwd, false, true, true)
+	err = g.HandleArtifacts(meta, gopath, cwd, false, true, true)
 	if err != nil {
 		log.Fatalf("post-build processing failed: %s", err)
 	}
 
-	err = HandleExtras(meta, gopath, cwd, false, true)
+	err = g.HandleExtras(meta, gopath, cwd, false, true)
 	if err != nil {
 		log.Fatalf("Extra artifact processing failed: %s", err)
 	}
