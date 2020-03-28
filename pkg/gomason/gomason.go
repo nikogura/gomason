@@ -44,10 +44,12 @@ func (m Metadata) GetLanguage() (lang string) {
 	return lang
 }
 
+// Gomason Object that does all the building
 type Gomason struct {
 	Config UserConfig
 }
 
+// NewGomason creates a new Gomason object for the current user
 func NewGomason() (g *Gomason, err error) {
 	userObj, err := user.Current()
 	if err != nil {
