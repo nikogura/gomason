@@ -176,6 +176,9 @@ func TestGetUserConfig(t *testing.T) {
 	userFile := fmt.Sprintf("%s/.gomason", homeDir)
 
 	err = ioutil.WriteFile(userFile, []byte(testUserConfig()), 0644)
+	if err != nil {
+		t.Errorf("error writing %s: %s", userFile, err)
+	}
 
 	actual, err := GetUserConfig(homeDir)
 	if err != nil {
