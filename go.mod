@@ -26,7 +26,7 @@ require (
 	github.com/spf13/jwalterweatherman v0.0.0-20180109140146-7c0cea34c8ec // indirect
 	github.com/spf13/pflag v0.0.0-20180601132542-3ebe029320b2 // indirect
 	github.com/spf13/viper v0.0.0-20180507071007-15738813a09d
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.1
 	gopkg.in/ini.v1 v1.41.0
 )
 

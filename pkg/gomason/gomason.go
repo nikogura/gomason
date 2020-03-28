@@ -17,9 +17,6 @@ import (
 // VERSION is the current gomason version
 const VERSION = "2.6.4"
 
-// NO_USER_CONFIG_ENV is an env var GOMASON_NO_USER_CONFIG that if set, blocks per user config loading.  Primarily useful for tests that leverage gomason.
-const NO_USER_CONFIG_ENV = "GOMASON_NO_USER_CONFIG"
-
 // Metadata type to represent the metadata.json file
 type Metadata struct {
 	Name           string                 `json:"name"`
@@ -45,6 +42,29 @@ func (m Metadata) GetLanguage() (lang string) {
 	}
 
 	return lang
+}
+
+type Gomason struct {
+	Config UserConfig
+}
+
+func NewGomason() (g *Gomason, err error) {
+	userObj, err := user.Current()
+	if err != nil {
+		log.Fatalf("failed to get current user: %s", err)
+	}
+
+	config, err := GetUserConfig(userObj.HomeDir)
+	if err != nil {
+		err = errors.Wrap(err, "error getting user config")
+		return g, err
+	}
+
+	g = &Gomason{
+		Config: config,
+	}
+
+	return g, err
 }
 
 // BuildInfo stores information used for building the code.
@@ -117,7 +137,7 @@ type UserSignInfo struct {
 // HandleArtifacts loops over the expected files built by Build() and optionally signs them and publishes them along with their signatures (if signing).
 //
 // If not publishing, the binaries (and their optional signatures) are collected and dumped into the directory where gomason was called. (Typically the root of a go project).
-func HandleArtifacts(meta Metadata, gopath string, cwd string, sign bool, publish bool, collect bool) (err error) {
+func (g *Gomason) HandleArtifacts(meta Metadata, gopath string, cwd string, sign bool, publish bool, collect bool) (err error) {
 	// loop through the built things for each type of build target
 	for _, target := range meta.BuildInfo.Targets {
 		log.Printf("[DEBUG] Processing build target: %s", target.Name)
@@ -150,7 +170,7 @@ func HandleArtifacts(meta Metadata, gopath string, cwd string, sign bool, publis
 
 				// sign 'em if we're signing
 				if sign {
-					err = SignBinary(meta, filename)
+					err = g.SignBinary(meta, filename)
 					if err != nil {
 						err = errors.Wrap(err, "failed to sign binary")
 						return err
@@ -159,7 +179,7 @@ func HandleArtifacts(meta Metadata, gopath string, cwd string, sign bool, publis
 
 				// publish and return if we're publishing
 				if publish {
-					err = PublishFile(meta, filename)
+					err = g.PublishFile(meta, filename)
 					if err != nil {
 						err = errors.Wrap(err, "failed to publish binary")
 						return err
@@ -186,7 +206,7 @@ func HandleArtifacts(meta Metadata, gopath string, cwd string, sign bool, publis
 // HandleExtras loops over the expected files built by Build() and optionally signs them and publishes them along with their signatures (if signing).
 //
 // If not publishing, the binaries (and their optional signatures) are collected and dumped into the directory where gomason was called. (Typically the root of a go project).
-func HandleExtras(meta Metadata, gopath string, cwd string, sign bool, publish bool) (err error) {
+func (g *Gomason) HandleExtras(meta Metadata, gopath string, cwd string, sign bool, publish bool) (err error) {
 
 	// loop through the built things for each type of build target
 	for _, extra := range meta.BuildInfo.Extras {
@@ -202,7 +222,7 @@ func HandleExtras(meta Metadata, gopath string, cwd string, sign bool, publish b
 
 		// sign 'em if we're signing
 		if sign {
-			err = SignBinary(meta, filename)
+			err = g.SignBinary(meta, filename)
 			if err != nil {
 				err = errors.Wrap(err, "failed to sign extra artifact")
 				return err
@@ -211,7 +231,7 @@ func HandleExtras(meta Metadata, gopath string, cwd string, sign bool, publish b
 
 		// publish and return if we're publishing
 		if publish {
-			err = PublishFile(meta, filename)
+			err = g.PublishFile(meta, filename)
 			if err != nil {
 				err = errors.Wrap(err, "failed to publish extra artifact")
 				return err
@@ -257,25 +277,8 @@ func CollectFileAndSignature(cwd string, filename string) (err error) {
 }
 
 // GetUserConfig reads ~/.gomason if present, and returns a struct with its data.
-func GetUserConfig() (config UserConfig, err error) {
-	if os.Getenv(NO_USER_CONFIG_ENV) != "" {
-		return config, err
-	}
-	// pull per-user signing info out of ~/.gomason if present
-	userObj, err := user.Current()
-	if err != nil {
-		err = fmt.Errorf("failed to get current user: %s", err)
-		return config, err
-	}
-
-	homeDir := userObj.HomeDir
-
-	if _, err := os.Stat(homeDir); os.IsNotExist(err) {
-		err = fmt.Errorf("user %s's homedir %s does not exist", userObj.Name, homeDir)
-		return config, err
-	}
-
-	perUserConfigFile := fmt.Sprintf("%s/.gomason", homeDir)
+func GetUserConfig(homedir string) (config UserConfig, err error) {
+	perUserConfigFile := fmt.Sprintf("%s/.gomason", homedir)
 
 	if _, err := os.Stat(perUserConfigFile); !os.IsNotExist(err) {
 		cfg, err := ini.Load(perUserConfigFile)

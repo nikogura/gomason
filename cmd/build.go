@@ -1,4 +1,4 @@
-// Copyright © 2017 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2017 Nik Ogura <nik.ogura@gmail.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,12 +16,11 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/nikogura/gomason/pkg/gomason"
+	"github.com/spf13/cobra"
 	"io/ioutil"
 	"log"
 	"os"
-
-	"github.com/nikogura/gomason/pkg/gomason"
-	"github.com/spf13/cobra"
 )
 
 var buildSkipTests bool
@@ -40,6 +39,11 @@ You could run 'test' separately, but 'build' is nice enough to do it for you.
 Binaries are dropped into the current working directory.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
+		gm, err := gomason.NewGomason()
+		if err != nil {
+			log.Fatalf("error creating gomason object")
+		}
+
 		cwd, err := os.Getwd()
 		if err != nil {
 			log.Fatalf("Failed to get current working directory: %s", err)
@@ -94,12 +98,12 @@ Binaries are dropped into the current working directory.
 
 		fmt.Print("Build Succeeded!\n\n")
 
-		err = gomason.HandleArtifacts(meta, workDir, cwd, false, false, true)
+		err = gm.HandleArtifacts(meta, workDir, cwd, false, false, true)
 		if err != nil {
 			log.Fatalf("signing failed: %s", err)
 		}
 
-		err = gomason.HandleExtras(meta, workDir, cwd, false, false)
+		err = gm.HandleExtras(meta, workDir, cwd, false, false)
 		if err != nil {
 			log.Fatalf("Extra artifact processing failed: %s", err)
 		}
@@ -109,14 +113,5 @@ Binaries are dropped into the current working directory.
 func init() {
 	rootCmd.AddCommand(buildCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// buildCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// buildCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	buildCmd.Flags().BoolVarP(&buildSkipTests, "skiptests", "s", false, "Skip tests when building.")
 }
