@@ -53,7 +53,7 @@ Publish will upload your binaries to wherever it is you've configured them to go
 
 		log.Printf("[DEBUG] Created temp dir %s", rootWorkDir)
 
-		meta, err := gomason.ReadMetadata("metadata.json")
+		meta, err := gomason.ReadMetadata(gomason.METADATA_FILENAME)
 		if err != nil {
 			log.Fatalf("failed to read metadata: %s", err)
 		}
@@ -95,7 +95,7 @@ Publish will upload your binaries to wherever it is you've configured them to go
 		fmt.Print("Build Succeeded!\n\n")
 
 		if meta.PublishInfo.SkipSigning {
-			log.Printf("[DEBUG] Skipping signing due to 'skip-signing': true in metadata.json")
+			log.Printf("[DEBUG] Skipping signing due to 'skip-signing': true in metadata file")
 			err = gm.HandleArtifacts(meta, workDir, cwd, false, true, false)
 			if err != nil {
 				log.Fatalf("post-build processing failed: %s", err)

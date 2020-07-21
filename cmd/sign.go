@@ -53,7 +53,7 @@ Signing sorta implies something to sign, which in turn, implies that it built, w
 
 		defer os.RemoveAll(rootWorkDir)
 
-		meta, err := gomason.ReadMetadata("metadata.json")
+		meta, err := gomason.ReadMetadata(gomason.METADATA_FILENAME)
 		if err != nil {
 			log.Fatalf("failed to read metadata: %s", err)
 		}

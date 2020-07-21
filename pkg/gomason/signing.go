@@ -12,11 +12,11 @@ import (
 // It's a good default.  You can install it anywhere.
 const defaultSigningProgram = "gpg"
 
-// SignBinary  signs the given binary based on the entity and program given in metadata.json, possibly overridden by information in ~/.gomason
+// SignBinary  signs the given binary based on the entity and program given in metadata file, possibly overridden by information in ~/.gomason
 func (g *Gomason) SignBinary(meta Metadata, binary string) (err error) {
 	log.Printf("[DEBUG] Preparing to sign binary %s", binary)
 
-	// pull signing info out of metadata.json
+	// pull signing info out of metadata file
 	signInfo := meta.SignInfo
 	signProg := signInfo.Program
 	if signProg == "" {
@@ -40,7 +40,7 @@ func (g *Gomason) SignBinary(meta Metadata, binary string) (err error) {
 	}
 
 	if signEntity == "" {
-		err = fmt.Errorf("Cannot sign without a signing entity (email).\n\nSet 'signing' section in metadata.json, or create ~/.gomason with the appropriate content.\n\nSee https://github.com/nikogura/gomason#config-reference for details.\n\n")
+		err = fmt.Errorf("Cannot sign without a signing entity (email).\n\nSet 'signing' section in metadata file, or create ~/.gomason with the appropriate content.\n\nSee https://github.com/nikogura/gomason#config-reference for details.\n\n")
 
 		return err
 	}
@@ -63,7 +63,7 @@ func (g *Gomason) SignBinary(meta Metadata, binary string) (err error) {
 
 // VerifyBinary will verify the signature of a signed binary.
 func VerifyBinary(binary string, meta Metadata) (ok bool, err error) {
-	// pull signing info out of metadata.json
+	// pull signing info out of metadata file
 	signInfo := meta.SignInfo
 
 	signProg := signInfo.Program

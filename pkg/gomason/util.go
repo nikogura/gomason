@@ -28,7 +28,7 @@ const AWS_SECRET_ENV_VAR = "AWS_SECRET_ACCESS_KEY"
 // AWS_REGION_ENV_VAR Default env var for AWS region.
 const AWS_REGION_ENV_VAR = "AWS_DEFAULT_REGION"
 
-// ReadMetadata  Reads a metadata.json and returns the Metadata object thus described
+// ReadMetadata  Reads a metadata file and returns the Metadata object thus described
 func ReadMetadata(filename string) (metadata Metadata, err error) {
 	mdBytes, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -60,7 +60,7 @@ func GitSSHUrlFromPackage(packageName string) (gitpath string) {
 	return gitpath
 }
 
-// GetCredentials gets credentials, first from the metadata.json, and then from the user config in ~/.gomason if it exists.  If no credentials are found in any of the places, it returns the empty stings for usernames and passwords.  This is not recommended, but it might be useful in some cases.  Who knows?  We makes the tools, we don't tell you how to use them.  (we do, however make suggestions.) :D
+// GetCredentials gets credentials, first from the metadata file, and then from the user config in ~/.gomason if it exists.  If no credentials are found in any of the places, it returns the empty stings for usernames and passwords.  This is not recommended, but it might be useful in some cases.  Who knows?  We makes the tools, we don't tell you how to use them.  (we do, however make suggestions.) :D
 func (g *Gomason) GetCredentials(meta Metadata) (username, password string, err error) {
 	log.Print("[DEBUG] Getting credentials")
 
@@ -156,7 +156,7 @@ func GetFunc(shellCommand string) (result string, err error) {
 	return result, err
 }
 
-// ParseTemplateForMetadata parses a raw string as if it was a text/template template and uses the Metadata from metadata.json as it's data source.  e.g. injecting Version into upload targets (PUT url) when publishing.
+// ParseTemplateForMetadata parses a raw string as if it was a text/template template and uses the Metadata from metadata file as it's data source.  e.g. injecting Version into upload targets (PUT url) when publishing.
 func ParseTemplateForMetadata(templateText string, metadata Metadata) (outputText string, err error) {
 	tmpl, err := template.New("OnTheFlyTemplate").Parse(templateText)
 	if err != nil {

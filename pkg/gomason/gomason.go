@@ -17,7 +17,10 @@ import (
 // VERSION is the current gomason version
 const VERSION = "2.6.4"
 
-// Metadata type to represent the metadata.json file
+// METADATA_FILENAME The default gomason metadata file name
+const METADATA_FILENAME = "metadata.json"
+
+// Metadata type to represent the metadata file
 type Metadata struct {
 	Name           string                 `json:"name"`
 	Version        string                 `json:"version"`
@@ -33,7 +36,7 @@ type Metadata struct {
 	Options        map[string]interface{} `json:"options,omitempty"`
 }
 
-// GetLanguage returns the language set in metadata.json, or the default 'golang'.
+// GetLanguage returns the language set in metadata, or the default 'golang'.
 func (m Metadata) GetLanguage() (lang string) {
 	lang = m.Language
 

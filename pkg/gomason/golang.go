@@ -183,7 +183,7 @@ func (Golang) Test(gopath string, gomodule string) (err error) {
 	return err
 }
 
-// Build uses `gox` to build binaries per metadata.json
+// Build uses `gox` to build binaries per metadata file
 func (g Golang) Build(gopath string, meta Metadata) (err error) {
 	log.Print("[DEBUG] Checking to see that gox is installed.\n")
 
@@ -196,7 +196,7 @@ func (g Golang) Build(gopath string, meta Metadata) (err error) {
 		}
 	}
 
-	//if _, err := os.Stat(fmt.Sprintf("%s/src/%s/metadata.json", gopath, meta.Package)); os.IsNotExist(err) {
+	//if _, err := os.Stat(fmt.Sprintf("%s/src/%s/%s", gopath, meta.Package, METADATA_FILENAME)); os.IsNotExist(err) {
 	//	err = g.Checkout(gopath, meta, branch)
 	//	if err != nil {
 	//		err = errors.Wrap(err, fmt.Sprintf("Failed to checkout module: %s branch: %s ", meta.Package, branch))
@@ -219,11 +219,11 @@ func (g Golang) Build(gopath string, meta Metadata) (err error) {
 
 	log.Printf("[DEBUG] Gox is: %s", gox)
 
-	metadatapath := fmt.Sprintf("%s/src/%s/metadata.json", gopath, meta.Package)
+	metadatapath := fmt.Sprintf("%s/src/%s/%s", gopath, meta.Package, METADATA_FILENAME)
 
 	md, err := ReadMetadata(metadatapath)
 	if err != nil {
-		err = errors.Wrap(err, "Failed to read metadata.json from checked out code")
+		err = errors.Wrap(err, "Failed to read metadata file from checked out code")
 		return err
 	}
 
@@ -309,7 +309,7 @@ func GoxInstall(gopath string) (err error) {
 	return err
 }
 
-// BuildExtras builds the extra artifacts specified in the metadata.json
+// BuildExtras builds the extra artifacts specified in the metadata file
 func BuildExtras(meta Metadata, workdir string) (err error) {
 	log.Print("[DEBUG] Building Extra Artifacts")
 

@@ -55,7 +55,7 @@ Sometimes you need the benefits of a full system here.  Now.  Right at your fing
 
 		defer os.RemoveAll(rootWorkDir)
 
-		meta, err := gomason.ReadMetadata("metadata.json")
+		meta, err := gomason.ReadMetadata(gomason.METADATA_FILENAME)
 		if err != nil {
 			log.Fatalf("failed to read metadata: %s", err)
 		}

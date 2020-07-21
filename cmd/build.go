@@ -57,9 +57,9 @@ Binaries are dropped into the current working directory.
 
 		defer os.RemoveAll(rootWorkDir)
 
-		meta, err := gomason.ReadMetadata("metadata.json")
+		meta, err := gomason.ReadMetadata(gomason.METADATA_FILENAME)
 		if err != nil {
-			log.Fatalf("couldn't read package information from metadata.json: %s", err)
+			log.Fatalf("couldn't read package information from metadata file: %s", err)
 		}
 
 		lang, err := gomason.GetByName(meta.GetLanguage())

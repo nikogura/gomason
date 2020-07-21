@@ -46,7 +46,7 @@ func TestCheckoutDefault(t *testing.T) {
 		t.FailNow()
 	}
 
-	metaPath := filepath.Join(gopath, "src", testModuleName(), "metadata.json")
+	metaPath := filepath.Join(gopath, "src", testModuleName(), METADATA_FILENAME)
 	if _, err := os.Stat(metaPath); os.IsNotExist(err) {
 		log.Printf("Failed to checkout module")
 		t.FailNow()
@@ -98,7 +98,7 @@ func TestPrep(t *testing.T) {
 		t.FailNow()
 	}
 
-	metaPath := filepath.Join(gopath, "src", testModuleName(), "metadata.json")
+	metaPath := filepath.Join(gopath, "src", testModuleName(), METADATA_FILENAME)
 	if _, err := os.Stat(metaPath); os.IsNotExist(err) {
 		log.Printf("Failed to checkout module")
 		t.FailNow()
@@ -153,7 +153,7 @@ func TestBuild(t *testing.T) {
 		t.FailNow()
 	}
 
-	metaPath := filepath.Join(gopath, "src", testModuleName(), "metadata.json")
+	metaPath := filepath.Join(gopath, "src", testModuleName(), METADATA_FILENAME)
 	if _, err := os.Stat(metaPath); os.IsNotExist(err) {
 		log.Printf("Failed to checkout module")
 		t.FailNow()
@@ -207,7 +207,7 @@ func TestTest(t *testing.T) {
 		t.FailNow()
 	}
 
-	metaPath := filepath.Join(gopath, "src", testModuleName(), "metadata.json")
+	metaPath := filepath.Join(gopath, "src", testModuleName(), METADATA_FILENAME)
 	if _, err := os.Stat(metaPath); os.IsNotExist(err) {
 		log.Printf("Failed to checkout module")
 		t.FailNow()

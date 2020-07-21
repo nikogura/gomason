@@ -39,7 +39,7 @@ CI systems like Artifactory Pro can sign binaries, but they don't really have pr
 
 Enter gomason, which can do the building and signing locally with personal keys and then upload.  Presumably you'd also require authentication on upload, but now you've actually established 2 things- someone with credentials has uploaded this, *and* they've personally signed what they uploaded.  Whether you trust that signature is up to you, but we've provided an easy means to extend what a traditional CI system can do.
 
-Gomason uses ```gox``` the Go cross compiler  to do it's compiling.  It builds whatever versions you like, but they need to be specified in the metadata.json file detailed below in gox-like format.
+Gomason uses ```gox``` the Go cross compiler  to do it's compiling.  It builds whatever versions you like, but they need to be specified in the metadata file detailed below in gox-like format.
 
 Code is downloaded via ```go get```.  If you have your VCS configured so that you can do that without authentication, then everything will *just work*.
 
@@ -97,7 +97,7 @@ As of v2.6.1, `gomason` supports S3 urls of the 'virtual host' variety.  (i.e. `
 
 Some information in ```metadata.json```, such as signing info can be overwritten by the [User Config](#user-config) detailed below.
 
-Example metadata.json:
+Example metadata file:
 
     {
       "version": "1.0.0",
@@ -410,7 +410,7 @@ Example:
 
 Gomason depends on a metadata file imaginatively named 'metadata.json'.  It's expected to be in the root of the repo.
 
-The metadata.json contains such information as the version. (Yes, I'm old fashioned that way.  I like human readable version numbers.)
+The metadata file contains such information as the version. (Yes, I'm old fashioned that way.  I like human readable version numbers.)
 
 Example:
 
