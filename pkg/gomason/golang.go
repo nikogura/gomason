@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/a8m/envsubst"
 	"github.com/pkg/errors"
@@ -184,7 +185,7 @@ func (Golang) Test(gopath string, gomodule string) (err error) {
 }
 
 // Build uses `gox` to build binaries per metadata file
-func (g Golang) Build(gopath string, meta Metadata) (err error) {
+func (g Golang) Build(gopath string, meta Metadata, skipTargets string) (err error) {
 	log.Print("[DEBUG] Checking to see that gox is installed.\n")
 
 	// Install gox if it's not already there
@@ -227,7 +228,23 @@ func (g Golang) Build(gopath string, meta Metadata) (err error) {
 		return err
 	}
 
+	skipTargetsMap := make(map[string]int)
+
+	if skipTargets != "" {
+		targetsList := strings.Split(skipTargets, ",")
+
+		for _, t := range targetsList {
+			skipTargetsMap[t] = 1
+		}
+	}
+
 	for _, target := range md.BuildInfo.Targets {
+		// skip this target if we're told to do so
+		_, skip := skipTargetsMap[target.Name]
+		if skip {
+			continue
+		}
+
 		log.Printf("[DEBUG] Building target: %q\n", target.Name)
 
 		// This gets weird because go's exec shell doesn't like the arg format that gox expects

@@ -87,7 +87,7 @@ Publish will upload your binaries to wherever it is you've configured them to go
 			fmt.Print("Tests Succeeded!\n\n")
 		}
 
-		err = lang.Build(workDir, meta)
+		err = lang.Build(workDir, meta, buildSkipTargets)
 		if err != nil {
 			log.Fatalf("build failed: %s", err)
 		}
@@ -96,7 +96,7 @@ Publish will upload your binaries to wherever it is you've configured them to go
 
 		if meta.PublishInfo.SkipSigning {
 			log.Printf("[DEBUG] Skipping signing due to 'skip-signing': true in metadata file")
-			err = gm.HandleArtifacts(meta, workDir, cwd, false, true, false)
+			err = gm.HandleArtifacts(meta, workDir, cwd, false, true, false, buildSkipTargets)
 			if err != nil {
 				log.Fatalf("post-build processing failed: %s", err)
 			}
@@ -107,7 +107,7 @@ Publish will upload your binaries to wherever it is you've configured them to go
 			}
 
 		} else {
-			err = gm.HandleArtifacts(meta, workDir, cwd, true, true, false)
+			err = gm.HandleArtifacts(meta, workDir, cwd, true, true, false, buildSkipTargets)
 			if err != nil {
 				log.Fatalf("post-build processing failed: %s", err)
 			}

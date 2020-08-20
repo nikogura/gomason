@@ -15,7 +15,7 @@ import (
 )
 
 // VERSION is the current gomason version
-const VERSION = "2.6.4"
+const VERSION = "2.6.5"
 
 // METADATA_FILENAME The default gomason metadata file name
 const METADATA_FILENAME = "metadata.json"
@@ -142,9 +142,25 @@ type UserSignInfo struct {
 // HandleArtifacts loops over the expected files built by Build() and optionally signs them and publishes them along with their signatures (if signing).
 //
 // If not publishing, the binaries (and their optional signatures) are collected and dumped into the directory where gomason was called. (Typically the root of a go project).
-func (g *Gomason) HandleArtifacts(meta Metadata, gopath string, cwd string, sign bool, publish bool, collect bool) (err error) {
+func (g *Gomason) HandleArtifacts(meta Metadata, gopath string, cwd string, sign bool, publish bool, collect bool, skipTargets string) (err error) {
 	// loop through the built things for each type of build target
+	skipTargetsMap := make(map[string]int)
+
+	if skipTargets != "" {
+		targetsList := strings.Split(skipTargets, ",")
+
+		for _, t := range targetsList {
+			skipTargetsMap[t] = 1
+		}
+	}
+
 	for _, target := range meta.BuildInfo.Targets {
+		// skip this target if we're told to do so
+		_, skip := skipTargetsMap[target.Name]
+		if skip {
+			continue
+		}
+
 		log.Printf("[DEBUG] Processing build target: %s", target.Name)
 		archparts := strings.Split(target.Name, "/")
 

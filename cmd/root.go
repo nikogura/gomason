@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/nikogura/gomason/pkg/gomason"
 	"os"
 
 	"github.com/nikogura/gomason/pkg/logging"
@@ -27,6 +28,9 @@ var Verbose bool
 var branch string
 var dryrun bool
 var workdir string
+var buildSkipTargets string
+
+//var pubSkipTargets string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -54,4 +58,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&dryrun, "dryrun", "d", false, "Dry Run (Only applies to publish.")
 	rootCmd.PersistentFlags().StringVarP(&branch, "branch", "b", "master", "Branch to operate upon")
 	rootCmd.PersistentFlags().StringVarP(&workdir, "workdir", "w", "", "Workdir.  If omitted, a temp dir will be created and subsequently cleaned up.")
+	rootCmd.PersistentFlags().StringVarP(&buildSkipTargets, "skip-build-targets", "", "", fmt.Sprintf("Comma separated list of build targets from %s to skip.", gomason.METADATA_FILENAME))
+
+	//rootCmd.PersistentFlags().StringVarP(&pubSkipTargets, fmt.Sprintf("skip-publish-targets", "", "", "Comma separated list of publish targets from %s to skip.", gomason.METADATA_FILENAME))
 }

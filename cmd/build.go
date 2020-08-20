@@ -91,14 +91,14 @@ Binaries are dropped into the current working directory.
 			fmt.Print("Tests Succeeded!\n\n")
 		}
 
-		err = lang.Build(workDir, meta)
+		err = lang.Build(workDir, meta, buildSkipTargets)
 		if err != nil {
 			log.Fatalf("build failed: %s", err)
 		}
 
 		fmt.Print("Build Succeeded!\n\n")
 
-		err = gm.HandleArtifacts(meta, workDir, cwd, false, false, true)
+		err = gm.HandleArtifacts(meta, workDir, cwd, false, false, true, buildSkipTargets)
 		if err != nil {
 			log.Fatalf("signing failed: %s", err)
 		}

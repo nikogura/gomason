@@ -15,7 +15,7 @@ type Language interface {
 	Checkout(workdir string, meta Metadata, branch string) error
 	Prep(workdir string, meta Metadata) error
 	Test(workdir string, module string) error
-	Build(workdir string, meta Metadata) error
+	Build(workdir string, meta Metadata, skipTargets string) error
 }
 
 // NoLanguage essentially an abstract class for the Language interface
@@ -42,7 +42,7 @@ func (NoLanguage) Test(workdir string, module string) error {
 }
 
 // Build Stub for the Build Action
-func (NoLanguage) Build(workdor string, meta Metadata) error {
+func (NoLanguage) Build(workdor string, meta Metadata, skipTargets string) error {
 	return nil
 }
 

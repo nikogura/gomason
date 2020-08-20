@@ -85,14 +85,14 @@ Signing sorta implies something to sign, which in turn, implies that it built, w
 
 		log.Printf("Tests Succeeded!\n\n")
 
-		err = lang.Build(workDir, meta)
+		err = lang.Build(workDir, meta, buildSkipTargets)
 		if err != nil {
 			log.Fatalf("build failed: %s", err)
 		}
 
 		log.Printf("Build Succeeded!\n\n")
 
-		err = gm.HandleArtifacts(meta, workDir, cwd, true, false, true)
+		err = gm.HandleArtifacts(meta, workDir, cwd, true, false, true, buildSkipTargets)
 		if err != nil {
 			log.Fatalf("signing failed: %s", err)
 		}

@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 
@@ -134,60 +133,106 @@ func TestBuildGoxInstall(t *testing.T) {
 }
 
 func TestBuild(t *testing.T) {
-	lang, _ := GetByName(LanguageGolang)
-
-	log.Printf("Running Build\n")
-	gopath, err := lang.CreateWorkDir(TestTmpDir)
-	if err != nil {
-		log.Printf("Error creating GOPATH in %s: %s\n", TestTmpDir, err)
-		t.FailNow()
+	inputs := []struct {
+		name             string
+		lang             string
+		skipTargets      string
+		artifactsPresent []string
+		artifactsMissing []string
+	}{
+		{
+			"skip-linux",
+			LanguageGolang,
+			"linux/amd64",
+			[]string{
+				"testproject_darwin_amd64",
+			},
+			[]string{
+				"testproject_linux_amd64",
+			},
+		},
+		{
+			"all-targets",
+			LanguageGolang,
+			"",
+			[]string{
+				"testproject_darwin_amd64",
+				"testproject_linux_amd64",
+			},
+			[]string{},
+		},
 	}
 
-	gomodule := testMetadataObj().Package
+	for _, tc := range inputs {
+		t.Run(tc.name, func(t *testing.T) {
+			lang, err := GetByName(tc.lang)
+			if err != nil {
+				t.Fatalf(err.Error())
+			}
 
-	log.Printf("Checking out Master Branch")
+			log.Printf("Running Build\n")
+			gopath, err := lang.CreateWorkDir(TestTmpDir)
+			if err != nil {
+				log.Printf("Error creating GOPATH in %s: %s\n", TestTmpDir, err)
+				t.FailNow()
+			}
 
-	err = lang.Checkout(gopath, testMetadataObj(), "master")
-	if err != nil {
-		log.Printf("Failed to checkout module: %s", err)
-		t.FailNow()
-	}
+			gomodule := testMetadataObj().Package
 
-	metaPath := filepath.Join(gopath, "src", testModuleName(), METADATA_FILENAME)
-	if _, err := os.Stat(metaPath); os.IsNotExist(err) {
-		log.Printf("Failed to checkout module")
-		t.FailNow()
-	}
+			log.Printf("Checking out Master Branch")
 
-	err = lang.Prep(gopath, testMetadataObj())
-	if err != nil {
-		log.Printf("error running prep steps: %s", err)
-		t.FailNow()
-	}
+			err = lang.Checkout(gopath, testMetadataObj(), "master")
+			if err != nil {
+				log.Printf("Failed to checkout module: %s", err)
+				t.FailNow()
+			}
 
-	err = lang.Build(gopath, testMetadataObj())
-	if err != nil {
-		log.Printf("Error building: %s", err)
-		t.FailNow()
-	}
+			metaPath := filepath.Join(gopath, "src", testModuleName(), METADATA_FILENAME)
+			if _, err := os.Stat(metaPath); os.IsNotExist(err) {
+				log.Printf("Failed to checkout module")
+				t.FailNow()
+			}
 
-	parts := strings.Split(gomodule, "/")
+			err = lang.Prep(gopath, testMetadataObj())
+			if err != nil {
+				log.Printf("error running prep steps: %s", err)
+				t.FailNow()
+			}
 
-	binaryPrefix := parts[len(parts)-1]
+			err = lang.Build(gopath, testMetadataObj(), tc.skipTargets)
+			if err != nil {
+				log.Printf("Error building: %s", err)
+				t.FailNow()
+			}
 
-	osname := runtime.GOOS
-	archname := runtime.GOARCH
+			for _, artifact := range tc.artifactsPresent {
+				workdir := filepath.Join(gopath, "src", gomodule)
+				binary := fmt.Sprintf("%s/%s", workdir, artifact)
 
-	workdir := filepath.Join(gopath, "src", gomodule)
-	binary := fmt.Sprintf("%s/%s_%s_%s", workdir, binaryPrefix, osname, archname)
+				log.Printf("Looking for binary present: %s", binary)
 
-	log.Printf("Looking for binary: %s", binary)
+				if _, err := os.Stat(binary); os.IsNotExist(err) {
+					log.Printf("Gox failed to build binary: %s.\n", binary)
+					t.FailNow()
+				} else {
+					log.Printf("Binary found.")
+				}
+			}
 
-	if _, err := os.Stat(binary); os.IsNotExist(err) {
-		log.Printf("Gox failed to build binary: %s.\n", binary)
-		t.FailNow()
-	} else {
-		log.Printf("Binary found.")
+			for _, artifact := range tc.artifactsMissing {
+				workdir := filepath.Join(gopath, "src", gomodule)
+				binary := fmt.Sprintf("%s/%s", workdir, artifact)
+
+				log.Printf("Looking for binary not present: %s", binary)
+
+				if _, err := os.Stat(binary); os.IsNotExist(err) {
+					log.Printf("Binary not found - as intended.")
+				} else {
+					log.Printf("Gox built binary: %s when it shouldn't have.\n", binary)
+					t.FailNow()
+				}
+			}
+		})
 	}
 }
 
@@ -254,7 +299,7 @@ func TestSignVerifyBinary(t *testing.T) {
 
 	// build artifacts
 	log.Printf("Running Build\n")
-	err = lang.Build(gopath, meta)
+	err = lang.Build(gopath, meta, "")
 	if err != nil {
 		log.Printf("Error building: %s", err)
 		t.FailNow()
@@ -349,7 +394,7 @@ Expire-Date: 0
 
 	fmt.Printf("Publishing\n")
 
-	err = g.HandleArtifacts(meta, gopath, cwd, false, true, true)
+	err = g.HandleArtifacts(meta, gopath, cwd, false, true, true, "")
 	if err != nil {
 		log.Fatalf("post-build processing failed: %s", err)
 	}
