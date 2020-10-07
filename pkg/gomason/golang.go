@@ -269,7 +269,12 @@ func (g Golang) Build(gopath string, meta Metadata, skipTargets string) (err err
 			log.Printf("[DEBUG] Build Flag: %s=%s", k, v)
 		}
 
-		args := gox + cgo + ` -osarch="` + target.Name + `"` + " ./..."
+		ldflags := ""
+		if target.Ldflags != "" {
+			ldflags = fmt.Sprintf(" -ldflags %q ", target.Ldflags)
+		}
+
+		args := gox + cgo + ldflags + ` -osarch="` + target.Name + `"` + " ./..."
 
 		// Calling it through sh makes everything happy
 		cmd := exec.Command("sh", "-c", args)

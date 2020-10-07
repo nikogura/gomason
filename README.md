@@ -120,7 +120,9 @@ Example metadata file:
             "flags": {
               "CC": "o64-gcc",
               "CXX": "o64-g++"
-             }
+             },
+            "ldflags": "-X github.com/nikogura/dbt/pkg/dbt.METADATA_TEMPLATE=${METADATA_TEMPLATE}"
+
           {
             "name": "linux/amd64"
           }
@@ -404,6 +406,16 @@ Example:
       }
     }
 
+### Building and Publishing Without Testing
+
+This is generally not a great idea, but one common use case for `gomason` is to make your own builds of some third party code with some custom flags.  In this case you often don't want or need the full range of testing or test targets, or don't have access to the author's test system.
+
+Sometimes you just want to build the damn code and publish it somewhere.  In those cases, run:
+
+    gomason [build | publish] -s [--skip-tests]
+    
+Please don't do this with your own code.  It makes <insert deity here> cry.
+
 ---
     
 ## Project Config Reference
@@ -487,7 +499,9 @@ This is primarily intended for situations like the Kubernetes Golang client, whi
 
 This is used to determine which OSes and architectures to compile for. It's gotta be Gox's way of expressing the version and arch (os/arch), as the strings will simply be passed along to gox to build your toys.
 
-Targets can take an optional 'cgo' flag to build with CGO, and a map of compiler flags that will be passed on to gox at build time.
+Targets can take an optional 'cgo' flag to build with CGO, and a map of compiler flags (ENV Vars) that will be passed on to gox at build time.
+
+You can also pass through a string for use by `-ldflags` if you need to pass special information into the compiler or set internal variables at build time.
 
 Targets can also take an optional 'legacy' flag to build with GO111MODULE=off, for older projects that have not been converted yet.
 
@@ -502,7 +516,8 @@ For example, the following will build 64 bit binaries for MacOS and Linux:
         "flags": {
           "CC": "o64-gcc",
           "CXX": "o64-g++"
-         }
+         },
+         "ldflags": "-X github.com/nikogura/dbt/pkg/dbt.METADATA_TEMPLATE=${METADATA_TEMPLATE}"
       {
         "name": "linux/amd64"
       }

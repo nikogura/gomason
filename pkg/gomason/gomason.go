@@ -15,7 +15,7 @@ import (
 )
 
 // VERSION is the current gomason version
-const VERSION = "2.6.5"
+const VERSION = "2.6.6"
 
 // METADATA_FILENAME The default gomason metadata file name
 const METADATA_FILENAME = "metadata.json"
@@ -81,10 +81,11 @@ type BuildInfo struct {
 
 // BuildTarget contains information on each build target
 type BuildTarget struct {
-	Name   string            `json:"name"`
-	Cgo    bool              `json:"cgo,omitempty"`
-	Flags  map[string]string `json:"flags,omitempty"`
-	Legacy bool              `json:"legacy,omitempty"`
+	Name    string            `json:"name"`
+	Cgo     bool              `json:"cgo,omitempty"`
+	Flags   map[string]string `json:"flags,omitempty"`
+	Ldflags string            `json:"ldflags",omitempty`
+	Legacy  bool              `json:"legacy,omitempty"`
 }
 
 // ExtraArtifact is an extra file built from a template at build time
