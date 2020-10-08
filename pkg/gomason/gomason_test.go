@@ -68,7 +68,20 @@ func testMetadataObj() (metadata Metadata) {
 			PrepCommands: []string{
 				"echo \"GOPATH is: ${GOPATH}\"",
 			},
-			Targets: []BuildTarget{{Name: "linux/amd64"}, {Name: "darwin/amd64"}},
+			Targets: []BuildTarget{
+				{
+					Name: "linux/amd64",
+					Flags: map[string]string{
+						"FOO": "bar",
+					},
+				},
+				{
+					Name: "darwin/amd64",
+					Flags: map[string]string{
+						"FOO": "bar",
+					},
+				},
+			},
 		},
 		SignInfo: SignInfo{
 			Program: "gpg",
