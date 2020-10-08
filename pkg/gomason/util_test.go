@@ -22,16 +22,16 @@ func testMetaDataJson() string {
 		],
 		"targets": [
 			{
-				"name": "linux/amd64"
+				"name": "linux/amd64",
 				"flags": {
 					"FOO": "bar"
-				{
+				}
 			},
 			{
-				"name": "darwin/amd64"
+				"name": "darwin/amd64",
 				"flags": {
 					"FOO": "bar"
-				{
+				}
 			}
 		]
 	},
