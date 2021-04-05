@@ -25,6 +25,7 @@ import (
 )
 
 var pubSkipTests bool
+var pubSkipBuild bool
 
 // publishCmd represents the publish command
 var publishCmd = &cobra.Command{
@@ -68,53 +69,83 @@ Publish will upload your binaries to wherever it is you've configured them to go
 			log.Fatalf("Failed to create ephemeral working directory: %s", err)
 		}
 
-		err = lang.Checkout(workDir, meta, branch)
-		if err != nil {
-			log.Fatalf("failed to checkout package %s at branch %s: %s", meta.Package, branch, err)
-		}
-
-		err = lang.Prep(workDir, meta)
-		if err != nil {
-			log.Fatalf("error running prep steps: %s", err)
-		}
-
-		if !pubSkipTests {
-			err = lang.Test(workDir, meta.Package)
+		// Totally skip building, and just do signing and uploading
+		if pubSkipBuild {
+			workDir, err = os.Getwd()
 			if err != nil {
-				log.Fatalf("error running go test: %s", err)
+				log.Fatalf("Failed getting current working directory.")
 			}
 
-			fmt.Print("Tests Succeeded!\n\n")
-		}
+			fmt.Printf("Workdir is %s\n", workDir)
 
-		err = lang.Build(workDir, meta, buildSkipTargets)
-		if err != nil {
-			log.Fatalf("build failed: %s", err)
-		}
+			for _, t := range meta.PublishInfo.Targets {
+				if meta.PublishInfo.SkipSigning {
+					err = gm.PublishFile(meta, t.Source)
+					if err != nil {
+						log.Fatalf("Failed to publish %s: %s", t.Source, err)
+					}
 
-		fmt.Print("Build Succeeded!\n\n")
+				} else {
+					err = gm.SignBinary(meta, t.Source)
+					if err != nil {
+						log.Fatalf("Failed to sign %s: %s", t.Source, err)
+					}
 
-		if meta.PublishInfo.SkipSigning {
-			log.Printf("[DEBUG] Skipping signing due to 'skip-signing': true in metadata file")
-			err = gm.HandleArtifacts(meta, workDir, cwd, false, true, false, buildSkipTargets)
-			if err != nil {
-				log.Fatalf("post-build processing failed: %s", err)
+					err = gm.PublishFile(meta, t.Source)
+					if err != nil {
+						log.Fatalf("Failed to publish %s: %s", t.Source, err)
+					}
+				}
 			}
-
-			err = gm.HandleExtras(meta, workDir, cwd, false, true)
-			if err != nil {
-				log.Fatalf("Extra artifact processing failed: %s", err)
-			}
-
 		} else {
-			err = gm.HandleArtifacts(meta, workDir, cwd, true, true, false, buildSkipTargets)
+			err = lang.Checkout(workDir, meta, branch)
 			if err != nil {
-				log.Fatalf("post-build processing failed: %s", err)
+				log.Fatalf("failed to checkout package %s at branch %s: %s", meta.Package, branch, err)
 			}
 
-			err = gm.HandleExtras(meta, workDir, cwd, true, true)
+			err = lang.Prep(workDir, meta)
 			if err != nil {
-				log.Fatalf("Extra artifact processing failed: %s", err)
+				log.Fatalf("error running prep steps: %s", err)
+			}
+
+			if !pubSkipTests {
+				err = lang.Test(workDir, meta.Package)
+				if err != nil {
+					log.Fatalf("error running go test: %s", err)
+				}
+
+				fmt.Print("Tests Succeeded!\n\n")
+			}
+
+			err = lang.Build(workDir, meta, buildSkipTargets)
+			if err != nil {
+				log.Fatalf("build failed: %s", err)
+			}
+
+			fmt.Print("Build Succeeded!\n\n")
+
+			if meta.PublishInfo.SkipSigning {
+				log.Printf("[DEBUG] Skipping signing due to 'skip-signing': true in metadata file")
+				err = gm.HandleArtifacts(meta, workDir, cwd, false, true, false, buildSkipTargets)
+				if err != nil {
+					log.Fatalf("post-build processing failed: %s", err)
+				}
+
+				err = gm.HandleExtras(meta, workDir, cwd, false, true)
+				if err != nil {
+					log.Fatalf("Extra artifact processing failed: %s", err)
+				}
+
+			} else {
+				err = gm.HandleArtifacts(meta, workDir, cwd, true, true, false, buildSkipTargets)
+				if err != nil {
+					log.Fatalf("post-build processing failed: %s", err)
+				}
+
+				err = gm.HandleExtras(meta, workDir, cwd, true, true)
+				if err != nil {
+					log.Fatalf("Extra artifact processing failed: %s", err)
+				}
 			}
 		}
 	},
@@ -124,4 +155,5 @@ func init() {
 	rootCmd.AddCommand(publishCmd)
 
 	publishCmd.Flags().BoolVarP(&pubSkipTests, "skiptests", "s", false, "Skip tests when publishing.")
+	publishCmd.Flags().BoolVarP(&pubSkipBuild, "skipbuild", "", false, "Skip build altogether and only publish.")
 }
