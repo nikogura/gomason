@@ -15,7 +15,7 @@ import (
 )
 
 // VERSION is the current gomason version
-const VERSION = "2.6.6"
+const VERSION = "2.7.0"
 
 // METADATA_FILENAME The default gomason metadata file name
 const METADATA_FILENAME = "metadata.json"
