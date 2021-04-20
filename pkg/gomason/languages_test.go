@@ -19,7 +19,7 @@ func TestNoLanguage(t *testing.T) {
 	err = nl.Prep("", Metadata{})
 	assert.True(t, err == nil, "Prep returned an error")
 
-	err = nl.Test("", "")
+	err = nl.Test("", "", "")
 	assert.True(t, err == nil, "Test returned an error")
 
 	err = nl.Build("", Metadata{}, "")

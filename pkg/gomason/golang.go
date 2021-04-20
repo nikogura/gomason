@@ -154,7 +154,7 @@ func (Golang) Prep(gopath string, meta Metadata) (err error) {
 }
 
 // Test Runs 'go test -v ./...' in the checked out code directory
-func (Golang) Test(gopath string, gomodule string) (err error) {
+func (Golang) Test(gopath string, gomodule string, timeout string) (err error) {
 	wd := filepath.Join(gopath, "src", gomodule)
 
 	log.Printf("[DEBUG] Changing working directory to %s.\n", wd)
@@ -168,7 +168,13 @@ func (Golang) Test(gopath string, gomodule string) (err error) {
 
 	log.Print("[DEBUG] Running 'go test -v ./...'.\n\n")
 
-	cmd := exec.Command("go", "test", "-v", "./...")
+	var timeoutArg string
+
+	if timeout != "" {
+		timeoutArg = fmt.Sprintf("-timeout %s", timeout)
+	}
+
+	cmd := exec.Command("go", "test", "-v", timeoutArg, "./...")
 
 	runenv := append(os.Environ(), fmt.Sprintf("GOPATH=%s", gopath))
 	runenv = append(runenv, "GO111MODULE=on")

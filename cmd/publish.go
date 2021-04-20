@@ -109,7 +109,7 @@ Publish will upload your binaries to wherever it is you've configured them to go
 			}
 
 			if !pubSkipTests {
-				err = lang.Test(workDir, meta.Package)
+				err = lang.Test(workDir, meta.Package, testTimeout)
 				if err != nil {
 					log.Fatalf("error running go test: %s", err)
 				}

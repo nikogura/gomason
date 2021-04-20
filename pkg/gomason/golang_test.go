@@ -264,7 +264,7 @@ func TestTest(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = lang.Test(gopath, testMetadataObj().Package)
+	err = lang.Test(gopath, testMetadataObj().Package, "10m")
 	if err != nil {
 		log.Printf("error running go test: %s", err)
 		t.FailNow()

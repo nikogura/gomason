@@ -78,7 +78,7 @@ Signing sorta implies something to sign, which in turn, implies that it built, w
 			log.Fatalf("error running prep steps: %s", err)
 		}
 
-		err = lang.Test(workDir, meta.Package)
+		err = lang.Test(workDir, meta.Package, testTimeout)
 		if err != nil {
 			log.Fatalf("error running go test: %s", err)
 		}

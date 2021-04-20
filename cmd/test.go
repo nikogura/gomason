@@ -80,7 +80,7 @@ Sometimes you need the benefits of a full system here.  Now.  Right at your fing
 			log.Fatalf("error running prep steps: %s", err)
 		}
 
-		err = lang.Test(workDir, meta.Package)
+		err = lang.Test(workDir, meta.Package, testTimeout)
 		if err != nil {
 			log.Fatalf("error running go test: %s", err)
 		}

@@ -83,7 +83,7 @@ Binaries are dropped into the current working directory.
 		}
 
 		if !buildSkipTests {
-			err = lang.Test(workDir, meta.Package)
+			err = lang.Test(workDir, meta.Package, testTimeout)
 			if err != nil {
 				log.Fatalf("error running go test: %s", err)
 			}

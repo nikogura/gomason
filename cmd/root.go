@@ -29,6 +29,7 @@ var branch string
 var dryrun bool
 var workdir string
 var buildSkipTargets string
+var testTimeout string
 
 //var pubSkipTargets string
 
@@ -59,6 +60,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&branch, "branch", "b", "master", "Branch to operate upon")
 	rootCmd.PersistentFlags().StringVarP(&workdir, "workdir", "w", "", "Workdir.  If omitted, a temp dir will be created and subsequently cleaned up.")
 	rootCmd.PersistentFlags().StringVarP(&buildSkipTargets, "skip-build-targets", "", "", fmt.Sprintf("Comma separated list of build targets from %s to skip.", gomason.METADATA_FILENAME))
+	rootCmd.PersistentFlags().StringVarP(&testTimeout, "test-timeout", "", "", "timeout for tests to complete (must be valid time input for language)")
 
 	//rootCmd.PersistentFlags().StringVarP(&pubSkipTargets, fmt.Sprintf("skip-publish-targets", "", "", "Comma separated list of publish targets from %s to skip.", gomason.METADATA_FILENAME))
 }
