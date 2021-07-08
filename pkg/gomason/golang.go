@@ -168,13 +168,13 @@ func (Golang) Test(gopath string, gomodule string, timeout string) (err error) {
 
 	log.Print("[DEBUG] Running 'go test -v ./...'.\n\n")
 
-	var timeoutArg string
-
+	var cmd *exec.Cmd
+	// Things break if you pass in an arg that has an empty string.  Splitting it up like this fixes https://github.com/nikogura/gomason/issues/24
 	if timeout != "" {
-		timeoutArg = fmt.Sprintf("-timeout %s", timeout)
+		cmd = exec.Command("go", "test", "-v", "-timeout", timeout, "./...")
+	} else {
+		cmd = exec.Command("go", "test", "-v", "./...")
 	}
-
-	cmd := exec.Command("go", "test", "-v", timeoutArg, "./...")
 
 	runenv := append(os.Environ(), fmt.Sprintf("GOPATH=%s", gopath))
 	runenv = append(runenv, "GO111MODULE=on")
