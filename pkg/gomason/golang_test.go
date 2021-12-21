@@ -39,7 +39,7 @@ func TestCheckoutDefault(t *testing.T) {
 	}
 
 	log.Printf("Checking out Master Branch")
-	err = lang.Checkout(gopath, testMetadataObj(), "master")
+	err = lang.Checkout(gopath, testMetadataObj(), "")
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.FailNow()
@@ -91,7 +91,7 @@ func TestPrep(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = lang.Checkout(gopath, testMetadataObj(), "master")
+	err = lang.Checkout(gopath, testMetadataObj(), "")
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.FailNow()
@@ -181,7 +181,7 @@ func TestBuild(t *testing.T) {
 
 			log.Printf("Checking out Master Branch")
 
-			err = lang.Checkout(gopath, testMetadataObj(), "master")
+			err = lang.Checkout(gopath, testMetadataObj(), "")
 			if err != nil {
 				log.Printf("Failed to checkout module: %s", err)
 				t.FailNow()
@@ -246,7 +246,7 @@ func TestTest(t *testing.T) {
 		t.FailNow()
 	}
 
-	err = lang.Checkout(gopath, testMetadataObj(), "master")
+	err = lang.Checkout(gopath, testMetadataObj(), "")
 	if err != nil {
 		log.Printf("Failed to checkout module: %s", err)
 		t.FailNow()
