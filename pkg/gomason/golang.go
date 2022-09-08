@@ -2,7 +2,6 @@ package gomason
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -311,9 +310,9 @@ func (g Golang) Build(gopath string, meta Metadata, skipTargets string) (err err
 	return err
 }
 
-// GoxInstall Installs github.com/mitchellh/gox, the go cross compiler
+// GoxInstall Installs github.com/mitchellh/gox, the go cross compiler.
 func GoxInstall(gopath string) (err error) {
-	log.Printf("[DEBUG] Installing gox with GOPATH=%s\n", gopath)
+	log.Printf("[DEBUG] Installing gox with GOPATH=%s, GOBIN=%s/bin\n", gopath, gopath)
 
 	gocommand, err := exec.LookPath("go")
 	if err != nil {
@@ -321,17 +320,32 @@ func GoxInstall(gopath string) (err error) {
 		return err
 	}
 
-	cmd := exec.Command(gocommand, "get", "-v", "github.com/mitchellh/gox")
+	cmd := exec.Command(gocommand, "install", "-v", "github.com/mitchellh/gox@latest")
 
 	env := append(os.Environ(), fmt.Sprintf("GOPATH=%s", gopath))
+	env = append(os.Environ(), fmt.Sprintf("GOBIN=%s/bin", gopath))
 
 	cmd.Env = env
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Printf("Error getting current working directory: %s\n\n", err)
+	}
+	err = os.Chdir(gopath)
+	if err != nil {
+		log.Printf("Error changing directory into %s: %s\n\n", gopath, err)
+	}
+
 	err = cmd.Run()
 	if err == nil {
 		log.Print("[DEBUG] Gox successfully installed.\n\n")
+	}
+
+	err = os.Chdir(wd)
+	if err != nil {
+		log.Printf("Error returning to directory %s:\n\n", wd)
 	}
 
 	return err
@@ -357,7 +371,7 @@ func BuildExtras(meta Metadata, workdir string) (err error) {
 			mode = 0644
 		}
 
-		tmplBytes, err := ioutil.ReadFile(templateName)
+		tmplBytes, err := os.ReadFile(templateName)
 		if err != nil {
 			err = errors.Wrapf(err, "failed to read template file %s", templateName)
 			return err
@@ -369,7 +383,7 @@ func BuildExtras(meta Metadata, workdir string) (err error) {
 			return err
 		}
 
-		err = ioutil.WriteFile(outputFileName, []byte(output), mode)
+		err = os.WriteFile(outputFileName, []byte(output), mode)
 		if err != nil {
 			err = errors.Wrapf(err, "failed to write file %s", outputFileName)
 			return err

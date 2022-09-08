@@ -2,7 +2,6 @@ package gomason
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/user"
@@ -15,7 +14,7 @@ import (
 )
 
 // VERSION is the current gomason version
-const VERSION = "2.10.0"
+const VERSION = "2.11.0"
 
 // METADATA_FILENAME The default gomason metadata file name
 const METADATA_FILENAME = "metadata.json"
@@ -84,7 +83,7 @@ type BuildTarget struct {
 	Name    string            `json:"name"`
 	Cgo     bool              `json:"cgo,omitempty"`
 	Flags   map[string]string `json:"flags,omitempty"`
-	Ldflags string            `json:"ldflags",omitempty`
+	Ldflags string            `json:"ldflags,omitempty"`
 	Legacy  bool              `json:"legacy,omitempty"`
 }
 
@@ -170,7 +169,7 @@ func (g *Gomason) HandleArtifacts(meta Metadata, gopath string, cwd string, sign
 
 		workdir := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
 
-		files, err := ioutil.ReadDir(workdir)
+		files, err := os.ReadDir(workdir)
 		if err != nil {
 			err = errors.Wrap(err, fmt.Sprintf("failed to read dir %s", workdir))
 			return err
