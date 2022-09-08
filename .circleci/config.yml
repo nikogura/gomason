@@ -5,7 +5,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/golang:1.13.4
+      - image: circleci/golang:1.19
 
     working_directory: /go/src/github.com/nikogura/gomason
     environment:
