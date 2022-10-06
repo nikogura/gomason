@@ -7,7 +7,6 @@ jobs:
     docker:
       - image: cimg/go:1.19.2
 
-    working_directory: /go/src/github.com/nikogura/gomason
     environment:
       GO111MODULE: "on"
     steps:
