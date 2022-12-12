@@ -185,7 +185,7 @@ func (g *Gomason) HandleArtifacts(meta Metadata, gopath string, cwd string, sign
 				filename := fmt.Sprintf("%s/%s", workdir, file.Name())
 
 				if _, err := os.Stat(filename); os.IsNotExist(err) {
-					err = fmt.Errorf("failed to build binary: %s\n", filename)
+					err = fmt.Errorf("file does not exist: %s\n", filename)
 					return err
 				}
 
@@ -271,50 +271,39 @@ func (g *Gomason) HandleExtras(meta Metadata, gopath string, cwd string, sign bo
 	return err
 }
 
-// SafeRename performs a 'rename' of a file that will work cross filesystem.  It reads the source file, writes it to the destination, then removes the source.
-func SafeRename(src, dst string) (err error) {
-	contents, err := os.ReadFile(src)
-	if err != nil {
-		err = errors.Wrapf(err, "failed reading file %q", src)
-		return err
-	}
-
-	err = os.WriteFile(dst, contents, 0644)
-	if err != nil {
-		err = errors.Wrapf(err, "failed writing file %s", dst)
-		return err
-	}
-
-	err = os.Remove(src)
-	if err != nil {
-		err = errors.Wrapf(err, "failed removing file %s", src)
-		return err
-	}
-
-	return err
-}
-
 // CollectFileAndSignature grabs a file and the signature if it exists and moves it from the temp workspace into the CWD where gomason was called.
 func CollectFileAndSignature(cwd string, filename string) (err error) {
 	binaryDestinationPath := fmt.Sprintf("%s/%s", cwd, filepath.Base(filename))
 
 	log.Printf("[DEBUG] Collecting Binaries and Signatures (if signing)")
 
-	err = SafeRename(filename, binaryDestinationPath)
+	contents, err := os.ReadFile(filename)
 	if err != nil {
-		err = errors.Wrap(err, fmt.Sprintf("failed to collect file %q", filename))
+		err = errors.Wrapf(err, "failed reading file %q", filename)
+		return err
+	}
+
+	err = os.WriteFile(binaryDestinationPath, contents, 0644)
+	if err != nil {
+		err = errors.Wrapf(err, "failed writing file %s", binaryDestinationPath)
 		return err
 	}
 
 	sigName := fmt.Sprintf("%s.asc", filepath.Base(filename))
 	if _, err := os.Stat(sigName); !os.IsNotExist(err) {
 		signatureDestinationPath := fmt.Sprintf("%s/%s", cwd, sigName)
-
-		err = SafeRename(sigName, signatureDestinationPath)
+		contents, err := os.ReadFile(filename)
 		if err != nil {
-			err = errors.Wrap(err, fmt.Sprintf("failed to collect signature %q", sigName))
+			err = errors.Wrapf(err, "failed reading file %q", filename)
 			return err
 		}
+
+		err = os.WriteFile(signatureDestinationPath, contents, 0644)
+		if err != nil {
+			err = errors.Wrapf(err, "failed writing file %s", signatureDestinationPath)
+			return err
+		}
+
 	}
 
 	return err

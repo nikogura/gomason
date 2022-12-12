@@ -93,6 +93,12 @@ func SignGPG(binary string, signingEntity string, meta Metadata) (err error) {
 		return err
 	}
 
+	_, err = os.Stat(binary)
+	if err != nil {
+		err = errors.Wrapf(err, "can't find file to sign: %s", err)
+		return err
+	}
+
 	var cmd *exec.Cmd
 
 	if keyring, ok := meta.Options["keyring"]; ok {

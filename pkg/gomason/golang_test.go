@@ -352,6 +352,7 @@ Expire-Date: 0
 	binaryPrefix := parts[len(parts)-1]
 
 	for _, target := range meta.BuildInfo.Targets {
+		fmt.Printf("Handling target %s\n", target.Name)
 		archparts := strings.Split(target.Name, "/")
 
 		osname := archparts[0]   // linux or darwin generally
@@ -364,6 +365,8 @@ Expire-Date: 0
 			fmt.Printf("Gox failed to build binary: %s\n", binary)
 			log.Printf("Failed to find binary %s", binary)
 			t.FailNow()
+		} else {
+			fmt.Printf("Built binary %s exists\n", binary)
 		}
 
 		err = g.SignBinary(meta, binary)
@@ -389,18 +392,18 @@ Expire-Date: 0
 
 	cwd, err := os.Getwd()
 	if err != nil {
-		log.Fatalf("Failed to get current working directory: %s", err)
+		t.Errorf("Failed to get current working directory: %s", err)
 	}
 
 	fmt.Printf("Publishing\n")
 
 	err = g.HandleArtifacts(meta, gopath, cwd, false, true, true, "")
 	if err != nil {
-		log.Fatalf("post-build processing failed: %s", err)
+		t.Errorf("post-build processing failed: %s", err)
 	}
 
 	err = g.HandleExtras(meta, gopath, cwd, false, true)
 	if err != nil {
-		log.Fatalf("Extra artifact processing failed: %s", err)
+		t.Errorf("Extra artifact processing failed: %s", err)
 	}
 }
