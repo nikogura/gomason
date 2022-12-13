@@ -14,7 +14,7 @@ import (
 )
 
 // VERSION is the current gomason version
-const VERSION = "2.11.0"
+const VERSION = "2.11.1"
 
 // METADATA_FILENAME The default gomason metadata file name
 const METADATA_FILENAME = "metadata.json"
@@ -277,21 +277,33 @@ func CollectFileAndSignature(cwd string, filename string) (err error) {
 
 	log.Printf("[DEBUG] Collecting Binaries and Signatures (if signing)")
 
-	err = os.Rename(filename, binaryDestinationPath)
+	contents, err := os.ReadFile(filename)
 	if err != nil {
-		err = errors.Wrap(err, fmt.Sprintf("failed to collect file %q", filename))
+		err = errors.Wrapf(err, "failed reading file %q", filename)
+		return err
+	}
+
+	err = os.WriteFile(binaryDestinationPath, contents, 0644)
+	if err != nil {
+		err = errors.Wrapf(err, "failed writing file %s", binaryDestinationPath)
 		return err
 	}
 
 	sigName := fmt.Sprintf("%s.asc", filepath.Base(filename))
 	if _, err := os.Stat(sigName); !os.IsNotExist(err) {
 		signatureDestinationPath := fmt.Sprintf("%s/%s", cwd, sigName)
-
-		err = os.Rename(sigName, signatureDestinationPath)
+		contents, err := os.ReadFile(filename)
 		if err != nil {
-			err = errors.Wrap(err, fmt.Sprintf("failed to collect signature %q", sigName))
+			err = errors.Wrapf(err, "failed reading file %q", filename)
 			return err
 		}
+
+		err = os.WriteFile(signatureDestinationPath, contents, 0644)
+		if err != nil {
+			err = errors.Wrapf(err, "failed writing file %s", signatureDestinationPath)
+			return err
+		}
+
 	}
 
 	return err
