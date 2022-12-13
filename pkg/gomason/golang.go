@@ -339,8 +339,15 @@ func GoxInstall(gopath string) (err error) {
 	}
 
 	err = cmd.Run()
-	if err == nil {
-		log.Print("[DEBUG] Gox successfully installed.\n\n")
+	if err != nil {
+		err = errors.Wrapf(err, "failed installing gox")
+	}
+
+	goxPath := filepath.Join(gopath, "bin/gox")
+
+	if _, err := os.Stat(goxPath); os.IsNotExist(err) {
+		err = errors.New(fmt.Sprintf("Gox still not installed to %s", goxPath))
+		return err
 	}
 
 	err = os.Chdir(wd)
