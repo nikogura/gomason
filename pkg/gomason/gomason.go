@@ -271,7 +271,7 @@ func (g *Gomason) HandleExtras(meta Metadata, gopath string, cwd string, sign bo
 	return err
 }
 
-// CollectFileAndSignature grabs a file and the signature if it exists and moves it from the temp workspace into the CWD where gomason was called.
+// CollectFileAndSignature grabs a file and the signature if it exists and copies it from the temp workspace into the CWD where gomason was called.
 func CollectFileAndSignature(cwd string, filename string) (err error) {
 	binaryDestinationPath := fmt.Sprintf("%s/%s", cwd, filepath.Base(filename))
 
