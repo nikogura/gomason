@@ -3,6 +3,7 @@ package gomason
 import (
 	"fmt"
 	"github.com/phayes/freeport"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"os"
@@ -23,7 +24,7 @@ func TestMain(m *testing.M) {
 }
 
 func setUp() {
-	//logging.Init(true)
+	logrus.SetLevel(logrus.DebugLevel)
 
 	dir, err := os.MkdirTemp("", "gomason")
 	if err != nil {

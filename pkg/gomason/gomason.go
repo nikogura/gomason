@@ -18,7 +18,7 @@ func init() {
 }
 
 // VERSION is the current gomason version
-const VERSION = "2.11.1"
+const VERSION = "2.12.0"
 
 // METADATA_FILENAME The default gomason metadata file name
 const METADATA_FILENAME = "metadata.json"
@@ -148,7 +148,7 @@ type UserSignInfo struct {
 //
 // If not publishing, the binaries (and their optional signatures) are collected and dumped into the directory where gomason was called. (Typically the root of a go project).
 func (g *Gomason) HandleArtifacts(meta Metadata, gopath string, cwd string, sign bool, publish bool, collect bool, skipTargets string) (err error) {
-	logrus.Infof("Handling Artifacts\n")
+	logrus.Debug("Handling Artifacts\n")
 	// loop through the built things for each type of build target
 	skipTargetsMap := make(map[string]int)
 

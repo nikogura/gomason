@@ -13,7 +13,7 @@ type TestRepo struct{}
 // Run runs the test repository server.
 func (tr *TestRepo) Run(port int) (err error) {
 
-	logrus.Infof("Running test artifact server on port %d", port)
+	logrus.Debugf("Running test artifact server on port %d", port)
 
 	http.HandleFunc("/repo/tool/", tr.HandlerTool)
 
@@ -24,7 +24,7 @@ func (tr *TestRepo) Run(port int) (err error) {
 
 // HandlerTool handles requests publishing a tool in the test repo
 func (tr *TestRepo) HandlerTool(w http.ResponseWriter, r *http.Request) {
-	logrus.Infof("*TestRepo: Request for %s*", r.URL.Path)
+	logrus.Debugf("*TestRepo: Request for %s*", r.URL.Path)
 
 	// we just return 200.  We're not doing anything beyond providing an endpoint for the client to hit.
 	w.WriteHeader(200)
