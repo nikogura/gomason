@@ -2,7 +2,7 @@ package gomason
 
 import (
 	"fmt"
-	"log"
+	"github.com/sirupsen/logrus"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -12,6 +12,10 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/ini.v1"
 )
+
+func init() {
+	logrus.SetFormatter(&logrus.JSONFormatter{})
+}
 
 // VERSION is the current gomason version
 const VERSION = "2.11.1"
@@ -55,7 +59,8 @@ type Gomason struct {
 func NewGomason() (g *Gomason, err error) {
 	userObj, err := user.Current()
 	if err != nil {
-		log.Fatalf("failed to get current user: %s", err)
+		err = errors.Wrapf(err, "failed to get current user")
+		return g, err
 	}
 
 	config, err := GetUserConfig(userObj.HomeDir)
@@ -143,6 +148,7 @@ type UserSignInfo struct {
 //
 // If not publishing, the binaries (and their optional signatures) are collected and dumped into the directory where gomason was called. (Typically the root of a go project).
 func (g *Gomason) HandleArtifacts(meta Metadata, gopath string, cwd string, sign bool, publish bool, collect bool, skipTargets string) (err error) {
+	logrus.Infof("Handling Artifacts\n")
 	// loop through the built things for each type of build target
 	skipTargetsMap := make(map[string]int)
 
@@ -161,11 +167,11 @@ func (g *Gomason) HandleArtifacts(meta Metadata, gopath string, cwd string, sign
 			continue
 		}
 
-		log.Printf("[DEBUG] Processing build target: %s", target.Name)
+		logrus.Debugf("Processing build target: %s\n", target.Name)
 		archparts := strings.Split(target.Name, "/")
 
-		osname := archparts[0]   // linux or darwin generally
-		archname := archparts[1] // amd64 generally
+		osname := archparts[0]
+		archname := archparts[1]
 
 		workdir := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
 
@@ -184,8 +190,10 @@ func (g *Gomason) HandleArtifacts(meta Metadata, gopath string, cwd string, sign
 			if matched {
 				filename := fmt.Sprintf("%s/%s", workdir, file.Name())
 
+				logrus.Debugf("\tHandling %s\n", filename)
+
 				if _, err := os.Stat(filename); os.IsNotExist(err) {
-					err = fmt.Errorf("failed to build binary: %s\n", filename)
+					err = errors.Wrapf(err, "failed to build binary: %s\n", filename)
 					return err
 				}
 
@@ -193,7 +201,7 @@ func (g *Gomason) HandleArtifacts(meta Metadata, gopath string, cwd string, sign
 				if sign {
 					err = g.SignBinary(meta, filename)
 					if err != nil {
-						err = errors.Wrap(err, "failed to sign binary")
+						err = errors.Wrapf(err, "failed to sign binary %s", filename)
 						return err
 					}
 				}
@@ -205,7 +213,6 @@ func (g *Gomason) HandleArtifacts(meta Metadata, gopath string, cwd string, sign
 						err = errors.Wrap(err, "failed to publish binary")
 						return err
 					}
-
 				}
 
 				if collect {
@@ -231,13 +238,13 @@ func (g *Gomason) HandleExtras(meta Metadata, gopath string, cwd string, sign bo
 
 	// loop through the built things for each type of build target
 	for _, extra := range meta.BuildInfo.Extras {
-		log.Printf("[DEBUG] Processing build extra: %s", extra.Template)
+		logrus.Debugf("Processing build extra: %s", extra.Template)
 
 		workdir := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
 		filename := fmt.Sprintf("%s/%s", workdir, extra.FileName)
 
 		if _, err := os.Stat(filename); os.IsNotExist(err) {
-			err = fmt.Errorf("failed to build extra artifact: %s\n", filename)
+			err = errors.Wrapf(err, "failed to build extra artifact: %s", filename)
 			return err
 		}
 
@@ -245,7 +252,7 @@ func (g *Gomason) HandleExtras(meta Metadata, gopath string, cwd string, sign bo
 		if sign {
 			err = g.SignBinary(meta, filename)
 			if err != nil {
-				err = errors.Wrap(err, "failed to sign extra artifact")
+				err = errors.Wrapf(err, "failed to sign extra artifact %s", filename)
 				return err
 			}
 		}
@@ -254,7 +261,7 @@ func (g *Gomason) HandleExtras(meta Metadata, gopath string, cwd string, sign bo
 		if publish {
 			err = g.PublishFile(meta, filename)
 			if err != nil {
-				err = errors.Wrap(err, "failed to publish extra artifact")
+				err = errors.Wrapf(err, "failed to publish extra artifact %s", filename)
 				return err
 			}
 
@@ -262,7 +269,7 @@ func (g *Gomason) HandleExtras(meta Metadata, gopath string, cwd string, sign bo
 			// if we're not publishing, collect up the stuff we built, and dump 'em into the cwd where we called gomason
 			err := CollectFileAndSignature(cwd, filename)
 			if err != nil {
-				err = errors.Wrap(err, "failed to collect binaries")
+				err = errors.Wrapf(err, "failed to collect binary %s", filename)
 				return err
 			}
 		}
@@ -271,39 +278,58 @@ func (g *Gomason) HandleExtras(meta Metadata, gopath string, cwd string, sign bo
 	return err
 }
 
-// CollectFileAndSignature grabs a file and the signature if it exists and copies it from the temp workspace into the CWD where gomason was called.
+// CollectFileAndSignature grabs a file and the signature if it exists and copies it from the temp workspace into the CWD where gomason was called. Does nothing at all if the file is currently in cwd.
 func CollectFileAndSignature(cwd string, filename string) (err error) {
+	fmt.Printf("[DEBUG] Collecting Binaries and Signatures (if signing)\n")
+
 	binaryDestinationPath := fmt.Sprintf("%s/%s", cwd, filepath.Base(filename))
 
-	log.Printf("[DEBUG] Collecting Binaries and Signatures (if signing)")
+	if binaryDestinationPath != filename {
+		fileInfo, err := os.Stat(filename)
+		if err != nil {
+			err = errors.Wrapf(err, "failed statting file %s", filename)
+		}
 
-	contents, err := os.ReadFile(filename)
-	if err != nil {
-		err = errors.Wrapf(err, "failed reading file %q", filename)
-		return err
-	}
-
-	err = os.WriteFile(binaryDestinationPath, contents, 0644)
-	if err != nil {
-		err = errors.Wrapf(err, "failed writing file %s", binaryDestinationPath)
-		return err
-	}
-
-	sigName := fmt.Sprintf("%s.asc", filepath.Base(filename))
-	if _, err := os.Stat(sigName); !os.IsNotExist(err) {
-		signatureDestinationPath := fmt.Sprintf("%s/%s", cwd, sigName)
 		contents, err := os.ReadFile(filename)
 		if err != nil {
 			err = errors.Wrapf(err, "failed reading file %q", filename)
 			return err
 		}
 
-		err = os.WriteFile(signatureDestinationPath, contents, 0644)
+		err = os.WriteFile(binaryDestinationPath, contents, fileInfo.Mode())
 		if err != nil {
-			err = errors.Wrapf(err, "failed writing file %s", signatureDestinationPath)
+			err = errors.Wrapf(err, "failed writing file %s", binaryDestinationPath)
 			return err
 		}
 
+		err = os.Remove(filename)
+		if err != nil {
+			err = errors.Wrapf(err, "failed removing file %s", filename)
+		}
+	}
+
+	sigName := fmt.Sprintf("%s.asc", filepath.Base(filename))
+	if _, err := os.Stat(sigName); !os.IsNotExist(err) {
+		signatureDestinationPath := fmt.Sprintf("%s/%s", cwd, sigName)
+		if signatureDestinationPath != sigName {
+			contents, err := os.ReadFile(filename)
+			if err != nil {
+				err = errors.Wrapf(err, "failed reading file %q", filename)
+				return err
+			}
+
+			err = os.WriteFile(signatureDestinationPath, contents, 0644)
+			if err != nil {
+				err = errors.Wrapf(err, "failed writing file %s", signatureDestinationPath)
+				return err
+			}
+
+			err = os.Remove(filename)
+			if err != nil {
+				err = errors.Wrapf(err, "failed removing file %s", filename)
+				return err
+			}
+		}
 	}
 
 	return err

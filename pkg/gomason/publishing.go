@@ -5,8 +5,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/sirupsen/logrus"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -24,7 +24,7 @@ func (g *Gomason) PublishFile(meta Metadata, filePath string) (err error) {
 		return err
 	}
 
-	log.Printf("[DEBUG] Publishing %s", filePath)
+	logrus.Debugf("Publishing %s", filePath)
 
 	client := &http.Client{}
 
@@ -110,7 +110,7 @@ func UploadChecksum(parsedDestination, checksum, sumtype string, client *http.Cl
 		return err
 	}
 
-	log.Printf("[DEBUG] Uploading checksum to %s", target)
+	logrus.Debugf("Uploading checksum to %s", target)
 
 	err = Upload(client, target, strings.NewReader(contents), sumMd5, sumSha1, sumSha256, username, password)
 	if err != nil {
@@ -143,7 +143,7 @@ func UploadFile(client *http.Client, destination string, filename string, meta M
 		return err
 	}
 
-	log.Printf("[DEBUG] Attempting to upload %s to %s", filename, parsedDestination)
+	logrus.Debugf("Attempting to upload %s to %s", filename, parsedDestination)
 
 	return Upload(client, parsedDestination, data, md5sum, sha1sum, sha256sum, username, password)
 }
@@ -186,6 +186,7 @@ func Upload(client *http.Client, url string, data io.Reader, md5sum string, sha1
 		dirs, err := DirsForURL(s3Meta.Key)
 		if err != nil {
 			err = errors.Wrapf(err, "failed to parse dirs for %s", s3Meta.Key)
+			return err
 		}
 
 		headSvc := s3.New(sess)
@@ -241,8 +242,8 @@ func Upload(client *http.Client, url string, data io.Reader, md5sum string, sha1
 		return err
 	}
 
-	log.Printf("[DEBUG] Response: %s", resp.Status)
-	log.Printf("[DEBUG] Response Code: %d", resp.StatusCode)
+	logrus.Debugf("Response: %s", resp.Status)
+	logrus.Debugf("Response Code: %d", resp.StatusCode)
 
 	if resp.StatusCode > 299 {
 		err = errors.New(fmt.Sprintf("response code %d is not indicative of a successful publish", resp.StatusCode))

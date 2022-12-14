@@ -2,7 +2,7 @@ package gomason
 
 import (
 	"fmt"
-	"log"
+	"github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -33,6 +33,8 @@ func (Golang) CreateWorkDir(workDir string) (gopath string, err error) {
 	for _, dir := range subdirs {
 		err = os.MkdirAll(dir, 0755)
 		if err != nil {
+			err = errors.Wrapf(err, "failed creating directory")
+
 			return gopath, err
 		}
 	}
@@ -49,9 +51,10 @@ func (Golang) Checkout(gopath string, meta Metadata, branch string) (err error) 
 	}
 
 	// install the code via go get  after all, we don't really want to play if it's not in a repo.
-	gocommand, err := exec.LookPath("go")
+	gobinary := "go"
+	gocommand, err := exec.LookPath(gobinary)
 	if err != nil {
-		err = errors.Wrap(err, "failed to find go binary")
+		err = errors.Wrapf(err, "failed to find go binary: %s", gobinary)
 		return err
 	}
 
@@ -66,7 +69,7 @@ func (Golang) Checkout(gopath string, meta Metadata, branch string) (err error) 
 		cmd = exec.Command(gocommand, "get", "-v", "-d", fmt.Sprintf("%s/...", meta.Package))
 	}
 
-	log.Printf("[DEBUG] Running %s with GOPATH=%s", cmd.Args, gopath)
+	logrus.Debugf("Running %s with GOPATH=%s", cmd.Args, gopath)
 
 	cmd.Env = runenv
 
@@ -76,7 +79,7 @@ func (Golang) Checkout(gopath string, meta Metadata, branch string) (err error) 
 	err = cmd.Run()
 
 	if err == nil {
-		log.Printf("[DEBUG] Checkout of %s complete\n\n", meta.Package)
+		logrus.Debugf("Checkout of %s complete", meta.Package)
 	}
 
 	git, err := exec.LookPath("git")
@@ -88,21 +91,19 @@ func (Golang) Checkout(gopath string, meta Metadata, branch string) (err error) 
 	codepath := filepath.Join(gopath, "src", meta.Package)
 
 	err = os.Chdir(codepath)
-
 	if err != nil {
-		log.Printf("[ERROR] changing working dir to %q: %s", codepath, err)
+		err = errors.Wrapf(err, "changing working dir to %q", codepath)
 		return err
 	}
 
 	if branch != "" {
-		log.Printf("[DEBUG] Checking out branch: %s\n\n", branch)
+		logrus.Debugf("Checking out branch: %s", branch)
 
 		cmd := exec.Command(git, "checkout", branch)
 
 		err = cmd.Run()
-
 		if err == nil {
-			log.Printf("[DEBUG] Checkout of branch: %s complete.\n\n", branch)
+			logrus.Debugf("Checkout of branch: %s complete.", branch)
 		}
 	}
 
@@ -111,7 +112,7 @@ func (Golang) Checkout(gopath string, meta Metadata, branch string) (err error) 
 
 // Prep  Commands run pre-build/ pre-test the checked out code in your temporary GOPATH
 func (Golang) Prep(gopath string, meta Metadata) (err error) {
-	log.Print("[DEBUG] Running Prep Commands")
+	logrus.Debug("Running Prep Commands")
 	codepath := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
 
 	err = os.Chdir(codepath)
@@ -124,7 +125,6 @@ func (Golang) Prep(gopath string, meta Metadata) (err error) {
 	_ = os.Setenv("GOPATH", gopath)
 
 	for _, cmdString := range meta.BuildInfo.PrepCommands {
-
 		// interpolate any environment variables into the command string
 		cmdString, err = envsubst.String(cmdString)
 		if err != nil {
@@ -134,7 +134,7 @@ func (Golang) Prep(gopath string, meta Metadata) (err error) {
 
 		cmd := exec.Command("bash", "-c", cmdString)
 
-		log.Printf("[DEBUG] Running %q with GOPATH=%s", cmdString, gopath)
+		logrus.Debugf("Running %q with GOPATH=%s", cmdString, gopath)
 
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -147,7 +147,7 @@ func (Golang) Prep(gopath string, meta Metadata) (err error) {
 		}
 	}
 
-	log.Printf("[DEBUG] Prep steps for %s complete\n\n", meta.Package)
+	logrus.Debugf("Prep steps for %s complete", meta.Package)
 
 	return err
 }
@@ -156,17 +156,18 @@ func (Golang) Prep(gopath string, meta Metadata) (err error) {
 func (Golang) Test(gopath string, gomodule string, timeout string) (err error) {
 	wd := filepath.Join(gopath, "src", gomodule)
 
-	log.Printf("[DEBUG] Changing working directory to %s.\n", wd)
+	logrus.Debugf("Changing working directory to %s.", wd)
 
 	err = os.Chdir(wd)
 
 	if err != nil {
-		log.Printf("[ERROR] changing working dir to %q: %s", wd, err)
+		err = errors.Wrapf(err, "changing working dir to %q", wd)
 		return err
 	}
 
-	log.Print("[DEBUG] Running 'go test -v ./...'.\n\n")
+	logrus.Debugf("Running 'go test -v ./...'.")
 
+	// TODO Should this use a shell exec like build?
 	var cmd *exec.Cmd
 	// Things break if you pass in an arg that has an empty string.  Splitting it up like this fixes https://github.com/nikogura/gomason/issues/24
 	if timeout != "" {
@@ -180,18 +181,23 @@ func (Golang) Test(gopath string, gomodule string, timeout string) (err error) {
 
 	cmd.Env = runenv
 
-	output, err := cmd.CombinedOutput()
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
 
-	fmt.Print(string(output))
+	err = cmd.Run()
+	if err != nil {
+		err = errors.Wrapf(err, "failed running %s", cmd)
+	}
 
-	log.Print("[DEBUG] Done with go test.\n\n")
+	logrus.Debugf("Done with go test.")
 
 	return err
 }
 
 // Build uses `gox` to build binaries per metadata file
 func (g Golang) Build(gopath string, meta Metadata, skipTargets string) (err error) {
-	log.Print("[DEBUG] Checking to see that gox is installed.\n")
+	logrus.Debugf("Checking to see that gox is installed.")
 
 	// Install gox if it's not already there
 	if _, err := os.Stat(filepath.Join(gopath, "bin/gox")); os.IsNotExist(err) {
@@ -202,28 +208,20 @@ func (g Golang) Build(gopath string, meta Metadata, skipTargets string) (err err
 		}
 	}
 
-	//if _, err := os.Stat(fmt.Sprintf("%s/src/%s/%s", gopath, meta.Package, METADATA_FILENAME)); os.IsNotExist(err) {
-	//	err = g.Checkout(gopath, meta, branch)
-	//	if err != nil {
-	//		err = errors.Wrap(err, fmt.Sprintf("Failed to checkout module: %s branch: %s ", meta.Package, branch))
-	//		return err
-	//	}
-	//}
-
 	wd := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
 
-	log.Printf("[DEBUG] Changing working directory to: %s", wd)
+	logrus.Debugf("Changing working directory to: %s", wd)
 
 	err = os.Chdir(wd)
 
 	if err != nil {
-		log.Printf("[ERROR] changing working dir to %q: %s", wd, err)
+		err = errors.Wrapf(err, "changing working dir to %q", wd)
 		return err
 	}
 
 	gox := fmt.Sprintf("%s/bin/gox", gopath)
 
-	log.Printf("[DEBUG] Gox is: %s", gox)
+	logrus.Debugf("Gox is: %s", gox)
 
 	metadatapath := fmt.Sprintf("%s/src/%s/%s", gopath, meta.Package, METADATA_FILENAME)
 
@@ -250,7 +248,7 @@ func (g Golang) Build(gopath string, meta Metadata, skipTargets string) (err err
 			continue
 		}
 
-		log.Printf("[DEBUG] Building target: %q\n", target.Name)
+		logrus.Debugf("Building target: %q", target.Name)
 
 		// This gets weird because go's exec shell doesn't like the arg format that gox expects
 		// Building it thusly keeps the various quoting levels straight
@@ -271,40 +269,41 @@ func (g Golang) Build(gopath string, meta Metadata, skipTargets string) (err err
 
 		for k, v := range target.Flags {
 			runenv = append(runenv, fmt.Sprintf("%s=%s", k, v))
-			log.Printf("[DEBUG] Build Flag: %s=%s", k, v)
+			logrus.Debugf("Build Flag: %s=%s", k, v)
 		}
 
 		ldflags := ""
 		if target.Ldflags != "" {
 			ldflags = fmt.Sprintf(" -ldflags %q ", target.Ldflags)
+			logrus.Debugf("LD Flag: %s", ldflags)
 		}
 
 		args := gox + cgo + ldflags + ` -osarch="` + target.Name + `"` + " ./..."
+
+		logrus.Debugf("Running gox with: %s", args)
 
 		// Calling it through sh makes everything happy
 		cmd := exec.Command("sh", "-c", args)
 
 		cmd.Env = runenv
 
-		log.Printf("[DEBUG] Running gox with: %s", args)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Stdin = os.Stdin
 
-		out, err := cmd.CombinedOutput()
-
-		fmt.Printf("%s\n", string(out))
-
+		err = cmd.Run()
 		if err != nil {
-			log.Printf("[ERROR] Build error: %s\n", err.Error())
+			err = errors.Wrapf(err, "failed building target %s", target.Name)
 			return err
 		}
 
-		log.Printf("[DEBUG] Gox build of target %s complete and successful.\n\n", target.Name)
+		logrus.Debugf("Gox build of target %s complete and successful.", target.Name)
 	}
 
 	err = BuildExtras(md, wd)
 	if err != nil {
 		err = errors.Wrapf(err, "Failed to build extras")
 		return err
-
 	}
 
 	return err
@@ -312,7 +311,7 @@ func (g Golang) Build(gopath string, meta Metadata, skipTargets string) (err err
 
 // GoxInstall Installs github.com/mitchellh/gox, the go cross compiler.
 func GoxInstall(gopath string) (err error) {
-	log.Printf("[DEBUG] Installing gox with GOPATH=%s, GOBIN=%s/bin\n", gopath, gopath)
+	logrus.Debugf("Installing gox with GOPATH=%s, GOBIN=%s/bin", gopath, gopath)
 
 	gocommand, err := exec.LookPath("go")
 	if err != nil {
@@ -331,16 +330,20 @@ func GoxInstall(gopath string) (err error) {
 
 	wd, err := os.Getwd()
 	if err != nil {
-		log.Printf("Error getting current working directory: %s\n\n", err)
+		err = errors.Wrapf(err, "Error getting current working directory")
+		return err
 	}
+
 	err = os.Chdir(gopath)
 	if err != nil {
-		log.Printf("Error changing directory into %s: %s\n\n", gopath, err)
+		err = errors.Wrapf(err, "Error changing directory into %s", gopath)
+		return err
 	}
 
 	err = cmd.Run()
 	if err != nil {
 		err = errors.Wrapf(err, "failed installing gox")
+		return err
 	}
 
 	goxPath := filepath.Join(gopath, "bin/gox")
@@ -352,7 +355,8 @@ func GoxInstall(gopath string) (err error) {
 
 	err = os.Chdir(wd)
 	if err != nil {
-		log.Printf("Error returning to directory %s:\n\n", wd)
+		err = errors.Wrapf(err, "Error returning to directory %s", wd)
+		return err
 	}
 
 	return err
@@ -360,15 +364,15 @@ func GoxInstall(gopath string) (err error) {
 
 // BuildExtras builds the extra artifacts specified in the metadata file
 func BuildExtras(meta Metadata, workdir string) (err error) {
-	log.Print("[DEBUG] Building Extra Artifacts")
+	logrus.Debugf("Building Extra Artifacts")
 
 	for _, extra := range meta.BuildInfo.Extras {
 		templateName := filepath.Join(workdir, extra.Template)
 		outputFileName := filepath.Join(workdir, extra.FileName)
 		executable := extra.Executable
 
-		log.Printf("[DEBUG] Reading template from %s\n", templateName)
-		log.Printf("[DEBUG] Writing to %s\n", outputFileName)
+		logrus.Debugf("Reading template from %s", templateName)
+		logrus.Debugf("Writing to %s", outputFileName)
 
 		var mode os.FileMode
 

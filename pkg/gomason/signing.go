@@ -2,7 +2,7 @@ package gomason
 
 import (
 	"fmt"
-	"log"
+	"github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 
@@ -14,7 +14,7 @@ const defaultSigningProgram = "gpg"
 
 // SignBinary  signs the given binary based on the entity and program given in metadata file, possibly overridden by information in ~/.gomason
 func (g *Gomason) SignBinary(meta Metadata, binary string) (err error) {
-	log.Printf("[DEBUG] Preparing to sign binary %s", binary)
+	logrus.Debugf("Preparing to sign binary %s", binary)
 
 	// pull signing info out of metadata file
 	signInfo := meta.SignInfo
@@ -23,7 +23,7 @@ func (g *Gomason) SignBinary(meta Metadata, binary string) (err error) {
 		signProg = defaultSigningProgram
 	}
 
-	log.Printf("[DEBUG] Signing program is %s", signProg)
+	logrus.Debugf("Signing program is %s", signProg)
 
 	signEntity := signInfo.Email
 
@@ -45,12 +45,12 @@ func (g *Gomason) SignBinary(meta Metadata, binary string) (err error) {
 		return err
 	}
 
-	log.Printf("[DEBUG] Signing %s with identity %s.", binary, signEntity)
+	logrus.Debugf("Signing %s with identity %s.", binary, signEntity)
 
 	switch signProg {
 	// insert other signing types here
 	default:
-		log.Print("[DEBUG] Signing with default program.")
+		logrus.Debug("Signing with default program.")
 		err = SignGPG(binary, signEntity, meta)
 		if err != nil {
 			err = errors.Wrap(err, fmt.Sprintf("failed to run %q", signProg))
@@ -73,10 +73,10 @@ func VerifyBinary(binary string, meta Metadata) (ok bool, err error) {
 	switch signProg {
 	// insert other signing types here
 	default:
-		log.Print("[DEBUG] Verifying with default program.")
+		logrus.Debugf("Verifying with default program.")
 		ok, err = VerifyGPG(binary, meta)
 		if err != nil {
-			err = errors.Wrap(err, fmt.Sprintf("failed to run %q", signProg))
+			err = errors.Wrapf(err, "failed to run %q", signProg)
 			return ok, err
 		}
 	}
@@ -89,7 +89,6 @@ func SignGPG(binary string, signingEntity string, meta Metadata) (err error) {
 	shellCmd, err := exec.LookPath("gpg")
 	if err != nil {
 		err = errors.Wrap(err, fmt.Sprintf("can't find signing program 'gpg' in path.  Is it installed?"))
-
 		return err
 	}
 
@@ -126,7 +125,6 @@ func VerifyGPG(binary string, meta Metadata) (ok bool, err error) {
 	shellCmd, err := exec.LookPath("gpg")
 	if err != nil {
 		err = errors.Wrap(err, fmt.Sprintf("can't find signing program 'gpg' in path.  Is it installed?"))
-
 		return ok, err
 	}
 
@@ -149,7 +147,7 @@ func VerifyGPG(binary string, meta Metadata) (ok bool, err error) {
 
 	err = cmd.Run()
 	if err != nil {
-		log.Printf("Verification Error: %s", err)
+		err = errors.Wrapf(err, "error verifying %s", sigFile)
 		return ok, err
 	}
 

@@ -2,6 +2,7 @@ package gomason
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -52,7 +53,7 @@ var languagesMap map[string]Language = map[string]Language{}
 func GetByName(lang string) (Language, error) {
 	l, ok := languagesMap[lang]
 	if !ok {
-		return NoLanguage{}, fmt.Errorf("Unsupported language: %s", lang)
+		return NoLanguage{}, errors.New(fmt.Sprintf("Unsupported language: %s", lang))
 	}
 	return l, nil
 }

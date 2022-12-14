@@ -17,9 +17,9 @@ package cmd
 import (
 	"fmt"
 	"github.com/nikogura/gomason/pkg/gomason"
+	"github.com/sirupsen/logrus"
 	"os"
 
-	"github.com/nikogura/gomason/pkg/logging"
 	"github.com/spf13/cobra"
 )
 
@@ -42,7 +42,9 @@ Tool for building Go binaries in a clean GOPATH.
 
 `,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		logging.Init(Verbose)
+		if Verbose {
+			logrus.SetLevel(logrus.DebugLevel)
+		}
 	},
 }
 

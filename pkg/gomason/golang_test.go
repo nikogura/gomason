@@ -2,14 +2,12 @@ package gomason
 
 import (
 	"fmt"
-	"log"
+	"github.com/pkg/errors"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/pkg/errors"
 )
 
 func TestCreateGoPath(t *testing.T) {
@@ -35,7 +33,6 @@ func TestCheckoutDefault(t *testing.T) {
 		t.Errorf("Error creating GOPATH in %s: %s", TestTmpDir, err)
 	}
 
-	log.Printf("Checking out Master Branch\n")
 	err = lang.Checkout(gopath, testMetadataObj(), "")
 	if err != nil {
 		t.Errorf("Failed to checkout module: %s", err)
@@ -48,8 +45,6 @@ func TestCheckoutDefault(t *testing.T) {
 }
 
 func TestCheckoutBranch(t *testing.T) {
-	log.Printf("Checking out Test Branch\n")
-
 	// making a separate temp dir here cos it steps on the other tests
 	dir, err := os.MkdirTemp("", "gomason")
 	if err != nil {
@@ -72,10 +67,14 @@ func TestCheckoutBranch(t *testing.T) {
 	if _, err := os.Stat(testFilePath); os.IsNotExist(err) {
 		t.Errorf("Failed to checkout branch")
 	}
+
+	err = os.RemoveAll(dir)
+	if err != nil {
+		t.Errorf("failed removing temp dir %s: %s", dir, err)
+	}
 }
 
 func TestPrep(t *testing.T) {
-	log.Printf("Checking out Master Branch\n")
 	lang, _ := GetByName(LanguageGolang)
 	gopath, err := lang.CreateWorkDir(TestTmpDir)
 	if err != nil {
@@ -101,7 +100,6 @@ func TestPrep(t *testing.T) {
 func TestBuildGoxInstall(t *testing.T) {
 	lang, _ := GetByName(LanguageGolang)
 
-	log.Printf("Installing Gox\n")
 	gopath, err := lang.CreateWorkDir(TestTmpDir)
 	if err != nil {
 		t.Errorf("Error creating GOPATH in %s: %s", TestTmpDir, err)
@@ -129,9 +127,7 @@ func TestBuild(t *testing.T) {
 			"skip-linux",
 			LanguageGolang,
 			"linux/amd64",
-			[]string{
-				"testproject_darwin_amd64",
-			},
+			[]string{},
 			[]string{
 				"testproject_linux_amd64",
 			},
@@ -141,7 +137,6 @@ func TestBuild(t *testing.T) {
 			LanguageGolang,
 			"",
 			[]string{
-				"testproject_darwin_amd64",
 				"testproject_linux_amd64",
 			},
 			[]string{},
@@ -155,15 +150,12 @@ func TestBuild(t *testing.T) {
 				t.Errorf(err.Error())
 			}
 
-			log.Printf("Running Build\n")
 			gopath, err := lang.CreateWorkDir(TestTmpDir)
 			if err != nil {
 				t.Errorf("Error creating GOPATH in %s: %s\n", TestTmpDir, err)
 			}
 
 			gomodule := testMetadataObj().Package
-
-			log.Printf("Checking out Master Branch\n")
 
 			err = lang.Checkout(gopath, testMetadataObj(), "")
 			if err != nil {
@@ -189,12 +181,8 @@ func TestBuild(t *testing.T) {
 				workdir := filepath.Join(gopath, "src", gomodule)
 				binary := fmt.Sprintf("%s/%s", workdir, artifact)
 
-				log.Printf("Looking for binary present: %s\n", binary)
-
 				if _, err := os.Stat(binary); os.IsNotExist(err) {
 					t.Errorf("Gox failed to build binary: %s.\n", binary)
-				} else {
-					log.Printf("Binary found.\n")
 				}
 			}
 
@@ -202,10 +190,8 @@ func TestBuild(t *testing.T) {
 				workdir := filepath.Join(gopath, "src", gomodule)
 				binary := fmt.Sprintf("%s/%s", workdir, artifact)
 
-				log.Printf("Looking for binary not present: %s\n", binary)
-
 				if _, err := os.Stat(binary); os.IsNotExist(err) {
-					log.Printf("Binary not found - as intended.\n")
+					fmt.Printf("Binary not found - as intended.\n")
 				} else {
 					t.Errorf("Gox built binary: %s when it shouldn't have.\n", binary)
 				}
@@ -217,7 +203,6 @@ func TestBuild(t *testing.T) {
 func TestTest(t *testing.T) {
 	lang, _ := GetByName(LanguageGolang)
 
-	log.Printf("Checking out Master Branch\n")
 	gopath, err := lang.CreateWorkDir(TestTmpDir)
 	if err != nil {
 		t.Errorf("Error creating GOPATH in %s: %s", TestTmpDir, err)
@@ -264,12 +249,16 @@ func TestSignVerifyBinary(t *testing.T) {
 		t.Errorf("Error creating GOPATH in %s: %s\n", TestTmpDir, err)
 	}
 
+	err = lang.Checkout(gopath, testMetadataObj(), "")
+	if err != nil {
+		t.Errorf("Failed to checkout module: %s", err)
+	}
+
 	meta := testMetadataObj()
 
 	meta.Repository = fmt.Sprintf("http://localhost:%d/repo/tool", servicePort)
 
 	// build artifacts
-	log.Printf("Running Build\n")
 	err = lang.Build(gopath, meta, "")
 	if err != nil {
 		t.Errorf("Error building: %s", err)
@@ -302,18 +291,12 @@ Expire-Date: 0
 		t.Errorf("Error writing test key generation file: %s", err)
 	}
 
-	log.Printf("Keyring file: %s\n", keyring)
-	log.Printf("Trustdb file: %s\n", trustdb)
-	log.Printf("Test key generation file: %s\n", keyFile)
-
 	// generate a test key
 	cmd := exec.Command(shellCmd, "--trustdb", trustdb, "--no-default-keyring", "--keyring", keyring, "--batch", "--generate-key", keyFile)
 	err = cmd.Run()
 	if err != nil {
 		t.Errorf("****** Error creating test key: %s *****", err)
 	}
-
-	log.Printf("Done creating keyring and test keys\n")
 
 	// sign binaries
 	parts := strings.Split(meta.Package, "/")
@@ -322,8 +305,8 @@ Expire-Date: 0
 	for _, target := range meta.BuildInfo.Targets {
 		archparts := strings.Split(target.Name, "/")
 
-		osname := archparts[0]   // linux or darwin generally
-		archname := archparts[1] // amd64 generally
+		osname := archparts[0]
+		archname := archparts[1]
 
 		workdir := filepath.Join(gopath, "src", meta.Package)
 		binary := fmt.Sprintf("%s/%s_%s_%s", workdir, binaryPrefix, osname, archname)
@@ -354,8 +337,6 @@ Expire-Date: 0
 	if err != nil {
 		t.Errorf("Failed to get current working directory: %s", err)
 	}
-
-	fmt.Printf("Publishing\n")
 
 	err = g.HandleArtifacts(meta, gopath, cwd, false, true, true, "")
 	if err != nil {
