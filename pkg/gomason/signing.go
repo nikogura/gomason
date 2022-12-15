@@ -14,7 +14,7 @@ const defaultSigningProgram = "gpg"
 
 // SignBinary  signs the given binary based on the entity and program given in metadata file, possibly overridden by information in ~/.gomason
 func (g *Gomason) SignBinary(meta Metadata, binary string) (err error) {
-	logrus.Debugf("Preparing to sign binary %s", binary)
+	logrus.Debugf("Preparing to sign file %s", binary)
 
 	// pull signing info out of metadata file
 	signInfo := meta.SignInfo
@@ -110,9 +110,14 @@ func SignGPG(binary string, signingEntity string, meta Metadata) (err error) {
 
 	cmd.Env = os.Environ()
 
-	err = cmd.Run()
+	err = cmd.Start()
 	if err != nil {
 		err = errors.Wrap(err, fmt.Sprintf("failed to run %q", shellCmd))
+	}
+
+	err = cmd.Wait()
+	if err != nil {
+		err = errors.Wrap(err, fmt.Sprintf("error waiting for  %q to finish", shellCmd))
 	}
 
 	return err

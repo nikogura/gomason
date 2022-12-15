@@ -248,7 +248,7 @@ func (g Golang) Build(gopath string, meta Metadata, skipTargets string) (err err
 			continue
 		}
 
-		logrus.Debugf("Building target: %q", target.Name)
+		logrus.Debugf("Building target: %q in dir %s", target.Name, wd)
 
 		// This gets weird because go's exec shell doesn't like the arg format that gox expects
 		// Building it thusly keeps the various quoting levels straight
@@ -280,7 +280,7 @@ func (g Golang) Build(gopath string, meta Metadata, skipTargets string) (err err
 
 		args := gox + cgo + ldflags + ` -osarch="` + target.Name + `"` + " ./..."
 
-		logrus.Debugf("Running gox with: %s", args)
+		logrus.Debugf("Running gox with: %s in dir %s", args, wd)
 
 		// Calling it through sh makes everything happy
 		cmd := exec.Command("sh", "-c", args)

@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/nikogura/gomason/pkg/gomason"
 	"github.com/spf13/cobra"
 	"io/ioutil"
@@ -53,8 +52,6 @@ Binaries are dropped into the current working directory.
 			log.Fatalf("Failed to create temp dir: %s", err)
 		}
 
-		log.Printf("[DEBUG] Created temp dir %s", rootWorkDir)
-
 		defer os.RemoveAll(rootWorkDir)
 
 		meta, err := gomason.ReadMetadata(gomason.METADATA_FILENAME)
@@ -87,8 +84,6 @@ Binaries are dropped into the current working directory.
 			if err != nil {
 				log.Fatalf("error running go test: %s", err)
 			}
-
-			fmt.Print("Tests Succeeded!\n\n")
 		}
 
 		err = lang.Build(workDir, meta, buildSkipTargets)
@@ -96,14 +91,12 @@ Binaries are dropped into the current working directory.
 			log.Fatalf("build failed: %s", err)
 		}
 
-		fmt.Print("Build Succeeded!\n\n")
-
 		err = gm.HandleArtifacts(meta, workDir, cwd, false, false, true, buildSkipTargets)
 		if err != nil {
 			log.Fatalf("signing failed: %s", err)
 		}
 
-		err = gm.HandleExtras(meta, workDir, cwd, false, false)
+		err = gm.HandleExtras(meta, workDir, cwd, false, false, true)
 		if err != nil {
 			log.Fatalf("Extra artifact processing failed: %s", err)
 		}

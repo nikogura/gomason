@@ -343,7 +343,7 @@ Expire-Date: 0
 		t.Errorf("post-build processing failed: %s", err)
 	}
 
-	err = g.HandleExtras(meta, gopath, cwd, false, true)
+	err = g.HandleExtras(meta, gopath, cwd, false, true, true)
 	if err != nil {
 		t.Errorf("Extra artifact processing failed: %s", err)
 	}

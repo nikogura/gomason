@@ -15,7 +15,6 @@
 package cmd
 
 import (
-	"fmt"
 	"github.com/nikogura/gomason/pkg/gomason"
 	"github.com/spf13/cobra"
 	"io/ioutil"
@@ -51,8 +50,6 @@ Sometimes you need the benefits of a full system here.  Now.  Right at your fing
 			log.Fatalf("Failed to create temp dir: %s", err)
 		}
 
-		log.Printf("[DEBUG] Created temp dir %s", rootWorkDir)
-
 		defer os.RemoveAll(rootWorkDir)
 
 		meta, err := gomason.ReadMetadata(gomason.METADATA_FILENAME)
@@ -85,7 +82,6 @@ Sometimes you need the benefits of a full system here.  Now.  Right at your fing
 			log.Fatalf("error running go test: %s", err)
 		}
 
-		fmt.Print("Success!\n\n")
 	},
 }
 

@@ -49,8 +49,6 @@ Signing sorta implies something to sign, which in turn, implies that it built, w
 			log.Fatalf("Failed to create temp dir: %s", err)
 		}
 
-		log.Printf("[DEBUG] Created temp dir %s", rootWorkDir)
-
 		defer os.RemoveAll(rootWorkDir)
 
 		meta, err := gomason.ReadMetadata(gomason.METADATA_FILENAME)
@@ -90,14 +88,12 @@ Signing sorta implies something to sign, which in turn, implies that it built, w
 			log.Fatalf("build failed: %s", err)
 		}
 
-		log.Printf("Build Succeeded!\n\n")
-
 		err = gm.HandleArtifacts(meta, workDir, cwd, true, false, true, buildSkipTargets)
 		if err != nil {
 			log.Fatalf("signing failed: %s", err)
 		}
 
-		err = gm.HandleExtras(meta, workDir, cwd, true, false)
+		err = gm.HandleExtras(meta, workDir, cwd, true, false, true)
 		if err != nil {
 			log.Fatalf("Extra artifact processing failed: %s", err)
 		}

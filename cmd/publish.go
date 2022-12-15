@@ -15,8 +15,6 @@
 package cmd
 
 import (
-	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -46,13 +44,11 @@ Publish will upload your binaries to wherever it is you've configured them to go
 		if err != nil {
 			log.Fatalf("Failed to get current working directory: %s", err)
 		}
-		rootWorkDir, err := ioutil.TempDir("", "gomason")
+		rootWorkDir, err := os.MkdirTemp("", "gomason")
 		if err != nil {
 			log.Fatalf("Failed to create temp dir: %s", err)
 		}
 		defer os.RemoveAll(rootWorkDir)
-
-		log.Printf("[DEBUG] Created temp dir %s", rootWorkDir)
 
 		meta, err := gomason.ReadMetadata(gomason.METADATA_FILENAME)
 		if err != nil {
@@ -75,8 +71,6 @@ Publish will upload your binaries to wherever it is you've configured them to go
 			if err != nil {
 				log.Fatalf("Failed getting current working directory.")
 			}
-
-			fmt.Printf("Workdir is %s\n", workDir)
 
 			for _, t := range meta.PublishInfo.Targets {
 				if meta.PublishInfo.SkipSigning {
@@ -114,15 +108,12 @@ Publish will upload your binaries to wherever it is you've configured them to go
 					log.Fatalf("error running go test: %s", err)
 				}
 
-				fmt.Print("Tests Succeeded!\n\n")
 			}
 
 			err = lang.Build(workDir, meta, buildSkipTargets)
 			if err != nil {
 				log.Fatalf("build failed: %s", err)
 			}
-
-			fmt.Print("Build Succeeded!\n\n")
 
 			if meta.PublishInfo.SkipSigning {
 				log.Printf("[DEBUG] Skipping signing due to 'skip-signing': true in metadata file")
@@ -131,7 +122,7 @@ Publish will upload your binaries to wherever it is you've configured them to go
 					log.Fatalf("post-build processing failed: %s", err)
 				}
 
-				err = gm.HandleExtras(meta, workDir, cwd, false, true)
+				err = gm.HandleExtras(meta, workDir, cwd, false, true, false)
 				if err != nil {
 					log.Fatalf("Extra artifact processing failed: %s", err)
 				}
@@ -142,7 +133,7 @@ Publish will upload your binaries to wherever it is you've configured them to go
 					log.Fatalf("post-build processing failed: %s", err)
 				}
 
-				err = gm.HandleExtras(meta, workDir, cwd, true, true)
+				err = gm.HandleExtras(meta, workDir, cwd, true, true, false)
 				if err != nil {
 					log.Fatalf("Extra artifact processing failed: %s", err)
 				}
