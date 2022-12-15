@@ -33,7 +33,7 @@ func FileMd5(filename string) (checksum string, err error) {
 	return BytesMd5(checksumBytes)
 }
 
-//BytesSha1 generates the sha1sum for a byte array
+// BytesSha1 generates the sha1sum for a byte array
 func BytesSha1(input []byte) (checksum string, err error) {
 	hasher := sha1.New()
 
