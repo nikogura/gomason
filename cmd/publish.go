@@ -25,6 +25,8 @@ import (
 var pubSkipTests bool
 var pubSkipBuild bool
 
+var pubBuildLocal bool
+
 // publishCmd represents the publish command
 var publishCmd = &cobra.Command{
 	Use:   "publish",
@@ -103,14 +105,14 @@ Publish will upload your binaries to wherever it is you've configured them to go
 			}
 
 			if !pubSkipTests {
-				err = lang.Test(workDir, meta.Package, testTimeout)
+				err = lang.Test(workDir, meta.Package, testTimeout, pubBuildLocal)
 				if err != nil {
 					log.Fatalf("error running go test: %s", err)
 				}
 
 			}
 
-			err = lang.Build(workDir, meta, buildSkipTargets)
+			err = lang.Build(workDir, meta, buildSkipTargets, pubBuildLocal)
 			if err != nil {
 				log.Fatalf("build failed: %s", err)
 			}
@@ -147,4 +149,5 @@ func init() {
 
 	publishCmd.Flags().BoolVarP(&pubSkipTests, "skiptests", "s", false, "Skip tests when publishing.")
 	publishCmd.Flags().BoolVarP(&pubSkipBuild, "skipbuild", "", false, "Skip build altogether and only publish.")
+	publishCmd.Flags().BoolVarP(&pubBuildLocal, "local", "l", false, "Build locally, in current working directory, with whatever is checked out.")
 }

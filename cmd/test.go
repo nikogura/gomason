@@ -22,6 +22,8 @@ import (
 	"os"
 )
 
+var testLocal bool
+
 // testCmd represents the test command
 var testCmd = &cobra.Command{
 	Use:   "test",
@@ -77,7 +79,7 @@ Sometimes you need the benefits of a full system here.  Now.  Right at your fing
 			log.Fatalf("error running prep steps: %s", err)
 		}
 
-		err = lang.Test(workDir, meta.Package, testTimeout)
+		err = lang.Test(workDir, meta.Package, testTimeout, testLocal)
 		if err != nil {
 			log.Fatalf("error running go test: %s", err)
 		}
@@ -87,4 +89,6 @@ Sometimes you need the benefits of a full system here.  Now.  Right at your fing
 
 func init() {
 	rootCmd.AddCommand(testCmd)
+
+	testCmd.Flags().BoolVarP(&testLocal, "local", "l", false, "Build locally, in current working directory, with whatever is checked out.")
 }

@@ -87,13 +87,13 @@ Binaries are dropped into the current working directory.
 		}
 
 		if !buildSkipTests {
-			err = lang.Test(workDir, meta.Package, testTimeout)
+			err = lang.Test(workDir, meta.Package, testTimeout, buildLocal)
 			if err != nil {
 				log.Fatalf("error running go test: %s", err)
 			}
 		}
 
-		err = lang.Build(workDir, meta, buildSkipTargets)
+		err = lang.Build(workDir, meta, buildSkipTargets, buildLocal)
 		if err != nil {
 			log.Fatalf("build failed: %s", err)
 		}

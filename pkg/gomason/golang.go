@@ -153,16 +153,18 @@ func (Golang) Prep(gopath string, meta Metadata) (err error) {
 }
 
 // Test Runs 'go test -v ./...' in the checked out code directory
-func (Golang) Test(gopath string, gomodule string, timeout string) (err error) {
-	wd := filepath.Join(gopath, "src", gomodule)
+func (Golang) Test(gopath string, gomodule string, timeout string, local bool) (err error) {
+	if !local {
+		wd := filepath.Join(gopath, "src", gomodule)
 
-	logrus.Debugf("Changing working directory to %s.", wd)
+		logrus.Debugf("Changing working directory to %s.", wd)
 
-	err = os.Chdir(wd)
+		err = os.Chdir(wd)
 
-	if err != nil {
-		err = errors.Wrapf(err, "changing working dir to %q", wd)
-		return err
+		if err != nil {
+			err = errors.Wrapf(err, "changing working dir to %q", wd)
+			return err
+		}
 	}
 
 	logrus.Debugf("Running 'go test -v ./...'.")
@@ -196,7 +198,7 @@ func (Golang) Test(gopath string, gomodule string, timeout string) (err error) {
 }
 
 // Build uses `gox` to build binaries per metadata file
-func (g Golang) Build(gopath string, meta Metadata, skipTargets string) (err error) {
+func (g Golang) Build(gopath string, meta Metadata, skipTargets string, local bool) (err error) {
 	logrus.Debugf("Checking to see that gox is installed.")
 
 	// Install gox if it's not already there
@@ -208,15 +210,25 @@ func (g Golang) Build(gopath string, meta Metadata, skipTargets string) (err err
 		}
 	}
 
-	wd := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
+	var wd string
 
-	logrus.Debugf("Changing working directory to: %s", wd)
+	if local {
+		wd, err = os.Getwd()
+		if err != nil {
+			err = errors.Wrapf(err, "failed getting CWD")
+			return err
+		}
+	} else {
+		wd = fmt.Sprintf("%s/src/%s", gopath, meta.Package)
 
-	err = os.Chdir(wd)
+		logrus.Debugf("Changing working directory to: %s", wd)
 
-	if err != nil {
-		err = errors.Wrapf(err, "changing working dir to %q", wd)
-		return err
+		err = os.Chdir(wd)
+
+		if err != nil {
+			err = errors.Wrapf(err, "changing working dir to %q", wd)
+			return err
+		}
 	}
 
 	gox := fmt.Sprintf("%s/bin/gox", gopath)

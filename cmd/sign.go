@@ -23,6 +23,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var signLocal bool
+
 // signCmd represents the sign command
 var signCmd = &cobra.Command{
 	Use:   "sign",
@@ -76,14 +78,14 @@ Signing sorta implies something to sign, which in turn, implies that it built, w
 			log.Fatalf("error running prep steps: %s", err)
 		}
 
-		err = lang.Test(workDir, meta.Package, testTimeout)
+		err = lang.Test(workDir, meta.Package, testTimeout, signLocal)
 		if err != nil {
 			log.Fatalf("error running go test: %s", err)
 		}
 
 		log.Printf("Tests Succeeded!\n\n")
 
-		err = lang.Build(workDir, meta, buildSkipTargets)
+		err = lang.Build(workDir, meta, buildSkipTargets, signLocal)
 		if err != nil {
 			log.Fatalf("build failed: %s", err)
 		}
@@ -102,4 +104,5 @@ Signing sorta implies something to sign, which in turn, implies that it built, w
 
 func init() {
 	rootCmd.AddCommand(signCmd)
+	signCmd.Flags().BoolVarP(&signLocal, "local", "l", false, "Build locally, in current working directory, with whatever is checked out.")
 }
