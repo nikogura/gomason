@@ -24,6 +24,8 @@ import (
 
 var buildSkipTests bool
 
+var buildLocal bool
+
 // buildCmd represents the build command
 var buildCmd = &cobra.Command{
 	Use:   "build",
@@ -47,12 +49,6 @@ Binaries are dropped into the current working directory.
 		if err != nil {
 			log.Fatalf("Failed to get current working directory: %s", err)
 		}
-		rootWorkDir, err := ioutil.TempDir("", "gomason")
-		if err != nil {
-			log.Fatalf("Failed to create temp dir: %s", err)
-		}
-
-		defer os.RemoveAll(rootWorkDir)
 
 		meta, err := gomason.ReadMetadata(gomason.METADATA_FILENAME)
 		if err != nil {
@@ -64,19 +60,30 @@ Binaries are dropped into the current working directory.
 			log.Fatalf("Invalid language: %v", err)
 		}
 
-		workDir, err := lang.CreateWorkDir(rootWorkDir)
-		if err != nil {
-			log.Fatalf("Failed to create ephemeral workDir: %s", err)
-		}
+		var workDir = cwd
 
-		err = lang.Checkout(workDir, meta, branch)
-		if err != nil {
-			log.Fatalf("failed to checkout package %s at branch %s: %s", meta.Package, branch, err)
-		}
+		if !buildLocal {
+			rootWorkDir, err := ioutil.TempDir("", "gomason")
+			if err != nil {
+				log.Fatalf("Failed to create temp dir: %s", err)
+			}
 
-		err = lang.Prep(workDir, meta)
-		if err != nil {
-			log.Fatalf("error running prep steps: %s", err)
+			defer os.RemoveAll(rootWorkDir)
+
+			workDir, err = lang.CreateWorkDir(rootWorkDir)
+			if err != nil {
+				log.Fatalf("Failed to create ephemeral workDir: %s", err)
+			}
+
+			err = lang.Checkout(workDir, meta, branch)
+			if err != nil {
+				log.Fatalf("failed to checkout package %s at branch %s: %s", meta.Package, branch, err)
+			}
+
+			err = lang.Prep(workDir, meta)
+			if err != nil {
+				log.Fatalf("error running prep steps: %s", err)
+			}
 		}
 
 		if !buildSkipTests {
@@ -107,4 +114,6 @@ func init() {
 	rootCmd.AddCommand(buildCmd)
 
 	buildCmd.Flags().BoolVarP(&buildSkipTests, "skiptests", "s", false, "Skip tests when building.")
+
+	buildCmd.Flags().BoolVarP(&buildLocal, "local", "l", false, "Build locally, in current working directory, with whatever is checked out.")
 }
