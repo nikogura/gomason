@@ -300,7 +300,9 @@ func (g Golang) Build(gopath string, meta Metadata, skipTargets string, local bo
 			logrus.Debugf("LD Flag: %s", ldflags)
 		}
 
-		args := gox + cgo + ldflags + ` -osarch="` + target.Name + `"` + " ./..."
+		outputTemplate := fmt.Sprintf("%s_{{.OS}}_{{.Arch}}", meta.Name)
+
+		args := gox + cgo + ldflags + ` -osarch="` + target.Name + `"` + ` -output="` + outputTemplate + `"` + " ./..."
 
 		logrus.Debugf("Running gox with: %s in dir %s", args, wd)
 
