@@ -14,7 +14,7 @@ const (
 type Language interface {
 	CreateWorkDir(string) (string, error)
 	Checkout(workdir string, meta Metadata, branch string) error
-	Prep(workdir string, meta Metadata) error
+	Prep(workdir string, meta Metadata, local bool) error
 	Test(workdir string, module string, timeout string, local bool) error
 	Build(workdir string, meta Metadata, skipTargets string, local bool) error
 }
@@ -33,7 +33,7 @@ func (NoLanguage) Checkout(workdir string, meta Metadata, branch string) error {
 }
 
 // Prep stub for the Prep action
-func (NoLanguage) Prep(workdir string, meta Metadata) error {
+func (NoLanguage) Prep(workdir string, meta Metadata, local bool) error {
 	return nil
 }
 

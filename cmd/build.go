@@ -78,10 +78,11 @@ Binaries are dropped into the current working directory.
 				log.Fatalf("failed to checkout package %s at branch %s: %s", meta.Package, branch, err)
 			}
 
-			err = lang.Prep(workDir, meta)
-			if err != nil {
-				log.Fatalf("error running prep steps: %s", err)
-			}
+		}
+
+		err = lang.Prep(workDir, meta, local)
+		if err != nil {
+			log.Fatalf("error running prep steps: %s", err)
 		}
 
 		if !buildSkipTests {

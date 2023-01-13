@@ -111,18 +111,30 @@ func (Golang) Checkout(gopath string, meta Metadata, branch string) (err error) 
 }
 
 // Prep  Commands run pre-build/ pre-test the checked out code in your temporary GOPATH
-func (Golang) Prep(gopath string, meta Metadata) (err error) {
+func (Golang) Prep(gopath string, meta Metadata, local bool) (err error) {
 	logrus.Debug("Running Prep Commands")
-	codepath := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
+	var codepath string
+	if local {
+		wd, err := os.Getwd()
+		if err != nil {
+			err = errors.Wrapf(err, "failed getting CWD")
+			return err
+		}
 
-	err = os.Chdir(codepath)
-	if err != nil {
-		err = errors.Wrapf(err, "failed to cwd to %s", gopath)
-		return err
+		codepath = wd
+
+	} else {
+		codepath = fmt.Sprintf("%s/src/%s", gopath, meta.Package)
+
+		err = os.Chdir(codepath)
+		if err != nil {
+			err = errors.Wrapf(err, "failed to cwd to %s", gopath)
+			return err
+		}
+
+		// set the gopath in the environment so that we can interpolate it below
+		_ = os.Setenv("GOPATH", gopath)
 	}
-
-	// set the gopath in the environment so that we can interpolate it below
-	_ = os.Setenv("GOPATH", gopath)
 
 	for _, cmdString := range meta.BuildInfo.PrepCommands {
 		// interpolate any environment variables into the command string
