@@ -72,7 +72,7 @@ Sometimes you need the benefits of a full system here.  Now.  Right at your fing
 			log.Fatalf("failed to checkout package %s at branch %s: %s", meta.Package, branch, err)
 		}
 
-		err = lang.Prep(workDir, meta)
+		err = lang.Prep(workDir, meta, local)
 		if err != nil {
 			log.Fatalf("error running prep steps: %s", err)
 		}
