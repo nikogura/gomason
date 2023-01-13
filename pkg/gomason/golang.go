@@ -271,11 +271,11 @@ func (g Golang) Build(gopath string, meta Metadata, skipTargets string, local bo
 		// This gets weird because go's exec shell doesn't like the arg format that gox expects
 		// Building it thusly keeps the various quoting levels straight
 
-		runenv := make([]string, 0)
+		runenv := os.Environ()
 
 		if !local {
 			gopathenv := fmt.Sprintf("GOPATH=%s", gopath)
-			runenv = append(os.Environ(), gopathenv)
+			runenv = append(runenv, gopathenv)
 		}
 
 		// allow user to turn off go modules
