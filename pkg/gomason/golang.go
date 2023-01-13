@@ -235,7 +235,13 @@ func (g Golang) Build(gopath string, meta Metadata, skipTargets string, local bo
 
 	logrus.Debugf("Gox is: %s", gox)
 
-	metadatapath := fmt.Sprintf("%s/src/%s/%s", gopath, meta.Package, METADATA_FILENAME)
+	var metadatapath string
+	if local {
+		metadatapath = fmt.Sprintf("%s/%s", wd, METADATA_FILENAME)
+
+	} else {
+		metadatapath = fmt.Sprintf("%s/src/%s/%s", gopath, meta.Package, METADATA_FILENAME)
+	}
 
 	md, err := ReadMetadata(metadatapath)
 	if err != nil {
