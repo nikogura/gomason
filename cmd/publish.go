@@ -25,8 +25,6 @@ import (
 var pubSkipTests bool
 var pubSkipBuild bool
 
-var pubBuildLocal bool
-
 // publishCmd represents the publish command
 var publishCmd = &cobra.Command{
 	Use:   "publish",
@@ -105,37 +103,37 @@ Publish will upload your binaries to wherever it is you've configured them to go
 			}
 
 			if !pubSkipTests {
-				err = lang.Test(workDir, meta.Package, testTimeout, pubBuildLocal)
+				err = lang.Test(workDir, meta.Package, testTimeout, local)
 				if err != nil {
 					log.Fatalf("error running go test: %s", err)
 				}
 
 			}
 
-			err = lang.Build(workDir, meta, buildSkipTargets, pubBuildLocal)
+			err = lang.Build(workDir, meta, buildSkipTargets, local)
 			if err != nil {
 				log.Fatalf("build failed: %s", err)
 			}
 
 			if meta.PublishInfo.SkipSigning {
 				log.Printf("[DEBUG] Skipping signing due to 'skip-signing': true in metadata file")
-				err = gm.HandleArtifacts(meta, workDir, cwd, false, true, false, buildSkipTargets)
+				err = gm.HandleArtifacts(meta, workDir, cwd, false, true, false, buildSkipTargets, local)
 				if err != nil {
 					log.Fatalf("post-build processing failed: %s", err)
 				}
 
-				err = gm.HandleExtras(meta, workDir, cwd, false, true, false)
+				err = gm.HandleExtras(meta, workDir, cwd, false, true, false, local)
 				if err != nil {
 					log.Fatalf("Extra artifact processing failed: %s", err)
 				}
 
 			} else {
-				err = gm.HandleArtifacts(meta, workDir, cwd, true, true, false, buildSkipTargets)
+				err = gm.HandleArtifacts(meta, workDir, cwd, true, true, false, buildSkipTargets, local)
 				if err != nil {
 					log.Fatalf("post-build processing failed: %s", err)
 				}
 
-				err = gm.HandleExtras(meta, workDir, cwd, true, true, false)
+				err = gm.HandleExtras(meta, workDir, cwd, true, true, false, local)
 				if err != nil {
 					log.Fatalf("Extra artifact processing failed: %s", err)
 				}
@@ -149,5 +147,4 @@ func init() {
 
 	publishCmd.Flags().BoolVarP(&pubSkipTests, "skiptests", "s", false, "Skip tests when publishing.")
 	publishCmd.Flags().BoolVarP(&pubSkipBuild, "skipbuild", "", false, "Skip build altogether and only publish.")
-	publishCmd.Flags().BoolVarP(&pubBuildLocal, "local", "l", false, "Build locally, in current working directory, with whatever is checked out.")
 }

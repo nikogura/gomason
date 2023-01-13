@@ -148,7 +148,7 @@ type UserSignInfo struct {
 // HandleArtifacts loops over the expected files built by Build() and optionally signs them and publishes them along with their signatures (if signing).
 //
 // If not publishing, the binaries (and their optional signatures) are collected and dumped into the directory where gomason was called. (Typically the root of a go project).
-func (g *Gomason) HandleArtifacts(meta Metadata, gopath string, cwd string, sign bool, publish bool, collect bool, skipTargets string) (err error) {
+func (g *Gomason) HandleArtifacts(meta Metadata, gopath string, cwd string, sign bool, publish bool, collect bool, skipTargets string, local bool) (err error) {
 	logrus.Debug("Handling Artifacts\n")
 	// loop through the built things for each type of build target
 	skipTargetsMap := make(map[string]int)
@@ -174,7 +174,18 @@ func (g *Gomason) HandleArtifacts(meta Metadata, gopath string, cwd string, sign
 		osname := archparts[0]
 		archname := archparts[1]
 
-		workdir := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
+		var workdir string
+		if local {
+			cwd, err := os.Getwd()
+			if err != nil {
+				err = errors.Wrapf(err, "failed getting CWD")
+				return err
+			}
+
+			workdir = cwd
+		} else {
+			workdir = fmt.Sprintf("%s/src/%s", gopath, meta.Package)
+		}
 
 		files, err := os.ReadDir(workdir)
 		if err != nil {
@@ -238,13 +249,27 @@ func (g *Gomason) HandleArtifacts(meta Metadata, gopath string, cwd string, sign
 // HandleExtras loops over the expected files built by Build() and optionally signs them and publishes them along with their signatures (if signing).
 //
 // If not publishing, the binaries (and their optional signatures) are collected and dumped into the directory where gomason was called. (Typically the root of a go project).
-func (g *Gomason) HandleExtras(meta Metadata, gopath string, cwd string, sign bool, publish bool, collect bool) (err error) {
+func (g *Gomason) HandleExtras(meta Metadata, gopath string, cwd string, sign bool, publish bool, collect bool, local bool) (err error) {
 
 	// loop through the built things for each type of build target
 	for _, extra := range meta.BuildInfo.Extras {
 		logrus.Debugf("Processing build extra: %s", extra.Template)
 
-		workdir := fmt.Sprintf("%s/src/%s", gopath, meta.Package)
+		var workdir string
+		if local {
+			cwd, err := os.Getwd()
+			if err != nil {
+				err = errors.Wrapf(err, "failed getting CWD")
+				return err
+			}
+
+			workdir = cwd
+
+		} else {
+			workdir = fmt.Sprintf("%s/src/%s", gopath, meta.Package)
+
+		}
+
 		filename := fmt.Sprintf("%s/%s", workdir, extra.FileName)
 
 		if _, err := os.Stat(filename); os.IsNotExist(err) {

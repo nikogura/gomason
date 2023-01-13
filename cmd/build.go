@@ -24,8 +24,6 @@ import (
 
 var buildSkipTests bool
 
-var buildLocal bool
-
 // buildCmd represents the build command
 var buildCmd = &cobra.Command{
 	Use:   "build",
@@ -62,7 +60,7 @@ Binaries are dropped into the current working directory.
 
 		var workDir = cwd
 
-		if !buildLocal {
+		if !local {
 			rootWorkDir, err := ioutil.TempDir("", "gomason")
 			if err != nil {
 				log.Fatalf("Failed to create temp dir: %s", err)
@@ -87,23 +85,23 @@ Binaries are dropped into the current working directory.
 		}
 
 		if !buildSkipTests {
-			err = lang.Test(workDir, meta.Package, testTimeout, buildLocal)
+			err = lang.Test(workDir, meta.Package, testTimeout, local)
 			if err != nil {
 				log.Fatalf("error running go test: %s", err)
 			}
 		}
 
-		err = lang.Build(workDir, meta, buildSkipTargets, buildLocal)
+		err = lang.Build(workDir, meta, buildSkipTargets, local)
 		if err != nil {
 			log.Fatalf("build failed: %s", err)
 		}
 
-		err = gm.HandleArtifacts(meta, workDir, cwd, false, false, true, buildSkipTargets)
+		err = gm.HandleArtifacts(meta, workDir, cwd, false, false, true, buildSkipTargets, local)
 		if err != nil {
 			log.Fatalf("signing failed: %s", err)
 		}
 
-		err = gm.HandleExtras(meta, workDir, cwd, false, false, true)
+		err = gm.HandleExtras(meta, workDir, cwd, false, false, true, local)
 		if err != nil {
 			log.Fatalf("Extra artifact processing failed: %s", err)
 		}
@@ -115,5 +113,4 @@ func init() {
 
 	buildCmd.Flags().BoolVarP(&buildSkipTests, "skiptests", "s", false, "Skip tests when building.")
 
-	buildCmd.Flags().BoolVarP(&buildLocal, "local", "l", false, "Build locally, in current working directory, with whatever is checked out.")
 }

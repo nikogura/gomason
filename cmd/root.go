@@ -30,6 +30,7 @@ var dryrun bool
 var workdir string
 var buildSkipTargets string
 var testTimeout string
+var local bool
 
 //var pubSkipTargets string
 
@@ -64,5 +65,6 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&buildSkipTargets, "skip-build-targets", "", "", fmt.Sprintf("Comma separated list of build targets from %s to skip.", gomason.METADATA_FILENAME))
 	rootCmd.PersistentFlags().StringVarP(&testTimeout, "test-timeout", "", "", "timeout for tests to complete (must be valid time input for language)")
 
+	rootCmd.Flags().BoolVarP(&local, "local", "l", false, "Do all work out of current working directory, with whatever is checked out.")
 	//rootCmd.PersistentFlags().StringVarP(&pubSkipTargets, fmt.Sprintf("skip-publish-targets", "", "", "Comma separated list of publish targets from %s to skip.", gomason.METADATA_FILENAME))
 }
