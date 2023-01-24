@@ -15,13 +15,13 @@ func TestNoLanguage(t *testing.T) {
 	err = nl.Checkout("", Metadata{}, "")
 	assert.True(t, err == nil, "Checkout returned an error")
 
-	err = nl.Prep("", Metadata{})
+	err = nl.Prep("", Metadata{}, false)
 	assert.True(t, err == nil, "Prep returned an error")
 
-	err = nl.Test("", "", "")
+	err = nl.Test("", "", "", false)
 	assert.True(t, err == nil, "Test returned an error")
 
-	err = nl.Build("", Metadata{}, "")
+	err = nl.Build("", Metadata{}, "", false)
 	assert.True(t, err == nil, "Build returned an error")
 
 }

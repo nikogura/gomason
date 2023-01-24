@@ -91,7 +91,7 @@ func TestPrep(t *testing.T) {
 		t.Errorf("Failed to checkout module")
 	}
 
-	err = lang.Prep(gopath, testMetadataObj())
+	err = lang.Prep(gopath, testMetadataObj(), false)
 	if err != nil {
 		t.Errorf("error running prep steps: %s", err)
 	}
@@ -167,12 +167,12 @@ func TestBuild(t *testing.T) {
 				t.Errorf("Failed to checkout module")
 			}
 
-			err = lang.Prep(gopath, testMetadataObj())
+			err = lang.Prep(gopath, testMetadataObj(), false)
 			if err != nil {
 				t.Errorf("error running prep steps: %s", err)
 			}
 
-			err = lang.Build(gopath, testMetadataObj(), tc.skipTargets)
+			err = lang.Build(gopath, testMetadataObj(), tc.skipTargets, false)
 			if err != nil {
 				t.Errorf("Error building: %s", err)
 			}
@@ -218,12 +218,12 @@ func TestTest(t *testing.T) {
 		t.Errorf("Failed to checkout module")
 	}
 
-	err = lang.Prep(gopath, testMetadataObj())
+	err = lang.Prep(gopath, testMetadataObj(), false)
 	if err != nil {
 		t.Errorf("error running prep steps: %s", err)
 	}
 
-	err = lang.Test(gopath, testMetadataObj().Package, "10m")
+	err = lang.Test(gopath, testMetadataObj().Package, "10m", false)
 	if err != nil {
 		t.Errorf("error running go test: %s", err)
 	}
@@ -259,7 +259,7 @@ func TestSignVerifyBinary(t *testing.T) {
 	meta.Repository = fmt.Sprintf("http://localhost:%d/repo/tool", servicePort)
 
 	// build artifacts
-	err = lang.Build(gopath, meta, "")
+	err = lang.Build(gopath, meta, "", false)
 	if err != nil {
 		t.Errorf("Error building: %s", err)
 	}
@@ -338,12 +338,12 @@ Expire-Date: 0
 		t.Errorf("Failed to get current working directory: %s", err)
 	}
 
-	err = g.HandleArtifacts(meta, gopath, cwd, false, true, true, "")
+	err = g.HandleArtifacts(meta, gopath, cwd, false, true, true, "", false)
 	if err != nil {
 		t.Errorf("post-build processing failed: %s", err)
 	}
 
-	err = g.HandleExtras(meta, gopath, cwd, false, true, true)
+	err = g.HandleExtras(meta, gopath, cwd, false, true, true, false)
 	if err != nil {
 		t.Errorf("Extra artifact processing failed: %s", err)
 	}

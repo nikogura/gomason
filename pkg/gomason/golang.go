@@ -312,9 +312,11 @@ func (g Golang) Build(gopath string, meta Metadata, skipTargets string, local bo
 			logrus.Debugf("LD Flag: %s", ldflags)
 		}
 
-		outputTemplate := fmt.Sprintf("%s_{{.OS}}_{{.Arch}}", meta.Name)
+		// Interesting idea, but breaks multiple binary builds such as dbt.  To properly implement, we'd have to find and handle each binary instead of relying on the './...'.
+		//outputTemplate := fmt.Sprintf("%s_{{.OS}}_{{.Arch}}", meta.Name)
+		//args := gox + cgo + ldflags + ` -osarch="` + target.Name + `"` + ` -output="` + outputTemplate + `"` + " ./..."
 
-		args := gox + cgo + ldflags + ` -osarch="` + target.Name + `"` + ` -output="` + outputTemplate + `"` + " ./..."
+		args := gox + cgo + ldflags + ` -osarch="` + target.Name + `"` + " ./..."
 
 		logrus.Debugf("Running gox with: %s in dir %s", args, wd)
 
