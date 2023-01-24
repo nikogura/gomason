@@ -96,12 +96,12 @@ func SignGPG(binary string, signingEntity string, meta Metadata) (err error) {
 
 	if keyring, ok := meta.Options["keyring"]; ok {
 		// use a custom keyring for testing
-		cmd = exec.Command(shellCmd, "--trustdb", meta.Options["trustdb"].(string), "--no-default-keyring", "--keyring", keyring.(string), "-bau", signingEntity, binary)
+		cmd = exec.Command(shellCmd, "--trustdb", meta.Options["trustdb"].(string), "--no-default-keyring", "--keyring", keyring.(string), "-bau", signingEntity, "--yes", binary)
 
 	} else {
 		// gpg -bau <email address>  <file>
 		// -b detatch  -a ascii armor -u specify user
-		cmd = exec.Command(shellCmd, "-bau", signingEntity, binary)
+		cmd = exec.Command(shellCmd, "-bau", signingEntity, "--yes", binary)
 	}
 
 	cmd.Stdout = os.Stdout
