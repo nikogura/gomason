@@ -163,6 +163,7 @@ An example ```~/.gomason```:
 
     [signing]
         program = gpg
+        email = nik.ogura@gmail.com
         
 This config would use the gpg program to sign binaries with the author's private key.  Obviously a key for the listed user must exist within gpg's keychain for this to function.  
 
@@ -607,6 +608,7 @@ example:
 
     [user]
         username = nikogura
+        email = nik.ogura@gmail.com
         
 #### Usernamefunc
 
@@ -652,10 +654,15 @@ User specific configuration information related to signing.  Supported configura
 
 The program used to sign your binaries.  Set here it overrides any setting in ```metadata.json```
 
+#### Email
+
+The email address of the key used to perform signing.  Set here it overrides any setting in ```metadata.json```
+
 example:
 
     [signing]
         program = gpg
+        email = nik.ogura@gmail.com
         
  
 
