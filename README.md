@@ -2,7 +2,7 @@
 
 [![Current Release](https://img.shields.io/github/release/nikogura/gomason.svg)](https://img.shields.io/github/release/nikogura/gomason.svg)
 
-[![Circle CI](https://circleci.com/gh/nikogura/gomason.svg?style=shield)](https://circleci.com/gh/nikogura/gomason)
+[![CI](https://github.com/nikogura/gomason/actions/workflows/ci.yml/badge.svg)](https://github.com/nikogura/gomason/actions/workflows/ci.yml)
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/nikogura/gomason)](https://goreportcard.com/report/github.com/nikogura/gomason)
 
@@ -12,8 +12,20 @@
 
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go)  
 
+Tool for testing, building, signing and publishing binaries.  Think of it as an on-premises CI/CD system that also performs code signing and publishing of artifacts.
 
-Tool for testing, building, signing and publishing binaries.  Think of it as an on premesis CI/CD system- that also performs code signing and publishing of artifacts.
+## Historical Context
+
+**Note:** Gomason was originally created in the pre-Go modules era (before Go 1.11, released September 2018) when Go dependency management was less deterministic and required tools like `dep`, `godep`, or manual `GOPATH` management. Many of gomason's core features—such as clean workspace builds, dependency isolation, and reproducible builds—addressed pain points that have since been largely solved by Go modules and the modern Go toolchain.
+
+While Go modules now provide deterministic builds and better dependency management, gomason still offers significant value for:
+- **Template-based artifact generation** - Dynamic creation of install scripts, documentation, and configuration files from templates
+- **Sophisticated publishing workflows** - Automated upload of binaries, signatures, checksums, and generated artifacts to multiple repository types
+- **Code signing with provenance** - GPG signing of binaries with proper author attribution
+- **Multi-platform release automation** - Cross-compilation and publishing in a single command
+- **Legacy project support** - Projects that haven't migrated to modules
+
+The templating and publishing functions remain highly useful even in the modern Go ecosystem, where they can complement standard tooling (`go build`, `go test`, GitHub Actions, etc.) to provide a complete release pipeline.
 
 You could do this via a CI/CD System and an artifact repository of some flavor.  But wiring that up properly takes time, experience, and tends to be very specific to your particular system and repository.  
 
@@ -41,7 +53,7 @@ Enter gomason, which can do the building and signing locally with personal keys 
 
 Gomason uses ```gox``` the Go cross compiler  to do it's compiling.  It builds whatever versions you like, but they need to be specified in the metadata file detailed below in gox-like format.
 
-Code is downloaded via ```go get```.  If you have your VCS configured so that you can do that without authentication, then everything will *just work*.
+Code is downloaded via ```go get``` (or `go mod download` in module-aware builds).  If you have your VCS configured so that you can do that without authentication, then everything will *just work*.
 
 Signing is currently done via GPG.  I intend to support other signing methods such as Keybase.io, but at the moment, gpg is all you get.  If your signing keys are in gpg, and you have the gpg-agent running, it should *just work*.
 
@@ -55,9 +67,40 @@ Necessity being the mother of invention, stay tuned...
 
 ## Installation
 
+**Modern Go (with modules):**
+
+    go install github.com/nikogura/gomason@latest
+
+**Legacy Go (pre-modules):**
+
     go get github.com/nikogura/gomason
+
+## Modern Usage Patterns
+
+For new projects, gomason excels at:
+
+**Release Automation:**
+```bash
+# Complete test, build, sign, and publish pipeline
+gomason publish
+
+# Test and build only (useful in CI)
+gomason build
+```
+
+**Template-Driven Artifacts:**
+- Generate install scripts, documentation, and configuration files
+- Template variables populated from `metadata.json` at build time
+- Perfect for creating distribution artifacts alongside binaries
+
+**Multi-Repository Publishing:**
+- Upload to multiple artifact repositories simultaneously  
+- Support for Artifactory, S3, and HTTP endpoints
+- Separate tool repositories from main binary repositories
+
+Combined with modern CI/CD (GitHub Actions, etc.), gomason provides the signing and publishing capabilities that standard Go tooling doesn't offer.
     
-## Usage
+## Usage Examples
 
 Test the master branch in a clean GOPATH return success/failure:
 

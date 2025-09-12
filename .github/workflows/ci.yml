@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+permissions:
+  contents: write
+  packages: write
+  pull-requests: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    outputs:
+      semver: ${{steps.version.outputs.version_tag}}
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Get Version from metadata.json
+      id: version
+      run: |
+        VERSION=$(jq -r '.version' metadata.json)
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "version_tag=$VERSION" >> $GITHUB_OUTPUT
+        echo "Version from metadata.json: $VERSION"
+    
+    - name: Semver (fallback)
+      uses: paulhatch/semantic-version@v5.4.0
+      with:
+        bump_each_commit: true
+        tag_prefix: ""
+        version_format: "${major}.${minor}.${patch}"
+      id: semver
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.22.4'
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gpg
+    
+    - name: Setup test config
+      run: |
+        # Copy test configuration for gomason
+        cp pkg/gomason/testfixtures/.gomason ~/.gomason
+        echo -e "[user]\n  email = gomason-tester@foo.com\n  username = gomason-tester\n[signing]\n  program = gpg" >> ~/.gomason
+    
+    - name: Start GPG agent
+      run: |
+        # Start GPG agent for cryptographic tests
+        gpg-agent --daemon --allow-preset-passphrase || true
+    
+    - name: Run tests
+      run: |
+        # Run tests with timeout to prevent hanging
+        timeout 10m go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.txt
+        token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    steps:
+      - name: Tag Repo
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          custom_tag: ${{needs.test.outputs.semver}}
+          tag_prefix: ""
+
+      - name: Publish Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{needs.test.outputs.semver}}
+          name: ${{needs.test.outputs.semver}}
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
