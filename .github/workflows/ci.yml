@@ -22,22 +22,27 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Get Version from metadata.json
+    - name: Determine version from git tags
       id: version
       run: |
-        VERSION=$(jq -r '.version' metadata.json)
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-        echo "version_tag=v$VERSION" >> $GITHUB_OUTPUT
-        echo "Version from metadata.json: v$VERSION"
-    
-    - name: Semver (fallback)
-      uses: paulhatch/semantic-version@v5.4.0
-      with:
-        bump_each_commit: true
-        tag_prefix: ""
-        version_format: "${major}.${minor}.${patch}"
-      id: semver
-    
+        # Get latest semver tag (with or without v prefix)
+        LAST_TAG=$(git tag -l --sort=-v:refname | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | head -n1 || echo "v0.0.0")
+        if [ -z "$LAST_TAG" ]; then
+          LAST_TAG="v0.0.0"
+        fi
+
+        # Strip v prefix if present, parse components
+        VERSION=${LAST_TAG#v}
+        IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+        # Bump patch version
+        PATCH=$((PATCH + 1))
+        NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+
+        echo "version=${MAJOR}.${MINOR}.${PATCH}" >> $GITHUB_OUTPUT
+        echo "version_tag=$NEW_VERSION" >> $GITHUB_OUTPUT
+        echo "Latest tag: $LAST_TAG -> New version: $NEW_VERSION"
+
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
