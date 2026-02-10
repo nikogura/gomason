@@ -6,6 +6,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -19,8 +20,17 @@ func init() {
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 }
 
-// VERSION is the current gomason version.
-const VERSION = "2.13.1"
+// Version returns the current gomason version from the embedded build info.
+func Version() (version string) {
+	version = "(unknown)"
+
+	info, ok := debug.ReadBuildInfo()
+	if ok && info.Main.Version != "" {
+		version = info.Main.Version
+	}
+
+	return version
+}
 
 // MetadataFilename is the default gomason metadata file name.
 const MetadataFilename = "metadata.json"

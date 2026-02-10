@@ -30,7 +30,7 @@ var versionCmd = &cobra.Command{
 	Long: `
 Displays Gomason Version.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("Gomason version: %s\n", gomason.VERSION)
+		fmt.Printf("Gomason version: %s\n", gomason.Version())
 	},
 }
 
