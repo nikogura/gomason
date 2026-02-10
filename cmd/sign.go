@@ -15,11 +15,10 @@
 package cmd
 
 import (
-	"io/ioutil"
 	"log"
 	"os"
 
-	"github.com/nikogura/gomason/pkg/gomason"
+	"github.com/nikogura/gomason/v2/pkg/gomason"
 	"github.com/spf13/cobra"
 )
 
@@ -46,7 +45,7 @@ Signing sorta implies something to sign, which in turn, implies that it built, w
 		if err != nil {
 			log.Fatalf("Failed to get current working directory: %s", err)
 		}
-		rootWorkDir, err := ioutil.TempDir("", "gomason")
+		rootWorkDir, err := os.MkdirTemp("", "gomason")
 		if err != nil {
 			log.Fatalf("Failed to create temp dir: %s", err)
 		}

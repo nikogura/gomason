@@ -14,7 +14,7 @@
 
 package main
 
-import "github.com/nikogura/gomason/cmd"
+import "github.com/nikogura/gomason/v2/cmd"
 
 func main() {
 	cmd.Execute()

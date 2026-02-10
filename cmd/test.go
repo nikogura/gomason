@@ -15,11 +15,11 @@
 package cmd
 
 import (
-	"github.com/nikogura/gomason/pkg/gomason"
-	"github.com/spf13/cobra"
-	"io/ioutil"
 	"log"
 	"os"
+
+	"github.com/nikogura/gomason/v2/pkg/gomason"
+	"github.com/spf13/cobra"
 )
 
 // testCmd represents the test command.
@@ -47,7 +47,7 @@ Sometimes you need the benefits of a full system here.  Now.  Right at your fing
 			log.Fatalf("error creating gomason object")
 		}
 
-		rootWorkDir, err := ioutil.TempDir("", "gomason")
+		rootWorkDir, err := os.MkdirTemp("", "gomason")
 		if err != nil {
 			log.Fatalf("Failed to create temp dir: %s", err)
 		}

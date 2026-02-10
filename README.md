@@ -4,9 +4,9 @@
 
 [![CI](https://github.com/nikogura/gomason/actions/workflows/ci.yml/badge.svg)](https://github.com/nikogura/gomason/actions/workflows/ci.yml)
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/nikogura/gomason)](https://goreportcard.com/report/github.com/nikogura/gomason)
+[![Go Report Card](https://goreportcard.com/badge/github.com/nikogura/gomason/v2)](https://goreportcard.com/report/github.com/nikogura/gomason/v2)
 
-[![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](http://godoc.org/github.com/nikogura/gomason)
+[![Go Doc](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](https://pkg.go.dev/github.com/nikogura/gomason/v2)
 
 [![Coverage Status](https://codecov.io/gh/nikogura/gomason/branch/master/graph/badge.svg)](https://codecov.io/gh/nikogura/gomason)
 
@@ -69,11 +69,11 @@ Necessity being the mother of invention, stay tuned...
 
 **Modern Go (with modules):**
 
-    go install github.com/nikogura/gomason@latest
+    go install github.com/nikogura/gomason/v2@latest
 
 **Legacy Go (pre-modules):**
 
-    go get github.com/nikogura/gomason
+    go get github.com/nikogura/gomason/v2
 
 ## Modern Usage Patterns
 
@@ -144,7 +144,7 @@ Example metadata file:
 
     {
       "version": "1.0.0",
-      "package": "github.com/nikogura/gomason",
+      "package": "github.com/nikogura/gomason/v2",
       "description": "A tool for testing, building, signing, and publishing your project from a clean workspace.",
       "repository": "http://localhost:8081/artifactory/generic-local",
       "tool-repository": "http://localhost:8081/artifactory/generic-local-tools",
@@ -225,7 +225,7 @@ See [User Config Reference](#user-config-reference) for more details.
 Example Minimum Config:
 
     {
-      "package": "github.com/nikogura/gomason",
+      "package": "github.com/nikogura/gomason/v2",
       "version": "0.1.0",
       "description": "A tool for building and testing your project in a clean GOPATH."
     }
@@ -239,7 +239,7 @@ Run:
 Example Minimum Config:
 
     {
-      "package": "github.com/nikogura/gomason",
+      "package": "github.com/nikogura/gomason/v2",
       "version": "0.1.0",
       "description": "A tool for building and testing your project in a clean GOPATH.",
       "building": {
@@ -264,7 +264,7 @@ The binaries will be moved into the current working directory.
 Example Config (Shared Key Signing):
 
     {
-      "package": "github.com/nikogura/gomason",
+      "package": "github.com/nikogura/gomason/v2",
       "version": "0.1.0",
       "description": "A tool for building and testing your project in a clean GOPATH.",
       "building": {
@@ -288,7 +288,7 @@ The binaries and their signatures will be dumped into the current working direct
 Example Config (Personal Key Signing):
 
     {
-      "package": "github.com/nikogura/gomason",
+      "package": "github.com/nikogura/gomason/v2",
       "version": "0.1.0",
       "description": "A tool for building and testing your project in a clean GOPATH.",
       "building": {
@@ -319,7 +319,7 @@ The binaries and their signatures will be dumped into the current working direct
 Example Config (Personal Key Signing, Personal Credentials):
 
     {
-      "package": "github.com/nikogura/gomason",
+      "package": "github.com/nikogura/gomason/v2",
       "version": "0.1.0",
       "description": "A tool for building and testing your project in a clean GOPATH.",
       "repository": "http://localhost:8081/artifactory/generic-local",
@@ -368,7 +368,7 @@ Run:
 Example Config (Shared Key Signing, Shared Credentials):
 
     {
-      "package": "github.com/nikogura/gomason",
+      "package": "github.com/nikogura/gomason/v2",
       "version": "0.1.0",
       "description": "A tool for building and testing your project in a clean GOPATH.",
       "repository": "http://localhost:8081/artifactory/generic-local",
@@ -418,7 +418,7 @@ In that case, set "skip-signing": true in the publishing section and gomason wil
 Example:
 
     {
-      "package": "github.com/nikogura/gomason",
+      "package": "github.com/nikogura/gomason/v2",
       "version": "0.1.0",
       "description": "A tool for building and testing your project in a clean GOPATH.",
       "repository": "http://localhost:8081/artifactory/generic-local",
@@ -472,7 +472,7 @@ Example:
 
     {
        "version": "0.1.0",
-       "package": "github.com/nikogura/gomason",
+       "package": "github.com/nikogura/gomason/v2",
        "description": "A tool for building and testing your project in a clean GOPATH.",
        "repository": "http://localhost:8081/artifactory/generic-local",
        "tool-repository": "http://localhost:8081/artifactory/generic-local-tools",

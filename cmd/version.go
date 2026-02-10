@@ -17,7 +17,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/nikogura/gomason/pkg/gomason"
+	"github.com/nikogura/gomason/v2/pkg/gomason"
 	"github.com/spf13/cobra"
 )
 

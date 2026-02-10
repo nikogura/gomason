@@ -1,6 +1,6 @@
 {
   "version": "2.13.1",
-  "package": "github.com/nikogura/gomason",
+  "package": "github.com/nikogura/gomason/v2",
   "description": "A tool for testing, building, signing, and publishing your project from a clean workspace.",
   "repository": "http://localhost:8081/artifactory/generic-local",
   "building": {

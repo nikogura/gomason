@@ -15,11 +15,11 @@
 package cmd
 
 import (
-	"github.com/nikogura/gomason/pkg/gomason"
-	"github.com/spf13/cobra"
-	"io/ioutil"
 	"log"
 	"os"
+
+	"github.com/nikogura/gomason/v2/pkg/gomason"
+	"github.com/spf13/cobra"
 )
 
 //nolint:gochecknoglobals // Cobra boilerplate
@@ -64,7 +64,7 @@ Binaries are dropped into the current working directory.
 		var workDir = cwd
 
 		if !local {
-			rootWorkDir, err := ioutil.TempDir("", "gomason") //nolint:govet // shadow is intentional - all errors in this cobra Run are fatal
+			rootWorkDir, err := os.MkdirTemp("", "gomason") //nolint:govet // shadow is intentional - all errors in this cobra Run are fatal
 			if err != nil {
 				log.Fatalf("Failed to create temp dir: %s", err)
 			}

@@ -5,8 +5,9 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/hex"
+	"os"
+
 	"github.com/pkg/errors"
-	"io/ioutil"
 )
 
 // BytesMd5 generates the md5sum for a byte array.
@@ -27,7 +28,7 @@ func BytesMd5(input []byte) (checksum string, err error) {
 func FileMd5(filename string) (checksum string, err error) {
 	var checksumBytes []byte
 
-	checksumBytes, err = ioutil.ReadFile(filename)
+	checksumBytes, err = os.ReadFile(filename)
 	if err != nil {
 		return checksum, err
 	}
@@ -56,7 +57,7 @@ func BytesSha1(input []byte) (checksum string, err error) {
 func FileSha1(filename string) (checksum string, err error) {
 	var checksumBytes []byte
 
-	checksumBytes, err = ioutil.ReadFile(filename)
+	checksumBytes, err = os.ReadFile(filename)
 	if err != nil {
 		return checksum, err
 	}
@@ -84,7 +85,7 @@ func BytesSha256(input []byte) (checksum string, err error) {
 func FileSha256(filename string) (checksum string, err error) {
 	var checksumBytes []byte
 
-	checksumBytes, err = ioutil.ReadFile(filename)
+	checksumBytes, err = os.ReadFile(filename)
 	if err != nil {
 		return checksum, err
 	}
