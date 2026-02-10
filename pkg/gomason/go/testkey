@@ -1,0 +1,11 @@
+%echo Generating a default key
+%no-protection
+%transient-key
+Key-Type: default
+Subkey-Type: default
+Name-Real: Gomason Tester
+Name-Comment: with no passphrase
+Name-Email: gomason-tester@foo.com
+Expire-Date: 0
+%commit
+%echo done
