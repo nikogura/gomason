@@ -67,13 +67,7 @@ Necessity being the mother of invention, stay tuned...
 
 ## Installation
 
-**Modern Go (with modules):**
-
     go install github.com/nikogura/gomason/v2@latest
-
-**Legacy Go (pre-modules):**
-
-    go get github.com/nikogura/gomason/v2
 
 ## Modern Usage Patterns
 
