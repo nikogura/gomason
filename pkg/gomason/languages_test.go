@@ -1,28 +1,30 @@
 package gomason
 
 import (
-	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNoLanguage(t *testing.T) {
 	nl := NoLanguage{}
 
 	_, err := nl.CreateWorkDir("")
-	assert.True(t, err == nil, "Create work dir returned an error")
+	require.NoError(t, err, "Create work dir returned an error")
 
 	err = nl.Checkout("", Metadata{}, "")
-	assert.True(t, err == nil, "Checkout returned an error")
+	require.NoError(t, err, "Checkout returned an error")
 
 	err = nl.Prep("", Metadata{}, false)
-	assert.True(t, err == nil, "Prep returned an error")
+	require.NoError(t, err, "Prep returned an error")
 
 	err = nl.Test("", "", "", false)
-	assert.True(t, err == nil, "Test returned an error")
+	require.NoError(t, err, "Test returned an error")
 
 	err = nl.Build("", Metadata{}, "", false)
-	assert.True(t, err == nil, "Build returned an error")
+	require.NoError(t, err, "Build returned an error")
 
 }
 

@@ -6,11 +6,11 @@ import (
 )
 
 const (
-	// LanguageGolang a canonical string representation of the golang language
+	// LanguageGolang is a canonical string representation of the golang language.
 	LanguageGolang = "golang"
 )
 
-// Language is a generic interface for doing what gomason does - abstracting build, test, signing, and publishing of binaries
+// Language is a generic interface for doing what gomason does - abstracting build, test, signing, and publishing of binaries.
 type Language interface {
 	CreateWorkDir(string) (string, error)
 	Checkout(workdir string, meta Metadata, branch string) error
@@ -19,41 +19,48 @@ type Language interface {
 	Build(workdir string, meta Metadata, skipTargets string, local bool) error
 }
 
-// NoLanguage essentially an abstract class for the Language interface
+// NoLanguage is essentially an abstract class for the Language interface.
 type NoLanguage struct{}
 
-// CreateWorkDir Stub for the CreateWorkDir action
+// CreateWorkDir is a stub for the CreateWorkDir action.
 func (NoLanguage) CreateWorkDir(string) (workdir string, err error) {
 	return workdir, err
 }
 
-// Checkout Stub for the Checkout action
-func (NoLanguage) Checkout(workdir string, meta Metadata, branch string) error {
-	return nil
+// Checkout is a stub for the Checkout action.
+func (NoLanguage) Checkout(workdir string, meta Metadata, branch string) (err error) {
+	return err
 }
 
-// Prep stub for the Prep action
-func (NoLanguage) Prep(workdir string, meta Metadata, local bool) error {
-	return nil
+// Prep is a stub for the Prep action.
+func (NoLanguage) Prep(workdir string, meta Metadata, local bool) (err error) {
+	return err
 }
 
-// Test Stub for the Test action
-func (NoLanguage) Test(workdir string, module string, timeout string, localTest bool) error {
-	return nil
+// Test is a stub for the Test action.
+func (NoLanguage) Test(workdir string, module string, timeout string, localTest bool) (err error) {
+	return err
 }
 
-// Build Stub for the Build Action
-func (NoLanguage) Build(workdor string, meta Metadata, skipTargets string, localBuild bool) error {
-	return nil
+// Build is a stub for the Build action.
+func (NoLanguage) Build(workdor string, meta Metadata, skipTargets string, localBuild bool) (err error) {
+	return err
 }
 
+//nolint:gochecknoglobals // language registry pattern
 var languagesMap map[string]Language = map[string]Language{}
 
 // GetByName Gets a specific Language interface by name.
-func GetByName(lang string) (Language, error) {
-	l, ok := languagesMap[lang]
+func GetByName(lang string) (language Language, err error) {
+	var ok bool
+
+	language, ok = languagesMap[lang]
 	if !ok {
-		return NoLanguage{}, errors.New(fmt.Sprintf("Unsupported language: %s", lang))
+		language = NoLanguage{}
+		err = errors.New(fmt.Sprintf("Unsupported language: %s", lang))
+
+		return language, err
 	}
-	return l, nil
+
+	return language, err
 }

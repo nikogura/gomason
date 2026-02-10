@@ -22,9 +22,12 @@ import (
 	"os"
 )
 
+//nolint:gochecknoglobals // Cobra boilerplate
 var buildSkipTests bool
 
-// buildCmd represents the build command
+// buildCmd represents the build command.
+//
+//nolint:gochecknoglobals // Cobra boilerplate
 var buildCmd = &cobra.Command{
 	Use:   "build",
 	Short: "Build your code in a clean environment.",
@@ -48,7 +51,7 @@ Binaries are dropped into the current working directory.
 			log.Fatalf("Failed to get current working directory: %s", err)
 		}
 
-		meta, err := gomason.ReadMetadata(gomason.METADATA_FILENAME)
+		meta, err := gomason.ReadMetadata(gomason.MetadataFilename)
 		if err != nil {
 			log.Fatalf("couldn't read package information from metadata file: %s", err)
 		}
@@ -61,7 +64,7 @@ Binaries are dropped into the current working directory.
 		var workDir = cwd
 
 		if !local {
-			rootWorkDir, err := ioutil.TempDir("", "gomason")
+			rootWorkDir, err := ioutil.TempDir("", "gomason") //nolint:govet // shadow is intentional - all errors in this cobra Run are fatal
 			if err != nil {
 				log.Fatalf("Failed to create temp dir: %s", err)
 			}
@@ -109,6 +112,7 @@ Binaries are dropped into the current working directory.
 	},
 }
 
+//nolint:gochecknoinits // Cobra boilerplate
 func init() {
 	rootCmd.AddCommand(buildCmd)
 

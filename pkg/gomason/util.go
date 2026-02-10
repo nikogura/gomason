@@ -2,11 +2,9 @@ package gomason
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/sirupsen/logrus"
 	"io"
 	"log"
 	"net/url"
@@ -17,21 +15,26 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
-// AWS_ID_ENV_VAR Default env var for AWS access key
-const AWS_ID_ENV_VAR = "AWS_ACCESS_KEY_ID"
+// AWSIDEnvVar is the default env var for AWS access key.
+const AWSIDEnvVar = "AWS_ACCESS_KEY_ID"
 
-// AWS_SECRET_ENV_VAR Default env var for AWS secret key
-const AWS_SECRET_ENV_VAR = "AWS_SECRET_ACCESS_KEY"
+// AWSSecretEnvVar is the default env var for AWS secret key.
+const AWSSecretEnvVar = "AWS_SECRET_ACCESS_KEY"
 
-// AWS_REGION_ENV_VAR Default env var for AWS region.
-const AWS_REGION_ENV_VAR = "AWS_DEFAULT_REGION"
+// AWSRegionEnvVar Default env var for AWS region.
+const AWSRegionEnvVar = "AWS_DEFAULT_REGION"
 
-// ReadMetadata  Reads a metadata file and returns the Metadata object thus described
+// ReadMetadata reads a metadata file and returns the Metadata object thus described.
 func ReadMetadata(filename string) (metadata Metadata, err error) {
-	mdBytes, err := os.ReadFile(filename)
+	var mdBytes []byte
+
+	mdBytes, err = os.ReadFile(filename)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to read file %s", filename)
 		return metadata, err
@@ -61,73 +64,84 @@ func GitSSHUrlFromPackage(packageName string) (gitpath string) {
 	return gitpath
 }
 
-// GetCredentials gets credentials, first from the metadata file, and then from the user config in ~/.gomason if it exists.  If no credentials are found in any of the places, it returns the empty stings for usernames and passwords.  This is not recommended, but it might be useful in some cases.  Who knows?  We makes the tools, we don't tell you how to use them.  (we do, however make suggestions.) :D
-func (g *Gomason) GetCredentials(meta Metadata) (username, password string, err error) {
+// resolveCredential resolves a credential value.  If funcName is set, it runs the shell function.
+// If only staticValue is set, it uses that.  The current parameter is used as a fallback
+// when neither funcName nor staticValue is set.
+func resolveCredential(current string, funcName string, staticValue string) (result string, err error) {
+	result = current
+
+	if funcName != "" {
+		result, err = GetFunc(funcName)
+		if err != nil {
+			err = errors.Wrapf(err, "failed to get value from shell function %q", funcName)
+		}
+
+		return result, err
+	}
+
+	if staticValue != "" {
+		result = staticValue
+	}
+
+	return result, err
+}
+
+// GetCredentials gets credentials, first from the metadata file, and then from the user config in ~/.gomason if it exists.  If no credentials are found in any of the places, it returns the empty strings for usernames and passwords.  If a bearer token is configured, it takes precedence over basic auth at upload time.
+func (g *Gomason) GetCredentials(meta Metadata) (username, password, bearerToken string, err error) {
 	logrus.Debug("Getting credentials")
 
 	// get creds from metadata
-	// usernamefunc takes precedence over username
-	if meta.PublishInfo.UsernameFunc != "" {
-		logrus.Debug("Getting username from function")
-		username, err = GetFunc(meta.PublishInfo.UsernameFunc)
-		if err != nil {
-			err = errors.Wrapf(err, "failed to get username from shell function %q", meta.PublishInfo.UsernameFunc)
-			return username, password, err
-		}
-	} else if meta.PublishInfo.Username != "" {
-		logrus.Debug("Getting username from metadata")
-		username = meta.PublishInfo.Username
+	username, err = resolveCredential("", meta.PublishInfo.UsernameFunc, meta.PublishInfo.Username)
+	if err != nil {
+		return username, password, bearerToken, err
 	}
 
-	// passwordfunc takes precedence over password
-	if meta.PublishInfo.PasswordFunc != "" {
-		logrus.Debug("Getting password from function")
-		password, err = GetFunc(meta.PublishInfo.PasswordFunc)
-		if err != nil {
-			err = errors.Wrapf(err, "failed to get password from shell function %q", meta.PublishInfo.PasswordFunc)
-			return username, password, err
-		}
-	} else if meta.PublishInfo.Password != "" {
-		logrus.Debug("Getting password from metadata")
-		password = meta.PublishInfo.Password
+	password, err = resolveCredential("", meta.PublishInfo.PasswordFunc, meta.PublishInfo.Password)
+	if err != nil {
+		return username, password, bearerToken, err
 	}
 
+	bearerToken, err = resolveCredential("", meta.PublishInfo.BearerTokenFunc, meta.PublishInfo.BearerToken)
+	if err != nil {
+		return username, password, bearerToken, err
+	}
+
+	// user config overrides metadata
 	config := g.Config
 
-	// usernamefunc takes precedence over username
-	if config.User.UsernameFunc != "" {
-		username, err = GetFunc(config.User.UsernameFunc)
-		if err != nil {
-			err = errors.Wrapf(err, "failed to get username from shell function %q", meta.PublishInfo.UsernameFunc)
-			return username, password, err
-		}
-	} else if config.User.Username != "" {
-		username = config.User.Username
+	username, err = resolveCredential(username, config.User.UsernameFunc, config.User.Username)
+	if err != nil {
+		return username, password, bearerToken, err
 	}
 
-	// passwordfunc takes precedence over password
-	if config.User.PasswordFunc != "" {
-		password, err = GetFunc(config.User.PasswordFunc)
-		if err != nil {
-			err = errors.Wrapf(err, "failed to get password from shell function %q", meta.PublishInfo.UsernameFunc)
-			return username, password, err
-		}
-	} else if config.User.Password != "" {
-		password = config.User.Password
+	password, err = resolveCredential(password, config.User.PasswordFunc, config.User.Password)
+	if err != nil {
+		return username, password, bearerToken, err
 	}
 
-	// We return empty strings for username and password if none is set anywhere.
+	bearerToken, err = resolveCredential(bearerToken, config.User.BearerTokenFunc, config.User.BearerToken)
+	if err != nil {
+		return username, password, bearerToken, err
+	}
+
+	// We return empty strings for username, password, and bearerToken if none is set anywhere.
 	// The err variable will be nil in this case.  Why?  No creds configured is not necessarily an error.
-	// People might want to use it without authentication
-	// Not recommended, but we don't know where/how gomason will be used, and it might just make sense
-	return username, password, err
+	// People might want to use it without authentication.
+	// Not recommended, but we don't know where/how gomason will be used, and it might just make sense.
+	return username, password, bearerToken, err
 }
 
 // GetFunc runs a shell command that is a getter function.  This could certainly be dangerous, so be careful how you use it.
 func GetFunc(shellCommand string) (result string, err error) {
-	cmd := exec.Command("sh", "-c", shellCommand)
+	cmd := exec.CommandContext(context.Background(), "sh", "-c", shellCommand)
 
-	stdout, err := cmd.StdoutPipe()
+	var stdout io.ReadCloser
+
+	stdout, err = cmd.StdoutPipe()
+	if err != nil {
+		err = errors.Wrapf(err, "failed to get stdout pipe for %q", shellCommand)
+		return result, err
+	}
 
 	cmd.Stdin = os.Stdin
 	cmd.Stderr = os.Stderr
@@ -140,7 +154,9 @@ func GetFunc(shellCommand string) (result string, err error) {
 		return result, err
 	}
 
-	stdoutBytes, err := io.ReadAll(stdout)
+	var stdoutBytes []byte
+
+	stdoutBytes, err = io.ReadAll(stdout)
 	if err != nil {
 		err = errors.Wrapf(err, "error reading stdout from func")
 		return result, err
@@ -159,7 +175,9 @@ func GetFunc(shellCommand string) (result string, err error) {
 
 // ParseTemplateForMetadata parses a raw string as if it was a text/template template and uses the Metadata from metadata file as it's data source.  e.g. injecting Version into upload targets (PUT url) when publishing.
 func ParseTemplateForMetadata(templateText string, metadata Metadata) (outputText string, err error) {
-	tmpl, err := template.New("OnTheFlyTemplate").Parse(templateText)
+	var tmpl *template.Template
+
+	tmpl, err = template.New("OnTheFlyTemplate").Parse(templateText)
 	if err != nil {
 		err = errors.Wrapf(err, "syntax error in destination url %q", templateText)
 		return outputText, err
@@ -178,11 +196,13 @@ func ParseTemplateForMetadata(templateText string, metadata Metadata) (outputTex
 	return outputText, err
 }
 
-// DirsForURL given a URL, return a list of path elements suitable for creating directories/ folders
+// DirsForURL given a URL, returns a list of path elements suitable for creating directories/folders.
 func DirsForURL(uri string) (dirs []string, err error) {
 	dirs = make([]string, 0)
 
-	u, err := url.Parse(uri)
+	var u *url.URL
+
+	u, err = url.Parse(uri)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to parse %s", uri)
 		return dirs, err
@@ -208,7 +228,7 @@ func DirsForURL(uri string) (dirs []string, err error) {
 
 // DefaultSession creates a default AWS session from local config path.  Hooks directly into credentials if present, or Credentials Provider if configured.
 func DefaultSession() (awssession *session.Session, err error) {
-	if os.Getenv(AWS_ID_ENV_VAR) == "" && os.Getenv(AWS_SECRET_ENV_VAR) == "" {
+	if os.Getenv(AWSIDEnvVar) == "" && os.Getenv(AWSSecretEnvVar) == "" {
 		_ = os.Setenv("AWS_SDK_LOAD_CONFIG", "true")
 	}
 
@@ -218,8 +238,8 @@ func DefaultSession() (awssession *session.Session, err error) {
 	}
 
 	// For some reason this doesn't get picked up automatically, but we'll set it if it's present in the environment.
-	if os.Getenv(AWS_REGION_ENV_VAR) != "" {
-		awssession.Config.Region = aws.String(os.Getenv(AWS_REGION_ENV_VAR))
+	if os.Getenv(AWSRegionEnvVar) != "" {
+		awssession.Config.Region = aws.String(os.Getenv(AWSRegionEnvVar))
 	}
 
 	return awssession, err
@@ -230,10 +250,10 @@ type S3Meta struct {
 	Bucket string
 	Region string
 	Key    string
-	Url    string
+	URL    string
 }
 
-// S3Url returns true, and a metadata struct if the url given appears to be in s3
+// S3Url returns true, and a metadata struct if the url given appears to be in s3.
 func S3Url(url string) (ok bool, meta S3Meta) {
 	// Check to see if it's an s3 URL.
 	s3Url := regexp.MustCompile(`https?://(.*)\.s3\.(.*)\.amazonaws.com/(.*)`)
@@ -252,7 +272,7 @@ func S3Url(url string) (ok bool, meta S3Meta) {
 			Bucket: match[1],
 			Region: match[2],
 			Key:    match[3],
-			Url:    url,
+			URL:    url,
 		}
 
 		ok = true

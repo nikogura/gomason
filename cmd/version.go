@@ -21,7 +21,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// versionCmd represents the version command
+// versionCmd represents the version command.
+//
+//nolint:gochecknoglobals // Cobra boilerplate
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Displays Gomason Version",
@@ -32,6 +34,7 @@ Displays Gomason Version.`,
 	},
 }
 
+//nolint:gochecknoinits // Cobra boilerplate
 func init() {
 	rootCmd.AddCommand(versionCmd)
 }

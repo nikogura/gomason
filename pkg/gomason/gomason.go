@@ -2,7 +2,6 @@ package gomason
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -11,20 +10,22 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/ini.v1"
 )
 
+//nolint:gochecknoinits // logger configuration
 func init() {
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 }
 
-// VERSION is the current gomason version
+// VERSION is the current gomason version.
 const VERSION = "2.13.1"
 
-// METADATA_FILENAME The default gomason metadata file name
-const METADATA_FILENAME = "metadata.json"
+// MetadataFilename is the default gomason metadata file name.
+const MetadataFilename = "metadata.json"
 
-// Metadata type to represent the metadata file
+// Metadata is a type to represent the metadata file.
 type Metadata struct {
 	Name           string                 `json:"name"`
 	Version        string                 `json:"version"`
@@ -51,20 +52,24 @@ func (m Metadata) GetLanguage() (lang string) {
 	return lang
 }
 
-// Gomason Object that does all the building
+// Gomason is the object that does all the building.
 type Gomason struct {
 	Config UserConfig
 }
 
-// NewGomason creates a new Gomason object for the current user
+// NewGomason creates a new Gomason object for the current user.
 func NewGomason() (g *Gomason, err error) {
-	userObj, err := user.Current()
+	var userObj *user.User
+
+	userObj, err = user.Current()
 	if err != nil {
 		err = errors.Wrapf(err, "failed to get current user")
 		return g, err
 	}
 
-	config, err := GetUserConfig(userObj.HomeDir)
+	var config UserConfig
+
+	config, err = GetUserConfig(userObj.HomeDir)
 	if err != nil {
 		err = errors.Wrap(err, "error getting user config")
 		return g, err
@@ -84,7 +89,7 @@ type BuildInfo struct {
 	Extras       []ExtraArtifact `json:"extras,omitempty"`
 }
 
-// BuildTarget contains information on each build target
+// BuildTarget contains information on each build target.
 type BuildTarget struct {
 	Name    string            `json:"name"`
 	Cgo     bool              `json:"cgo,omitempty"`
@@ -93,7 +98,7 @@ type BuildTarget struct {
 	Legacy  bool              `json:"legacy,omitempty"`
 }
 
-// ExtraArtifact is an extra file built from a template at build time
+// ExtraArtifact is an extra file built from a template at build time.
 type ExtraArtifact struct {
 	Template   string `json:"template"`
 	FileName   string `json:"filename"`
@@ -106,18 +111,20 @@ type SignInfo struct {
 	Email   string `json:"email"`
 }
 
-// PublishInfo holds information for publishing
+// PublishInfo holds information for publishing.
 type PublishInfo struct {
-	Targets      []PublishTarget          `json:"targets"`
-	TargetsMap   map[string]PublishTarget `json:"-"`
-	Username     string                   `json:"username"`
-	Password     string                   `json:"password"`
-	UsernameFunc string                   `json:"usernamefunc"`
-	PasswordFunc string                   `json:"passwordfunc"`
-	SkipSigning  bool                     `json:"skip-signing"`
+	Targets         []PublishTarget          `json:"targets"`
+	TargetsMap      map[string]PublishTarget `json:"-"`
+	Username        string                   `json:"username"`
+	Password        string                   `json:"password"`
+	UsernameFunc    string                   `json:"usernamefunc"`
+	PasswordFunc    string                   `json:"passwordfunc"`
+	BearerToken     string                   `json:"bearertoken"`
+	BearerTokenFunc string                   `json:"bearertokenfunc"`
+	SkipSigning     bool                     `json:"skip-signing"`
 }
 
-// PublishTarget  a struct representing an individual file to upload
+// PublishTarget is a struct representing an individual file to upload.
 type PublishTarget struct {
 	Source      string `json:"src"`
 	Destination string `json:"dst"`
@@ -125,24 +132,83 @@ type PublishTarget struct {
 	Checksums   bool   `json:"checksums"`
 }
 
-// UserConfig a struct representing the information stored in ~/.gomason
+// UserConfig is a struct representing the information stored in ~/.gomason.
 type UserConfig struct {
 	User    UserInfo
 	Signing UserSignInfo
 }
 
-// UserInfo  information from the user section in ~/.gomason
+// UserInfo  information from the user section in ~/.gomason.
 type UserInfo struct {
-	Email        string
-	Username     string
-	Password     string
-	UsernameFunc string
-	PasswordFunc string
+	Email           string
+	Username        string
+	Password        string
+	UsernameFunc    string
+	PasswordFunc    string
+	BearerToken     string
+	BearerTokenFunc string
 }
 
-// UserSignInfo  information from the signing section in ~/.gomason
+// UserSignInfo holds information from the signing section in ~/.gomason.
 type UserSignInfo struct {
 	Program string
+}
+
+// resolveWorkDir resolves the working directory based on whether we are running locally or not.
+func resolveWorkDir(gopath string, meta Metadata, local bool) (workdir string, err error) {
+	if local {
+		workdir, err = os.Getwd()
+		if err != nil {
+			err = errors.Wrapf(err, "failed getting CWD")
+		}
+
+		return workdir, err
+	}
+
+	workdir = fmt.Sprintf("%s/src/%s", gopath, meta.Package)
+
+	return workdir, err
+}
+
+// processArtifactFile handles signing, publishing, and collecting a single artifact file.
+func (g *Gomason) processArtifactFile(meta Metadata, filename string, sign bool, publish bool, collect bool, cwd string) (err error) {
+	_, statErr := os.Stat(filename)
+	if os.IsNotExist(statErr) {
+		err = errors.Wrapf(statErr, "failed building binary: %s\n", filename)
+		return err
+	}
+
+	// sign 'em if we're signing
+	if sign {
+		logrus.Debugf("Signing %s", filename)
+		err = g.SignBinary(meta, filename)
+		if err != nil {
+			err = errors.Wrapf(err, "failed to sign binary %s", filename)
+			return err
+		}
+	}
+
+	// publish and return if we're publishing
+	if publish {
+		logrus.Debugf("Publishing %s", filename)
+		err = g.PublishFile(meta, filename)
+		if err != nil {
+			err = errors.Wrap(err, "failed to publish binary")
+			return err
+		}
+	}
+
+	// Collect up the stuff we built, and dump 'em into the cwd where we called gomason
+	if collect {
+		logrus.Debugf("Collecting %s", filename)
+		err = CollectFileAndSignature(cwd, filename)
+		if err != nil {
+			err = errors.Wrap(err, "failed to collect binaries")
+			return err
+		}
+	}
+
+	return err
 }
 
 // HandleArtifacts loops over the expected files built by Build() and optionally signs them and publishes them along with their signatures (if signing).
@@ -168,79 +234,54 @@ func (g *Gomason) HandleArtifacts(meta Metadata, gopath string, cwd string, sign
 			continue
 		}
 
-		logrus.Debugf("Processing build target: %s\n", target.Name)
-		archparts := strings.Split(target.Name, "/")
-
-		osname := archparts[0]
-		archname := archparts[1]
-
-		var workdir string
-		if local {
-			cwd, err := os.Getwd()
-			if err != nil {
-				err = errors.Wrapf(err, "failed getting CWD")
-				return err
-			}
-
-			workdir = cwd
-		} else {
-			workdir = fmt.Sprintf("%s/src/%s", gopath, meta.Package)
-		}
-
-		files, err := os.ReadDir(workdir)
+		err = g.handleTargetArtifacts(meta, gopath, cwd, target, sign, publish, collect, local)
 		if err != nil {
-			err = errors.Wrap(err, fmt.Sprintf("failed to read dir %s", workdir))
 			return err
 		}
+	}
 
-		targetSuffix := fmt.Sprintf(".+_%s_%s$", osname, archname)
-		targetRegex := regexp.MustCompile(targetSuffix)
+	return err
+}
 
-		for _, file := range files {
-			matched := targetRegex.MatchString(file.Name())
+// handleTargetArtifacts processes artifacts for a single build target.
+func (g *Gomason) handleTargetArtifacts(meta Metadata, gopath string, cwd string, target BuildTarget, sign bool, publish bool, collect bool, local bool) (err error) {
+	logrus.Debugf("Processing build target: %s\n", target.Name)
+	archparts := strings.Split(target.Name, "/")
 
-			if matched {
-				filename := fmt.Sprintf("%s/%s", workdir, file.Name())
+	osname := archparts[0]
+	archname := archparts[1]
 
-				logrus.Debugf("Handling %s", filename)
+	var workdir string
 
-				if _, err := os.Stat(filename); os.IsNotExist(err) {
-					err = errors.Wrapf(err, "failed building binary: %s\n", filename)
-					return err
-				}
+	workdir, err = resolveWorkDir(gopath, meta, local)
+	if err != nil {
+		return err
+	}
 
-				// sign 'em if we're signing
-				if sign {
-					logrus.Debugf("Signing %s", filename)
-					err = g.SignBinary(meta, filename)
-					if err != nil {
-						err = errors.Wrapf(err, "failed to sign binary %s", filename)
-						return err
-					}
-				}
+	var files []os.DirEntry
 
-				// publish and return if we're publishing
-				if publish {
-					logrus.Debugf("Publishing %s", filename)
-					err = g.PublishFile(meta, filename)
-					if err != nil {
-						err = errors.Wrap(err, "failed to publish binary")
-						return err
-					}
-				}
+	files, err = os.ReadDir(workdir)
+	if err != nil {
+		err = errors.Wrap(err, fmt.Sprintf("failed to read dir %s", workdir))
+		return err
+	}
 
-				// Collect up the stuff we built, and dump 'em into the cwd where we called gomason
-				if collect {
-					logrus.Debugf("Collecting %s", filename)
-					err := CollectFileAndSignature(cwd, filename)
-					if err != nil {
-						err = errors.Wrap(err, "failed to collect binaries")
-						return err
-					}
-				}
-			}
+	targetSuffix := fmt.Sprintf(".+_%s_%s$", osname, archname)
+	targetRegex := regexp.MustCompile(targetSuffix)
+
+	for _, file := range files {
+		matched := targetRegex.MatchString(file.Name())
+		if !matched {
+			continue
 		}
 
+		filename := fmt.Sprintf("%s/%s", workdir, file.Name())
+		logrus.Debugf("Handling %s", filename)
+
+		err = g.processArtifactFile(meta, filename, sign, publish, collect, cwd)
+		if err != nil {
+			return err
+		}
 	}
 
 	return err
@@ -256,62 +297,30 @@ func (g *Gomason) HandleExtras(meta Metadata, gopath string, cwd string, sign bo
 		logrus.Debugf("Processing build extra: %s", extra.Template)
 
 		var workdir string
-		if local {
-			cwd, err := os.Getwd()
-			if err != nil {
-				err = errors.Wrapf(err, "failed getting CWD")
-				return err
-			}
 
-			workdir = cwd
-
-		} else {
-			workdir = fmt.Sprintf("%s/src/%s", gopath, meta.Package)
-
+		workdir, err = resolveWorkDir(gopath, meta, local)
+		if err != nil {
+			return err
 		}
 
 		filename := fmt.Sprintf("%s/%s", workdir, extra.FileName)
 
-		if _, err := os.Stat(filename); os.IsNotExist(err) {
-			err = errors.Wrapf(err, "failed to build extra artifact: %s", filename)
+		_, statErr := os.Stat(filename)
+		if os.IsNotExist(statErr) {
+			err = errors.Wrapf(statErr, "failed to build extra artifact: %s", filename)
 			return err
 		}
 
-		// sign 'em if we're signing
-		if sign {
-			logrus.Debugf("Signing %s", filename)
-			err = g.SignBinary(meta, filename)
-			if err != nil {
-				err = errors.Wrapf(err, "failed to sign extra artifact %s", filename)
-				return err
-			}
-		}
-
-		// publish and return if we're publishing
-		if publish {
-			logrus.Debugf("Publishing %s", filename)
-			err = g.PublishFile(meta, filename)
-			if err != nil {
-				err = errors.Wrapf(err, "failed to publish extra artifact %s", filename)
-				return err
-			}
-
-		}
-
-		if collect {
-			// Collect up the stuff we built, and dump 'em into the cwd where we called gomason
-			logrus.Debugf("Collecting %s", filename)
-			err := CollectFileAndSignature(cwd, filename)
-			if err != nil {
-				err = errors.Wrapf(err, "failed to collect binary %s", filename)
-				return err
-			}
+		err = g.processArtifactFile(meta, filename, sign, publish, collect, cwd)
+		if err != nil {
+			return err
 		}
 	}
 
 	return err
 }
 
+// DebugPrint prints debug information about a file.
 func DebugPrint(filename, tag string) {
 	ts := time.Now().UnixNano()
 	cwd, _ := os.Getwd()
@@ -325,6 +334,38 @@ func DebugPrint(filename, tag string) {
 	}
 }
 
+// copyAndRemove copies a file from src to dst preserving permissions, then removes the source.
+func copyAndRemove(src string, dst string) (err error) {
+	var fileInfo os.FileInfo
+
+	fileInfo, err = os.Stat(src)
+	if err != nil {
+		err = errors.Wrapf(err, "failed statting file %s", src)
+		return err
+	}
+
+	var contents []byte
+
+	contents, err = os.ReadFile(src)
+	if err != nil {
+		err = errors.Wrapf(err, "failed reading file %q", src)
+		return err
+	}
+
+	err = os.WriteFile(dst, contents, fileInfo.Mode())
+	if err != nil {
+		err = errors.Wrapf(err, "failed writing file %s", dst)
+		return err
+	}
+
+	err = os.Remove(src)
+	if err != nil {
+		err = errors.Wrapf(err, "failed removing file %s", src)
+	}
+
+	return err
+}
+
 // CollectFileAndSignature grabs a file and the signature if it exists and copies it from the temp workspace into the CWD where gomason was called. Does nothing at all if the file is currently in cwd.
 func CollectFileAndSignature(cwd string, filename string) (err error) {
 	logrus.Debugf("Collecting Files and Signatures")
@@ -332,123 +373,106 @@ func CollectFileAndSignature(cwd string, filename string) (err error) {
 	binaryDestinationPath := fmt.Sprintf("%s/%s", cwd, filepath.Base(filename))
 
 	if binaryDestinationPath != filename {
-		fileInfo, err := os.Stat(filename)
+		err = copyAndRemove(filename, binaryDestinationPath)
 		if err != nil {
-			err = errors.Wrapf(err, "failed statting file %s", filename)
 			return err
-		}
-
-		contents, err := os.ReadFile(filename)
-		if err != nil {
-			err = errors.Wrapf(err, "failed reading file %q", filename)
-			return err
-		}
-
-		err = os.WriteFile(binaryDestinationPath, contents, fileInfo.Mode())
-		if err != nil {
-			err = errors.Wrapf(err, "failed writing file %s", binaryDestinationPath)
-			return err
-		}
-
-		err = os.Remove(filename)
-		if err != nil {
-			err = errors.Wrapf(err, "failed removing file %s", filename)
 		}
 	}
 
 	sigName := fmt.Sprintf("%s.asc", filepath.Base(filename))
-	if _, err := os.Stat(sigName); !os.IsNotExist(err) {
-		signatureDestinationPath := fmt.Sprintf("%s/%s", cwd, sigName)
-		if signatureDestinationPath != sigName {
-			fileInfo, err := os.Stat(sigName)
-			if err != nil {
-				err = errors.Wrapf(err, "failed statting file %s", sigName)
-				return err
-			}
-			contents, err := os.ReadFile(sigName)
-			if err != nil {
-				err = errors.Wrapf(err, "failed reading file %q", sigName)
-				return err
-			}
 
-			err = os.WriteFile(signatureDestinationPath, contents, fileInfo.Mode())
-			if err != nil {
-				err = errors.Wrapf(err, "failed writing file %s", signatureDestinationPath)
-				return err
-			}
+	_, sigStatErr := os.Stat(sigName)
+	if os.IsNotExist(sigStatErr) {
+		return err
+	}
 
-			err = os.Remove(sigName)
-			if err != nil {
-				err = errors.Wrapf(err, "failed removing file %s", sigName)
-				return err
-			}
-		}
+	signatureDestinationPath := fmt.Sprintf("%s/%s", cwd, sigName)
+	if signatureDestinationPath != sigName {
+		err = copyAndRemove(sigName, signatureDestinationPath)
 	}
 
 	return err
+}
+
+// parseUserSection parses the user section from a gomason config file.
+func parseUserSection(cfg *ini.File) (userInfo UserInfo) {
+	userSection, _ := cfg.GetSection("user")
+	if userSection == nil {
+		return userInfo
+	}
+
+	if userSection.HasKey("email") {
+		key, _ := userSection.GetKey("email")
+		userInfo.Email = key.Value()
+	}
+
+	if userSection.HasKey("username") {
+		key, _ := userSection.GetKey("username")
+		userInfo.Username = key.Value()
+	}
+
+	if userSection.HasKey("password") {
+		key, _ := userSection.GetKey("password")
+		userInfo.Password = key.Value()
+	}
+
+	if userSection.HasKey("usernamefunc") {
+		key, _ := userSection.GetKey("usernamefunc")
+		userInfo.UsernameFunc = key.Value()
+	}
+
+	if userSection.HasKey("passwordfunc") {
+		key, _ := userSection.GetKey("passwordfunc")
+		userInfo.PasswordFunc = key.Value()
+	}
+
+	if userSection.HasKey("bearertoken") {
+		key, _ := userSection.GetKey("bearertoken")
+		userInfo.BearerToken = key.Value()
+	}
+
+	if userSection.HasKey("bearertokenfunc") {
+		key, _ := userSection.GetKey("bearertokenfunc")
+		userInfo.BearerTokenFunc = key.Value()
+	}
+
+	return userInfo
+}
+
+// parseSigningSection parses the signing section from a gomason config file.
+func parseSigningSection(cfg *ini.File) (signInfo UserSignInfo) {
+	signingSection, _ := cfg.GetSection("signing")
+	if signingSection == nil {
+		return signInfo
+	}
+
+	if signingSection.HasKey("program") {
+		key, _ := signingSection.GetKey("program")
+		signInfo.Program = key.Value()
+	}
+
+	return signInfo
 }
 
 // GetUserConfig reads ~/.gomason if present, and returns a struct with its data.
 func GetUserConfig(homedir string) (config UserConfig, err error) {
 	perUserConfigFile := fmt.Sprintf("%s/.gomason", homedir)
 
-	if _, err := os.Stat(perUserConfigFile); !os.IsNotExist(err) {
-		cfg, err := ini.Load(perUserConfigFile)
-		if err != nil {
-			err = errors.Wrap(err, fmt.Sprintf("failed to load per user config file %s", perUserConfigFile))
-			return config, err
-		}
-
-		userSection, _ := cfg.GetSection("user")
-		if userSection != nil {
-			userInfo := UserInfo{}
-
-			// email section
-			if userSection.HasKey("email") {
-				key, _ := userSection.GetKey("email")
-				userInfo.Email = key.Value()
-			}
-
-			// username section
-			if userSection.HasKey("username") {
-				key, _ := userSection.GetKey("username")
-				userInfo.Username = key.Value()
-			}
-
-			// password section
-			if userSection.HasKey("password") {
-				key, _ := userSection.GetKey("password")
-				userInfo.Password = key.Value()
-			}
-
-			// usernamefunc section
-			if userSection.HasKey("usernamefunc") {
-				key, _ := userSection.GetKey("usernamefunc")
-				userInfo.UsernameFunc = key.Value()
-			}
-
-			// password func section
-			if userSection.HasKey("passwordfunc") {
-				key, _ := userSection.GetKey("passwordfunc")
-				userInfo.PasswordFunc = key.Value()
-			}
-
-			config.User = userInfo
-		}
-
-		signingSection, _ := cfg.GetSection("signing")
-		if signingSection != nil {
-			signSec := UserSignInfo{}
-
-			// program section
-			if signingSection.HasKey("program") {
-				key, _ := signingSection.GetKey("program")
-				signSec.Program = key.Value()
-			}
-
-			config.Signing = signSec
-		}
+	_, statErr := os.Stat(perUserConfigFile)
+	if os.IsNotExist(statErr) {
+		return config, err
 	}
+
+	var cfg *ini.File
+
+	cfg, err = ini.Load(perUserConfigFile)
+	if err != nil {
+		err = errors.Wrap(err, fmt.Sprintf("failed to load per user config file %s", perUserConfigFile))
+		return config, err
+	}
+
+	config.User = parseUserSection(cfg)
+	config.Signing = parseSigningSection(cfg)
 
 	return config, err
 }

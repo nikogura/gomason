@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 )
 
-// BytesMd5 generates the md5sum for a byte array
+// BytesMd5 generates the md5sum for a byte array.
 func BytesMd5(input []byte) (checksum string, err error) {
 	hasher := md5.New()
 
@@ -25,15 +25,19 @@ func BytesMd5(input []byte) (checksum string, err error) {
 
 // FileMd5 generates the md5sum for a file.
 func FileMd5(filename string) (checksum string, err error) {
-	checksumBytes, err := ioutil.ReadFile(filename)
+	var checksumBytes []byte
+
+	checksumBytes, err = ioutil.ReadFile(filename)
 	if err != nil {
 		return checksum, err
 	}
 
-	return BytesMd5(checksumBytes)
+	checksum, err = BytesMd5(checksumBytes)
+
+	return checksum, err
 }
 
-// BytesSha1 generates the sha1sum for a byte array
+// BytesSha1 generates the sha1sum for a byte array.
 func BytesSha1(input []byte) (checksum string, err error) {
 	hasher := sha1.New()
 
@@ -50,15 +54,19 @@ func BytesSha1(input []byte) (checksum string, err error) {
 
 // FileSha1 generates the sha1sum for a file.
 func FileSha1(filename string) (checksum string, err error) {
-	checksumBytes, err := ioutil.ReadFile(filename)
+	var checksumBytes []byte
+
+	checksumBytes, err = ioutil.ReadFile(filename)
 	if err != nil {
 		return checksum, err
 	}
 
-	return BytesSha1(checksumBytes)
+	checksum, err = BytesSha1(checksumBytes)
+
+	return checksum, err
 }
 
-// BytesSha256 generates the sha256sum for a byte array
+// BytesSha256 generates the sha256sum for a byte array.
 func BytesSha256(input []byte) (checksum string, err error) {
 	hasher := sha256.New()
 
@@ -74,35 +82,39 @@ func BytesSha256(input []byte) (checksum string, err error) {
 
 // FileSha256 generates the Sha256 sum for a file.
 func FileSha256(filename string) (checksum string, err error) {
-	checksumBytes, err := ioutil.ReadFile(filename)
+	var checksumBytes []byte
+
+	checksumBytes, err = ioutil.ReadFile(filename)
 	if err != nil {
 		return checksum, err
 	}
 
-	return BytesSha256(checksumBytes)
+	checksum, err = BytesSha256(checksumBytes)
+
+	return checksum, err
 }
 
-// AllChecksumsForFile is a convenience method that generates and returns md5, sha1, and sha256 checksums for a given file
+// AllChecksumsForFile is a convenience method that generates and returns md5, sha1, and sha256 checksums for a given file.
 func AllChecksumsForFile(filename string) (md5sum, sha1sum, sha256sum string, err error) {
 	md5sum, err = FileMd5(filename)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to calculate md5sum for %s", filename)
-		return
+		return md5sum, sha1sum, sha256sum, err
 	}
 
 	sha1sum, err = FileSha1(filename)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to calculate sha1sum for %s", filename)
-		return
+		return md5sum, sha1sum, sha256sum, err
 	}
 
 	sha256sum, err = FileSha256(filename)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to calculate sha256sum for %s", filename)
-		return
+		return md5sum, sha1sum, sha256sum, err
 	}
 
-	return
+	return md5sum, sha1sum, sha256sum, err
 }
 
 // AllChecksumsForBytes is a convenience method for returning the md5, sha1, sha256 checksums for a byte array.
@@ -110,20 +122,20 @@ func AllChecksumsForBytes(input []byte) (md5sum, sha1sum, sha256sum string, err 
 	md5sum, err = BytesMd5(input)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to calculate md5sum for %s", string(input))
-		return
+		return md5sum, sha1sum, sha256sum, err
 	}
 
 	sha1sum, err = BytesSha1(input)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to calculate sha1sum for %s", string(input))
-		return
+		return md5sum, sha1sum, sha256sum, err
 	}
 
 	sha256sum, err = BytesSha256(input)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to calculate sha256sum for %s", string(input))
-		return
+		return md5sum, sha1sum, sha256sum, err
 	}
 
-	return
+	return md5sum, sha1sum, sha256sum, err
 }

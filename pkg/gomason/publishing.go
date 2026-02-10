@@ -1,24 +1,28 @@
 package gomason
 
 import (
+	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
-	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
-// PublishFile publishes the binary to wherever you have it configured to go
+// PublishFile publishes the binary to wherever you have it configured to go.
 func (g *Gomason) PublishFile(meta Metadata, filePath string) (err error) {
 	// get creds
-	username, password, err := g.GetCredentials(meta)
+	var username, password, bearerToken string
+
+	username, password, bearerToken, err = g.GetCredentials(meta)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to get credentials")
 		return err
@@ -31,32 +35,32 @@ func (g *Gomason) PublishFile(meta Metadata, filePath string) (err error) {
 	fileName := filepath.Base(filePath)
 
 	target, ok := meta.PublishInfo.TargetsMap[fileName]
+	if !ok {
+		return err
+	}
 
-	if ok {
-		// upload the file
-		err = UploadFile(client, target.Destination, filePath, meta, username, password)
+	// upload the file
+	err = UploadFile(client, target.Destination, filePath, meta, username, password, bearerToken)
+	if err != nil {
+		err = errors.Wrapf(err, "failed to upload file %s", filePath)
+		return err
+	}
+
+	// upload the detached signature
+	if target.Signature {
+		err = UploadSignature(client, target.Destination, filePath, meta, username, password, bearerToken)
 		if err != nil {
-			err = errors.Wrapf(err, "failed to upload file %s", filePath)
+			err = errors.Wrapf(err, "failed to upload signature for %s", filePath)
 			return err
 		}
+	}
 
-		// upload the detached signature
-		if target.Signature {
-			err := UploadSignature(client, target.Destination, filePath, meta, username, password)
-			if err != nil {
-				err = errors.Wrapf(err, "failed to upload signature for %s", filePath)
-				return err
-			}
-
-		}
-
-		// upload the checksums if configured to do so
-		if target.Checksums {
-			err := UploadChecksums(client, target.Destination, filePath, meta, username, password)
-			if err != nil {
-				err = errors.Wrapf(err, "failed to upload checksums for %s", filePath)
-				return err
-			}
+	// upload the checksums if configured to do so
+	if target.Checksums {
+		err = UploadChecksums(client, target.Destination, filePath, meta, username, password, bearerToken)
+		if err != nil {
+			err = errors.Wrapf(err, "failed to upload checksums for %s", filePath)
+			return err
 		}
 	}
 
@@ -64,34 +68,40 @@ func (g *Gomason) PublishFile(meta Metadata, filePath string) (err error) {
 }
 
 // UploadChecksums uploads the checksums for a file.  This is useful if the repository is not configured to do so automatically.
-func UploadChecksums(client *http.Client, destination, filename string, meta Metadata, username string, password string) (err error) {
+func UploadChecksums(client *http.Client, destination, filename string, meta Metadata, username string, password string, bearerToken string) (err error) {
 
-	md5sum, sha1sum, sha256sum, err := AllChecksumsForFile(filename)
+	var md5sum, sha1sum, sha256sum string
+
+	md5sum, sha1sum, sha256sum, err = AllChecksumsForFile(filename)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to calculate checksum for %s", filename)
 		return err
 	}
 
-	parsedDestination, err := ParseTemplateForMetadata(destination, meta)
+	var parsedDestination string
+
+	parsedDestination, err = ParseTemplateForMetadata(destination, meta)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to parse destination url %s", destination)
 		return err
 	}
 
 	// upload Md5Sum
-	err = UploadChecksum(parsedDestination, md5sum, "md5", client, username, password)
+	err = UploadChecksum(parsedDestination, md5sum, "md5", client, username, password, bearerToken)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to upload md5sum file for %s", filename)
+		return err
 	}
 
 	// upload Sha1Sum
-	err = UploadChecksum(parsedDestination, sha1sum, "sha1", client, username, password)
+	err = UploadChecksum(parsedDestination, sha1sum, "sha1", client, username, password, bearerToken)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to upload sha1sum file for %s", filename)
+		return err
 	}
 
 	// upload Sha256Sum
-	err = UploadChecksum(parsedDestination, sha256sum, "sha256", client, username, password)
+	err = UploadChecksum(parsedDestination, sha256sum, "sha256", client, username, password, bearerToken)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to upload sha256sum file for %s", filename)
 	}
@@ -99,12 +109,14 @@ func UploadChecksums(client *http.Client, destination, filename string, meta Met
 	return err
 }
 
-// UploadChecksum uploads the checksum of the given type for the given file
-func UploadChecksum(parsedDestination, checksum, sumtype string, client *http.Client, username, password string) (err error) {
+// UploadChecksum uploads the checksum of the given type for the given file.
+func UploadChecksum(parsedDestination, checksum, sumtype string, client *http.Client, username, password, bearerToken string) (err error) {
 	target := fmt.Sprintf("%s.%s", parsedDestination, sumtype)
 	contents := checksum
 
-	sumMd5, sumSha1, sumSha256, err := AllChecksumsForBytes([]byte(contents))
+	var sumMd5, sumSha1, sumSha256 string
+
+	sumMd5, sumSha1, sumSha256, err = AllChecksumsForBytes([]byte(contents))
 	if err != nil {
 		err = errors.Wrapf(err, "failed to generate checksums for %s file with contents %q", sumtype, contents)
 		return err
@@ -112,7 +124,7 @@ func UploadChecksum(parsedDestination, checksum, sumtype string, client *http.Cl
 
 	logrus.Debugf("Uploading checksum to %s", target)
 
-	err = Upload(client, target, strings.NewReader(contents), sumMd5, sumSha1, sumSha256, username, password)
+	err = Upload(client, target, strings.NewReader(contents), sumMd5, sumSha1, sumSha256, username, password, bearerToken)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to upload md5sum file to %s", target)
 		return err
@@ -121,23 +133,29 @@ func UploadChecksum(parsedDestination, checksum, sumtype string, client *http.Cl
 	return err
 }
 
-// UploadFile uploads a file off the filesystem
-func UploadFile(client *http.Client, destination string, filename string, meta Metadata, username string, password string) (err error) {
+// UploadFile uploads a file off the filesystem.
+func UploadFile(client *http.Client, destination string, filename string, meta Metadata, username string, password string, bearerToken string) (err error) {
 	// get data
-	data, err := os.Open(filename)
+	var data *os.File
+
+	data, err = os.Open(filename)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to open %s", filename)
 		return err
 	}
 
 	// get checksums
-	md5sum, sha1sum, sha256sum, err := AllChecksumsForFile(filename)
+	var md5sum, sha1sum, sha256sum string
+
+	md5sum, sha1sum, sha256sum, err = AllChecksumsForFile(filename)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to calculate checksum for %s", filename)
 		return err
 	}
 
-	parsedDestination, err := ParseTemplateForMetadata(destination, meta)
+	var parsedDestination string
+
+	parsedDestination, err = ParseTemplateForMetadata(destination, meta)
 	if err != nil {
 		err = errors.Wrapf(err, "failed to parse destination url %s", destination)
 		return err
@@ -145,86 +163,114 @@ func UploadFile(client *http.Client, destination string, filename string, meta M
 
 	logrus.Debugf("Attempting to upload %s to %s", filename, parsedDestination)
 
-	return Upload(client, parsedDestination, data, md5sum, sha1sum, sha256sum, username, password)
+	err = Upload(client, parsedDestination, data, md5sum, sha1sum, sha256sum, username, password, bearerToken)
+
+	return err
 }
 
-// UploadSignature uploads the detached signature for a file
-func UploadSignature(client *http.Client, destination string, filename string, meta Metadata, username string, password string) (err error) {
+// UploadSignature uploads the detached signature for a file.
+func UploadSignature(client *http.Client, destination string, filename string, meta Metadata, username string, password string, bearerToken string) (err error) {
 	filename += ".asc"
 	destination += ".asc"
 
-	return UploadFile(client, destination, filename, meta, username, password)
+	err = UploadFile(client, destination, filename, meta, username, password, bearerToken)
+
+	return err
 }
 
-// Upload actually does the upload.  It uploads pure data.
-func Upload(client *http.Client, url string, data io.Reader, md5sum string, sha1sum string, sha256sum string, username string, password string) (err error) {
+// Upload actually does the upload.  It uploads pure data.  If bearerToken is non-empty, it is used as an Authorization: Bearer header instead of basic auth.
+func Upload(client *http.Client, url string, data io.Reader, md5sum string, sha1sum string, sha256sum string, username string, password string, bearerToken string) (err error) {
 	// Check to see if this is an S3 URL
 	isS3, s3Meta := S3Url(url)
 
 	if isS3 {
-		sess, err := DefaultSession()
-		if err != nil {
-			err = errors.Wrap(err, "Failed to create AWS session")
-			return err
-		}
-
-		uploader := s3manager.NewUploader(sess)
-
-		uploadOptions := &s3manager.UploadInput{
-			Body:   data,
-			Bucket: aws.String(s3Meta.Bucket),
-			Key:    aws.String(s3Meta.Key),
-		}
-
-		_, err = uploader.Upload(uploadOptions)
-		if err != nil {
-			err = errors.Wrapf(err, "failed uploading to %s", url)
-			return err
-		}
-
-		// make the directory paths in s3
-		dirs, err := DirsForURL(s3Meta.Key)
-		if err != nil {
-			err = errors.Wrapf(err, "failed to parse dirs for %s", s3Meta.Key)
-			return err
-		}
-
-		headSvc := s3.New(sess)
-		s3Client := s3.New(sess)
-
-		// create the 'folders' (0 byte objects) in s3
-		for _, d := range dirs {
-			if d != "." {
-				path := fmt.Sprintf("%s/", d)
-				// check to see if it doesn't already exist
-				headOptions := &s3.HeadObjectInput{
-					Bucket: aws.String(s3Meta.Bucket),
-					Key:    aws.String(path),
-				}
-
-				_, err = headSvc.HeadObject(headOptions)
-				// if there's an error, it doesn't exist
-				if err != nil {
-					// so create it
-					_, err = s3Client.PutObject(&s3.PutObjectInput{
-						Bucket: aws.String(s3Meta.Bucket),
-						Key:    aws.String(path),
-					})
-					if err != nil {
-						err = errors.Wrapf(err, "Failed to create %s in s3", path)
-						return err
-					}
-				}
-			}
-		}
-
+		err = uploadToS3(url, data, s3Meta)
 		return err
-
 	}
 
-	// TODO Check if destination exists
-	// TODO Create path if not
-	req, err := http.NewRequest("PUT", url, data)
+	err = uploadToHTTP(client, url, data, md5sum, sha1sum, sha256sum, username, password, bearerToken)
+
+	return err
+}
+
+// uploadToS3 handles uploading data to an S3 bucket.
+func uploadToS3(url string, data io.Reader, s3Meta S3Meta) (err error) {
+	var sess *session.Session
+
+	sess, err = DefaultSession()
+	if err != nil {
+		err = errors.Wrap(err, "Failed to create AWS session")
+		return err
+	}
+
+	uploader := s3manager.NewUploader(sess)
+
+	uploadOptions := &s3manager.UploadInput{
+		Body:   data,
+		Bucket: aws.String(s3Meta.Bucket),
+		Key:    aws.String(s3Meta.Key),
+	}
+
+	_, err = uploader.Upload(uploadOptions)
+	if err != nil {
+		err = errors.Wrapf(err, "failed uploading to %s", url)
+		return err
+	}
+
+	err = createS3Directories(sess, s3Meta)
+
+	return err
+}
+
+// createS3Directories creates the directory structure (0-byte objects) in S3.
+func createS3Directories(sess *session.Session, s3Meta S3Meta) (err error) {
+	var dirs []string
+
+	dirs, err = DirsForURL(s3Meta.Key)
+	if err != nil {
+		err = errors.Wrapf(err, "failed to parse dirs for %s", s3Meta.Key)
+		return err
+	}
+
+	headSvc := s3.New(sess)
+	s3Client := s3.New(sess)
+
+	// create the 'folders' (0 byte objects) in s3
+	for _, d := range dirs {
+		if d == "." {
+			continue
+		}
+
+		path := fmt.Sprintf("%s/", d)
+		// check to see if it doesn't already exist
+		headOptions := &s3.HeadObjectInput{
+			Bucket: aws.String(s3Meta.Bucket),
+			Key:    aws.String(path),
+		}
+
+		_, err = headSvc.HeadObject(headOptions)
+		// if there's an error, it doesn't exist
+		if err != nil {
+			// so create it
+			_, err = s3Client.PutObject(&s3.PutObjectInput{
+				Bucket: aws.String(s3Meta.Bucket),
+				Key:    aws.String(path),
+			})
+			if err != nil {
+				err = errors.Wrapf(err, "Failed to create %s in s3", path)
+				return err
+			}
+		}
+	}
+
+	return err
+}
+
+// uploadToHTTP handles uploading data via HTTP PUT.
+func uploadToHTTP(client *http.Client, url string, data io.Reader, md5sum string, sha1sum string, sha256sum string, username string, password string, bearerToken string) (err error) {
+	var req *http.Request
+
+	req, err = http.NewRequestWithContext(context.Background(), http.MethodPut, url, data)
 	if err != nil {
 		err = errors.Wrap(err, fmt.Sprintf("failed to create http request for target %s", url))
 		return err
@@ -234,13 +280,22 @@ func Upload(client *http.Client, url string, data io.Reader, md5sum string, sha1
 	req.Header.Add("X-Checksum-Md5", md5sum)
 	req.Header.Add("X-Checksum-Sha1", sha1sum)
 	req.Header.Add("X-Checksum-Sha256", sha256sum)
-	req.SetBasicAuth(username, password)
 
-	resp, err := client.Do(req)
+	// Bearer token takes precedence over basic auth
+	if bearerToken != "" {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", bearerToken))
+	} else {
+		req.SetBasicAuth(username, password)
+	}
+
+	var resp *http.Response
+
+	resp, err = client.Do(req)
 	if err != nil {
 		err = errors.Wrap(err, fmt.Sprintf("Failed to PUT to url %s", url))
 		return err
 	}
+	defer resp.Body.Close()
 
 	logrus.Debugf("Response: %s", resp.Status)
 	logrus.Debugf("Response Code: %d", resp.StatusCode)

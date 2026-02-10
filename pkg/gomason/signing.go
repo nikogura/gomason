@@ -1,18 +1,19 @@
 package gomason
 
 import (
+	"context"
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 // It's a good default.  You can install it anywhere.
 const defaultSigningProgram = "gpg"
 
-// SignBinary  signs the given binary based on the entity and program given in metadata file, possibly overridden by information in ~/.gomason
+// SignBinary signs the given binary based on the entity and program given in metadata file, possibly overridden by information in ~/.gomason.
 func (g *Gomason) SignBinary(meta Metadata, binary string) (err error) {
 	logrus.Debugf("Preparing to sign file %s", binary)
 
@@ -40,7 +41,7 @@ func (g *Gomason) SignBinary(meta Metadata, binary string) (err error) {
 	}
 
 	if signEntity == "" {
-		err = fmt.Errorf("Cannot sign without a signing entity (email).\n\nSet 'signing' section in metadata file, or create ~/.gomason with the appropriate content.\n\nSee https://github.com/nikogura/gomason#config-reference for details.\n\n")
+		err = errors.New("Cannot sign without a signing entity (email).\n\nSet 'signing' section in metadata file, or create ~/.gomason with the appropriate content.\n\nSee https://github.com/nikogura/gomason#config-reference for details.\n\n")
 
 		return err
 	}
@@ -86,22 +87,32 @@ func VerifyBinary(binary string, meta Metadata) (ok bool, err error) {
 
 // SignGPG signs a given binary with GPG using the given signing entity.
 func SignGPG(binary string, signingEntity string, meta Metadata) (err error) {
-	shellCmd, err := exec.LookPath("gpg")
+	var shellCmd string
+
+	shellCmd, err = exec.LookPath("gpg")
 	if err != nil {
-		err = errors.Wrap(err, fmt.Sprintf("can't find signing program 'gpg' in path.  Is it installed?"))
+		err = errors.Wrap(err, "can't find signing program 'gpg' in path.  Is it installed?")
 		return err
 	}
 
 	var cmd *exec.Cmd
 
-	if keyring, ok := meta.Options["keyring"]; ok {
-		// use a custom keyring for testing
-		cmd = exec.Command(shellCmd, "--trustdb", meta.Options["trustdb"].(string), "--no-default-keyring", "--keyring", keyring.(string), "-bau", signingEntity, "--yes", binary)
+	homedir, hasHomedir := meta.Options["homedir"]
+	keyring, hasKeyring := meta.Options["keyring"]
 
+	if hasHomedir {
+		// use a custom GPG home directory (GPG 2.x compatible)
+		homedirStr, _ := homedir.(string)
+		cmd = exec.CommandContext(context.Background(), shellCmd, "--homedir", homedirStr, "-bau", signingEntity, "--yes", binary)
+	} else if hasKeyring {
+		// use a custom keyring for testing (GPG 1.x style)
+		trustdbStr, _ := meta.Options["trustdb"].(string)
+		keyringStr, _ := keyring.(string)
+		cmd = exec.CommandContext(context.Background(), shellCmd, "--trustdb", trustdbStr, "--no-default-keyring", "--keyring", keyringStr, "-bau", signingEntity, "--yes", binary)
 	} else {
 		// gpg -bau <email address>  <file>
 		// -b detatch  -a ascii armor -u specify user
-		cmd = exec.Command(shellCmd, "-bau", signingEntity, "--yes", binary)
+		cmd = exec.CommandContext(context.Background(), shellCmd, "-bau", signingEntity, "--yes", binary)
 	}
 
 	cmd.Stdout = os.Stdout
@@ -113,6 +124,7 @@ func SignGPG(binary string, signingEntity string, meta Metadata) (err error) {
 	err = cmd.Start()
 	if err != nil {
 		err = errors.Wrap(err, fmt.Sprintf("failed to run %q", shellCmd))
+		return err
 	}
 
 	err = cmd.Wait()
@@ -127,21 +139,31 @@ func SignGPG(binary string, signingEntity string, meta Metadata) (err error) {
 func VerifyGPG(binary string, meta Metadata) (ok bool, err error) {
 	sigFile := fmt.Sprintf("%s.asc", binary)
 
-	shellCmd, err := exec.LookPath("gpg")
+	var shellCmd string
+
+	shellCmd, err = exec.LookPath("gpg")
 	if err != nil {
-		err = errors.Wrap(err, fmt.Sprintf("can't find signing program 'gpg' in path.  Is it installed?"))
+		err = errors.Wrap(err, "can't find signing program 'gpg' in path.  Is it installed?")
 		return ok, err
 	}
 
 	var cmd *exec.Cmd
 
-	if keyring, ok := meta.Options["keyring"]; ok {
-		// use a custom keyring for testing
-		cmd = exec.Command(shellCmd, "--trustdb", meta.Options["trustdb"].(string), "--no-default-keyring", "--keyring", keyring.(string), "--verify", sigFile)
+	homedir, hasHomedir := meta.Options["homedir"]
+	keyringVal, hasKeyring := meta.Options["keyring"]
 
+	if hasHomedir {
+		// use a custom GPG home directory (GPG 2.x compatible)
+		homedirStr, _ := homedir.(string)
+		cmd = exec.CommandContext(context.Background(), shellCmd, "--homedir", homedirStr, "--verify", sigFile)
+	} else if hasKeyring {
+		// use a custom keyring for testing (GPG 1.x style)
+		trustdbStr, _ := meta.Options["trustdb"].(string)
+		keyringStr, _ := keyringVal.(string)
+		cmd = exec.CommandContext(context.Background(), shellCmd, "--trustdb", trustdbStr, "--no-default-keyring", "--keyring", keyringStr, "--verify", sigFile)
 	} else {
 		// gpg --verify  <file>
-		cmd = exec.Command(shellCmd, "--verify", sigFile)
+		cmd = exec.CommandContext(context.Background(), shellCmd, "--verify", sigFile)
 	}
 
 	cmd.Stdout = os.Stdout

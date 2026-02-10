@@ -22,10 +22,10 @@ func (tr *TestRepo) Run(port int) (err error) {
 	return err
 }
 
-// HandlerTool handles requests publishing a tool in the test repo
+// HandlerTool handles requests publishing a tool in the test repo.
 func (tr *TestRepo) HandlerTool(w http.ResponseWriter, r *http.Request) {
 	logrus.Debugf("*TestRepo: Request for %s*", r.URL.Path)
 
 	// we just return 200.  We're not doing anything beyond providing an endpoint for the client to hit.
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 }

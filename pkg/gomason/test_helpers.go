@@ -1,12 +1,11 @@
 package gomason
 
 import (
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-// testMetadataObj returns a Metadata object suitable for testing
+// testMetadataObj returns a Metadata object suitable for testing.
 func testMetadataObj() (metadata Metadata) {
 	metadata = Metadata{
 		Package:     testModuleName(),
@@ -52,12 +51,14 @@ func testMetadataObj() (metadata Metadata) {
 	return metadata
 }
 
-// testModuleName returns the name of the test module
-func testModuleName() string {
-	return "github.com/nikogura/testproject"
+// testModuleName returns the name of the test module.
+func testModuleName() (name string) {
+	name = "github.com/nikogura/testproject"
+
+	return name
 }
 
-func TestMetadata_GetLanguage(t *testing.T) {
+func TestMetadataGetLanguage(t *testing.T) {
 	cases := []struct {
 		name     string
 		meta     Metadata
@@ -95,8 +96,8 @@ func TestMetadata_GetLanguage(t *testing.T) {
 	}
 }
 
-func testUserConfig() string {
-	return `[user]
+func testUserConfig() (config string) {
+	config = `[user]
   email = nik.ogura@gmail.com
   username = nikogura
   usernamefunc = echo 'foo bar baz'
@@ -106,10 +107,38 @@ func testUserConfig() string {
 [signing]
   program = gpg
 `
+
+	return config
 }
 
-func testMetaDataJson() string {
-	return `{
+func testUserConfigWithBearerToken() (config string) {
+	config = `[user]
+  email = nik.ogura@gmail.com
+  username = nikogura
+  password = changeit
+  bearertoken = static-test-token-12345
+
+[signing]
+  program = gpg
+`
+
+	return config
+}
+
+func testUserConfigWithBearerTokenFunc() (config string) {
+	config = `[user]
+  email = nik.ogura@gmail.com
+  bearertokenfunc = echo 'dynamic-token-from-func'
+
+[signing]
+  program = gpg
+`
+
+	return config
+}
+
+func testMetaDataJSON() (jsonStr string) {
+	jsonStr = `{
 	"version": "0.1.0",
 	"package": "github.com/nikogura/testproject",
 	"description": "Test Project for Gomason.",
@@ -141,36 +170,42 @@ func testMetaDataJson() string {
 		]
 	}
 }`
+
+	return jsonStr
 }
 
-func testMetadataFileName() string {
-	return METADATA_FILENAME
+func testMetadataFileName() (name string) {
+	name = MetadataFilename
+
+	return name
 }
 
-func testFileContent() string {
-	return `the quick fox jumped over the lazy brown dog`
+func testFileContent() (content string) {
+	content = `the quick fox jumped over the lazy brown dog`
+
+	return content
 }
 
-func testFileMd5() string {
-	return "356b5768c6964531f678781446840b76"
+func testFileMd5() (checksum string) {
+	checksum = "356b5768c6964531f678781446840b76"
+
+	return checksum
 }
 
-func testFileSha1() string {
-	return "041b2390cd9697ba6b9f57b532b0aa5ac183736b"
+func testFileSha1() (checksum string) {
+	checksum = "041b2390cd9697ba6b9f57b532b0aa5ac183736b"
+
+	return checksum
 }
 
-func testFileSha256() string {
-	return "e088f8b9456b8a91a48159497ac425a4c3cdcad3ad81cc3a269618209dee033b"
+func testFileSha256() (checksum string) {
+	checksum = "e088f8b9456b8a91a48159497ac425a4c3cdcad3ad81cc3a269618209dee033b"
+
+	return checksum
 }
 
-func testRawUrl() string {
-	return "http://localhost:8081/artifactory/repo-local/foo/{{.Version}}/linux/amd64/foo"
-}
+func testAllChecksums() (checksums []string) {
+	checksums = []string{testFileMd5(), testFileSha1(), testFileSha256()}
 
-func testParsedUrl(version string) string {
-	return fmt.Sprintf("http://localhost:8081/artifactory/repo-local/foo/%s/linux/amd64/foo", version)
-}
-
-func testAllChecksums() []string {
-	return []string{testFileMd5(), testFileSha1(), testFileSha256()}
+	return checksums
 }

@@ -23,7 +23,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// signCmd represents the sign command
+// signCmd represents the sign command.
+//
+//nolint:gochecknoglobals // Cobra boilerplate
 var signCmd = &cobra.Command{
 	Use:   "sign",
 	Short: "Sign your binaries after building them.",
@@ -51,7 +53,7 @@ Signing sorta implies something to sign, which in turn, implies that it built, w
 
 		defer os.RemoveAll(rootWorkDir)
 
-		meta, err := gomason.ReadMetadata(gomason.METADATA_FILENAME)
+		meta, err := gomason.ReadMetadata(gomason.MetadataFilename)
 		if err != nil {
 			log.Fatalf("failed to read metadata: %s", err)
 		}
@@ -100,6 +102,7 @@ Signing sorta implies something to sign, which in turn, implies that it built, w
 	},
 }
 
+//nolint:gochecknoinits // Cobra boilerplate
 func init() {
 	rootCmd.AddCommand(signCmd)
 }

@@ -22,10 +22,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+//nolint:gochecknoglobals // Cobra boilerplate
 var pubSkipTests bool
+
+//nolint:gochecknoglobals // Cobra boilerplate
 var pubSkipBuild bool
 
-// publishCmd represents the publish command
+// publishCmd represents the publish command.
+//
+//nolint:gochecknoglobals // Cobra boilerplate
 var publishCmd = &cobra.Command{
 	Use:   "publish",
 	Short: "Test, build, sign and publish your code",
@@ -50,7 +55,7 @@ Publish will upload your binaries to wherever it is you've configured them to go
 		}
 		defer os.RemoveAll(rootWorkDir)
 
-		meta, err := gomason.ReadMetadata(gomason.METADATA_FILENAME)
+		meta, err := gomason.ReadMetadata(gomason.MetadataFilename)
 		if err != nil {
 			log.Fatalf("failed to read metadata: %s", err)
 		}
@@ -67,11 +72,6 @@ Publish will upload your binaries to wherever it is you've configured them to go
 
 		// Totally skip building, and just do signing and uploading
 		if pubSkipBuild {
-			workDir, err = os.Getwd()
-			if err != nil {
-				log.Fatalf("Failed getting current working directory.")
-			}
-
 			for _, t := range meta.PublishInfo.Targets {
 				if meta.PublishInfo.SkipSigning {
 					err = gm.PublishFile(meta, t.Source)
@@ -145,6 +145,7 @@ Publish will upload your binaries to wherever it is you've configured them to go
 	},
 }
 
+//nolint:gochecknoinits // Cobra boilerplate
 func init() {
 	rootCmd.AddCommand(publishCmd)
 

@@ -22,7 +22,9 @@ import (
 	"os"
 )
 
-// testCmd represents the test command
+// testCmd represents the test command.
+//
+//nolint:gochecknoglobals // Cobra boilerplate
 var testCmd = &cobra.Command{
 	Use:   "test",
 	Short: "Test your code in a clean environment.",
@@ -52,7 +54,7 @@ Sometimes you need the benefits of a full system here.  Now.  Right at your fing
 
 		defer os.RemoveAll(rootWorkDir)
 
-		meta, err := gomason.ReadMetadata(gomason.METADATA_FILENAME)
+		meta, err := gomason.ReadMetadata(gomason.MetadataFilename)
 		if err != nil {
 			log.Fatalf("failed to read metadata: %s", err)
 		}
@@ -85,6 +87,7 @@ Sometimes you need the benefits of a full system here.  Now.  Right at your fing
 	},
 }
 
+//nolint:gochecknoinits // Cobra boilerplate
 func init() {
 	rootCmd.AddCommand(testCmd)
 }

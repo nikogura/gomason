@@ -23,18 +23,32 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Verbose sets verbose output
+// Verbose sets verbose output.
+//
+//nolint:gochecknoglobals // Cobra boilerplate
 var Verbose bool
+
+//nolint:gochecknoglobals // Cobra boilerplate
 var branch string
+
+//nolint:gochecknoglobals // Cobra boilerplate
 var dryrun bool
+
+//nolint:gochecknoglobals // Cobra boilerplate
 var workdir string
+
+//nolint:gochecknoglobals // Cobra boilerplate
 var buildSkipTargets string
+
+//nolint:gochecknoglobals // Cobra boilerplate
 var testTimeout string
+
+//nolint:gochecknoglobals // Cobra boilerplate
 var local bool
 
-//var pubSkipTargets string
-
-// rootCmd represents the base command when called without any subcommands
+// rootCmd represents the base command when called without any subcommands.
+//
+//nolint:gochecknoglobals // Cobra boilerplate
 var rootCmd = &cobra.Command{
 	Use:   "gomason",
 	Short: "Tool for building Go binaries in a clean GOPATH.",
@@ -49,22 +63,24 @@ Tool for building Go binaries in a clean GOPATH.
 	},
 }
 
-// Execute runs the root cobra command
+// Execute runs the root cobra command.
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
+	err := rootCmd.Execute()
+	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 }
 
+//nolint:gochecknoinits // Cobra boilerplate
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "Verbose output")
 	rootCmd.PersistentFlags().BoolVarP(&dryrun, "dryrun", "d", false, "Dry Run (Only applies to publish.")
 	rootCmd.PersistentFlags().StringVarP(&branch, "branch", "b", "", "Branch to operate upon")
 	rootCmd.PersistentFlags().StringVarP(&workdir, "workdir", "w", "", "Workdir.  If omitted, a temp dir will be created and subsequently cleaned up.")
-	rootCmd.PersistentFlags().StringVarP(&buildSkipTargets, "skip-build-targets", "", "", fmt.Sprintf("Comma separated list of build targets from %s to skip.", gomason.METADATA_FILENAME))
+	rootCmd.PersistentFlags().StringVarP(&buildSkipTargets, "skip-build-targets", "", "", fmt.Sprintf("Comma separated list of build targets from %s to skip.", gomason.MetadataFilename))
 	rootCmd.PersistentFlags().StringVarP(&testTimeout, "test-timeout", "", "", "timeout for tests to complete (must be valid time input for language)")
 
 	rootCmd.PersistentFlags().BoolVarP(&local, "local", "l", false, "Do all work out of current working directory, with whatever is checked out.")
-	//rootCmd.PersistentFlags().StringVarP(&pubSkipTargets, fmt.Sprintf("skip-publish-targets", "", "", "Comma separated list of publish targets from %s to skip.", gomason.METADATA_FILENAME))
+	//rootCmd.PersistentFlags().StringVarP(&pubSkipTargets, fmt.Sprintf("skip-publish-targets", "", "", "Comma separated list of publish targets from %s to skip.", gomason.MetadataFilename))
 }

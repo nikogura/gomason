@@ -9,16 +9,11 @@ import (
 )
 
 func TestReadMetadata(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "gomason")
-	if err != nil {
-		log.Printf("Error creating temp dir\n")
-		t.Fail()
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	fileName := fmt.Sprintf("%s/%s", tmpDir, testMetadataFileName())
 
-	err = os.WriteFile(fileName, []byte(testMetaDataJson()), 0644)
+	err := os.WriteFile(fileName, []byte(testMetaDataJSON()), 0644)
 	if err != nil {
 		log.Printf("Error writing metadata file: %s", err)
 		t.Fail()
