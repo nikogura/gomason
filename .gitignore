@@ -68,3 +68,9 @@ fabric.properties
 
 #vendor/*
 #!vendor/vendor.json
+### Gomason build output
+dist/
+bin/
+coverage.txt
+coverage.out
+/gomason

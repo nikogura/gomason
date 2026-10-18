@@ -1,3 +1,17 @@
+// Copyright © 2017 Nik Ogura <nik.ogura@gmail.com>
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package gomason
 
 import (
@@ -6,7 +20,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/url"
 	"os"
 	"os/exec"
@@ -15,8 +28,8 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/aws"         //nolint:staticcheck // aws-sdk-go v1 is past end-of-support; migrating the S3 publish path to aws-sdk-go-v2 is tracked separately.
+	"github.com/aws/aws-sdk-go/aws/session" //nolint:staticcheck // aws-sdk-go v1 is past end-of-support; migrating the S3 publish path to aws-sdk-go-v2 is tracked separately.
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -29,6 +42,10 @@ const AWSSecretEnvVar = "AWS_SECRET_ACCESS_KEY"
 
 // AWSRegionEnvVar Default env var for AWS region.
 const AWSRegionEnvVar = "AWS_DEFAULT_REGION"
+
+// AWSLoadConfigEnvVar is the env var telling the AWS SDK to read the shared
+// config file, which it does not do by default.
+const AWSLoadConfigEnvVar = "AWS_SDK_LOAD_CONFIG"
 
 // ReadMetadata reads a metadata file and returns the Metadata object thus described.
 func ReadMetadata(filename string) (metadata Metadata, err error) {
@@ -62,6 +79,20 @@ func GitSSHUrlFromPackage(packageName string) (gitpath string) {
 	gitpath = fmt.Sprintf("git@%s.git", munged)
 
 	return gitpath
+}
+
+// GitHTTPSUrlFromPackage turns a go package name into a git+https URI, the form SLSA
+// provenance expects for a resolved source dependency. A module's major-version
+// suffix (/v2, /v3, ...) is a Go modules convention, not part of the repository URL,
+// and is stripped.
+func GitHTTPSUrlFromPackage(packageName string) (giturl string) {
+	moduleVersion := regexp.MustCompile(`/v[0-9]+$`)
+
+	repoPath := moduleVersion.ReplaceAllString(packageName, "")
+
+	giturl = fmt.Sprintf("git+https://%s", repoPath)
+
+	return giturl
 }
 
 // resolveCredential resolves a credential value.  If funcName is set, it runs the shell function.
@@ -229,12 +260,19 @@ func DirsForURL(uri string) (dirs []string, err error) {
 // DefaultSession creates a default AWS session from local config path.  Hooks directly into credentials if present, or Credentials Provider if configured.
 func DefaultSession() (awssession *session.Session, err error) {
 	if os.Getenv(AWSIDEnvVar) == "" && os.Getenv(AWSSecretEnvVar) == "" {
-		_ = os.Setenv("AWS_SDK_LOAD_CONFIG", "true")
+		err = os.Setenv(AWSLoadConfigEnvVar, "true")
+		if err != nil {
+			err = errors.Wrapf(err, "failed to set %s", AWSLoadConfigEnvVar)
+
+			return awssession, err
+		}
 	}
 
 	awssession, err = session.NewSession()
 	if err != nil {
-		log.Fatalf("Failed to create aws session")
+		err = errors.Wrap(err, "failed to create aws session")
+
+		return awssession, err
 	}
 
 	// For some reason this doesn't get picked up automatically, but we'll set it if it's present in the environment.

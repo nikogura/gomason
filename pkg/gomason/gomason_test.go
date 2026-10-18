@@ -1,13 +1,29 @@
+// Copyright © 2017 Nik Ogura <nik.ogura@gmail.com>
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package gomason
 
 import (
 	"fmt"
-	"github.com/phayes/freeport"
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/nikogura/gomason/v2/pkg/gomason/testfixtures"
+	"github.com/phayes/freeport"
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 //nolint:gochecknoglobals // test fixture shared state
@@ -46,7 +62,7 @@ func setUp() {
 
 	servicePort = freePort
 
-	tr := TestRepo{}
+	tr := testfixtures.TestRepo{}
 
 	go tr.Run(servicePort)
 
@@ -69,7 +85,7 @@ func TestGetUserConfig(t *testing.T) {
 
 	userFile := fmt.Sprintf("%s/.gomason", homeDir)
 
-	err = os.WriteFile(userFile, []byte(testUserConfig()), 0644)
+	err = os.WriteFile(userFile, []byte(testfixtures.UserConfig), 0644)
 	if err != nil {
 		t.Errorf("error writing %s: %s", userFile, err)
 	}
@@ -105,7 +121,7 @@ func TestGetUserConfigWithBearerToken(t *testing.T) {
 
 	userFile := fmt.Sprintf("%s/.gomason", homeDir)
 
-	err = os.WriteFile(userFile, []byte(testUserConfigWithBearerToken()), 0644)
+	err = os.WriteFile(userFile, []byte(testfixtures.UserConfigWithBearerToken), 0644)
 	if err != nil {
 		t.Errorf("error writing %s: %s", userFile, err)
 	}
@@ -140,7 +156,7 @@ func TestGetUserConfigWithBearerTokenFunc(t *testing.T) {
 
 	userFile := fmt.Sprintf("%s/.gomason", homeDir)
 
-	err = os.WriteFile(userFile, []byte(testUserConfigWithBearerTokenFunc()), 0644)
+	err = os.WriteFile(userFile, []byte(testfixtures.UserConfigWithBearerTokenFunc), 0644)
 	if err != nil {
 		t.Errorf("error writing %s: %s", userFile, err)
 	}

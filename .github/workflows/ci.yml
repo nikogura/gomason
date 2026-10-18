@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  # 1.26 is the floor: namedreturns requires it to build, and the test/lint jobs
+  # install it from source. Pinning the minor (not toolchain auto-download) keeps
+  # the runners deterministic.
+  GO_VERSION: '1.26'
+
 permissions:
   contents: write
   packages: write
@@ -13,86 +19,137 @@ permissions:
 
 jobs:
   test:
+    name: Test
     runs-on: ubuntu-latest
-    outputs:
-      semver: ${{steps.version.outputs.version_tag}}
-    
+
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
-
-    - name: Determine version from git tags
-      id: version
-      run: |
-        # Get latest semver tag (with or without v prefix)
-        LAST_TAG=$(git tag -l --sort=-v:refname | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | head -n1 || echo "v0.0.0")
-        if [ -z "$LAST_TAG" ]; then
-          LAST_TAG="v0.0.0"
-        fi
-
-        # Strip v prefix if present, parse components
-        VERSION=${LAST_TAG#v}
-        IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
-
-        # Bump patch version
-        PATCH=$((PATCH + 1))
-        NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
-
-        echo "version=${MAJOR}.${MINOR}.${PATCH}" >> $GITHUB_OUTPUT
-        echo "version_tag=$NEW_VERSION" >> $GITHUB_OUTPUT
-        echo "Latest tag: $LAST_TAG -> New version: $NEW_VERSION"
 
     - name: Set up Go
       uses: actions/setup-go@v5
       with:
-        go-version: '1.22.4'
-    
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Cache Go modules
+      uses: actions/cache@v4
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
     - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y gpg
-    
+
     - name: Setup test config
       run: |
-        # Copy test configuration for gomason
+        # Gomason's tests read the signing identity from ~/.gomason.
         cp pkg/gomason/testfixtures/.gomason ~/.gomason
         echo -e "[user]\n  email = gomason-tester@foo.com\n  username = gomason-tester\n[signing]\n  program = gpg" >> ~/.gomason
-    
+
     - name: Start GPG agent
       run: |
         # Start GPG agent for cryptographic tests
         gpg-agent --daemon --allow-preset-passphrase || true
-    
+
+    - name: Download Go dependencies
+      run: go mod download
+
+    - name: Install namedreturns
+      run: go install github.com/nikogura/namedreturns@latest
+
+    - name: Install golangci-lint
+      uses: golangci/golangci-lint-action@v8
+      with:
+        # Pinned: a floating latest turns a lint release into an unplanned CI break.
+        version: v2.13.2
+        install-mode: binary
+        args: --version
+
+    - name: Lint Checks
+      run: make lint
+
     - name: Run tests
       run: |
         # Run tests with timeout to prevent hanging
         timeout 10m go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
-    
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
-        file: ./coverage.txt
+        files: ./coverage.txt
         token: ${{ secrets.CODECOV_TOKEN }}
         verbose: true
 
   publish:
+    name: Publish
     runs-on: ubuntu-latest
     needs: test
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-    steps:
-      - name: Tag Repo
-        uses: mathieudutour/github-tag-action@v6.2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          custom_tag: ${{needs.test.outputs.semver}}
-          tag_prefix: ""
 
-      - name: Publish Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{needs.test.outputs.semver}}
-          name: ${{needs.test.outputs.semver}}
-          draft: false
-          prerelease: false
-          token: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Determine version
+      id: bump
+      run: |
+        # Gomason's tags carry a leading 'v'.  Find the newest, bump the patch.
+        LATEST_TAG=$(git tag -l --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1 || echo "v0.0.0")
+        if [ -z "$LATEST_TAG" ]; then
+          LATEST_TAG="v0.0.0"
+        fi
+
+        IFS='.' read -r major minor patch <<< "${LATEST_TAG#v}"
+        NEW_VERSION="v${major}.${minor}.$((patch + 1))"
+
+        echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        echo "Latest tag: $LATEST_TAG -> Publishing version: $NEW_VERSION"
+
+    - name: Build release binaries
+      run: |
+        VERSION=${{ steps.bump.outputs.version }}
+
+        for pair in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do
+          OS=${pair%/*}
+          ARCH=${pair#*/}
+          echo "Building gomason_${OS}_${ARCH} ($VERSION)..."
+          CGO_ENABLED=0 GOOS=$OS GOARCH=$ARCH \
+            go build -o "gomason_${OS}_${ARCH}" .
+        done
+
+        ls -la gomason_*
+
+    - name: Tag Repo
+      uses: mathieudutour/github-tag-action@v6.2
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        custom_tag: ${{ steps.bump.outputs.version }}
+        tag_prefix: ""
+
+    - name: Publish Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.bump.outputs.version }}
+        name: ${{ steps.bump.outputs.version }}
+        draft: false
+        prerelease: false
+        token: ${{ secrets.GITHUB_TOKEN }}
+        files: |
+          gomason_linux_amd64
+          gomason_linux_arm64
+          gomason_darwin_amd64
+          gomason_darwin_arm64

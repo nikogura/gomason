@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -41,75 +42,110 @@ You could run 'test' separately, but 'build' is nice enough to do it for you.
 Binaries are dropped into the current working directory.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		gm, err := gomason.NewGomason()
-		if err != nil {
-			log.Fatalf("error creating gomason object")
+		rootWorkDir, runErr := runBuild()
+
+		cleanupErr := cleanupWorkDir(rootWorkDir)
+
+		if runErr != nil {
+			log.Fatalf("%s", runErr)
 		}
 
-		cwd, err := os.Getwd()
-		if err != nil {
-			log.Fatalf("Failed to get current working directory: %s", err)
-		}
-
-		meta, err := gomason.ReadMetadata(gomason.MetadataFilename)
-		if err != nil {
-			log.Fatalf("couldn't read package information from metadata file: %s", err)
-		}
-
-		lang, err := gomason.GetByName(meta.GetLanguage())
-		if err != nil {
-			log.Fatalf("Invalid language: %v", err)
-		}
-
-		var workDir = cwd
-
-		if !local {
-			rootWorkDir, err := os.MkdirTemp("", "gomason") //nolint:govet // shadow is intentional - all errors in this cobra Run are fatal
-			if err != nil {
-				log.Fatalf("Failed to create temp dir: %s", err)
-			}
-
-			defer os.RemoveAll(rootWorkDir)
-
-			workDir, err = lang.CreateWorkDir(rootWorkDir)
-			if err != nil {
-				log.Fatalf("Failed to create ephemeral workDir: %s", err)
-			}
-
-			err = lang.Checkout(workDir, meta, branch)
-			if err != nil {
-				log.Fatalf("failed to checkout package %s at branch %s: %s", meta.Package, branch, err)
-			}
-
-		}
-
-		err = lang.Prep(workDir, meta, local)
-		if err != nil {
-			log.Fatalf("error running prep steps: %s", err)
-		}
-
-		if !buildSkipTests {
-			err = lang.Test(workDir, meta.Package, testTimeout, local)
-			if err != nil {
-				log.Fatalf("error running go test: %s", err)
-			}
-		}
-
-		err = lang.Build(workDir, meta, buildSkipTargets, local)
-		if err != nil {
-			log.Fatalf("build failed: %s", err)
-		}
-
-		err = gm.HandleArtifacts(meta, workDir, cwd, false, false, true, buildSkipTargets, local)
-		if err != nil {
-			log.Fatalf("signing failed: %s", err)
-		}
-
-		err = gm.HandleExtras(meta, workDir, cwd, false, false, true, local)
-		if err != nil {
-			log.Fatalf("Extra artifact processing failed: %s", err)
+		if cleanupErr != nil {
+			log.Fatalf("%s", cleanupErr)
 		}
 	},
+}
+
+// runBuild tests and builds the project.  Unless --local was given, it works
+// in a clean, ephemeral work dir, and returns the root of that dir so the
+// caller can clean it up on every path, including the failure paths.  A local
+// build works out of the current directory and returns an empty path, which
+// cleanupWorkDir treats as nothing to do.
+func runBuild() (rootWorkDir string, err error) {
+	var gm *gomason.Gomason
+
+	gm, err = gomason.NewGomason()
+	if err != nil {
+		err = fmt.Errorf("error creating gomason object: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	var cwd string
+
+	cwd, err = os.Getwd()
+	if err != nil {
+		err = fmt.Errorf("failed to get current working directory: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	var meta gomason.Metadata
+
+	meta, err = gomason.ReadMetadata(gomason.MetadataFilename)
+	if err != nil {
+		err = fmt.Errorf("couldn't read package information from metadata file: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	var lang gomason.Language
+
+	lang, err = gomason.GetByName(meta.GetLanguage())
+	if err != nil {
+		err = fmt.Errorf("invalid language: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	// A local build uses whatever is checked out here; otherwise build clean.
+	workDir := cwd
+
+	if !local {
+		rootWorkDir, workDir, err = prepareWorkspace(lang, meta)
+		if err != nil {
+			return rootWorkDir, err
+		}
+	}
+
+	err = lang.Prep(workDir, meta, local)
+	if err != nil {
+		err = fmt.Errorf("error running prep steps: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	if !buildSkipTests {
+		err = lang.Test(workDir, meta.Package, testTimeout, local)
+		if err != nil {
+			err = fmt.Errorf("error running go test: %w", err)
+
+			return rootWorkDir, err
+		}
+	}
+
+	err = lang.Build(workDir, meta, buildSkipTargets, local)
+	if err != nil {
+		err = fmt.Errorf("build failed: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	err = gm.HandleArtifacts(meta, workDir, cwd, false, false, true, buildSkipTargets, local)
+	if err != nil {
+		err = fmt.Errorf("signing failed: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	err = gm.HandleExtras(meta, workDir, cwd, false, false, true, local)
+	if err != nil {
+		err = fmt.Errorf("extra artifact processing failed: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	return rootWorkDir, err
 }
 
 //nolint:gochecknoinits // Cobra boilerplate
@@ -117,5 +153,4 @@ func init() {
 	rootCmd.AddCommand(buildCmd)
 
 	buildCmd.Flags().BoolVarP(&buildSkipTests, "skiptests", "s", false, "Skip tests when building.")
-
 }

@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -36,69 +37,105 @@ Artists sign their work, you should too.
 Signing sorta implies something to sign, which in turn, implies that it built, which means it tested successfully.  What I'm getting at is this command will run 'test', 'build', and then it will 'sign'.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		gm, err := gomason.NewGomason()
-		if err != nil {
-			log.Fatalf("error creating gomason object")
+		rootWorkDir, runErr := runSign()
+
+		cleanupErr := cleanupWorkDir(rootWorkDir)
+
+		if runErr != nil {
+			log.Fatalf("%s", runErr)
 		}
 
-		cwd, err := os.Getwd()
-		if err != nil {
-			log.Fatalf("Failed to get current working directory: %s", err)
-		}
-		rootWorkDir, err := os.MkdirTemp("", "gomason")
-		if err != nil {
-			log.Fatalf("Failed to create temp dir: %s", err)
-		}
-
-		defer os.RemoveAll(rootWorkDir)
-
-		meta, err := gomason.ReadMetadata(gomason.MetadataFilename)
-		if err != nil {
-			log.Fatalf("failed to read metadata: %s", err)
-		}
-
-		lang, err := gomason.GetByName(meta.GetLanguage())
-		if err != nil {
-			log.Fatalf("Invalid language: %v", err)
-		}
-
-		workDir, err := lang.CreateWorkDir(rootWorkDir)
-		if err != nil {
-			log.Fatalf("Failed to create ephemeral workDir: %s", err)
-		}
-
-		err = lang.Checkout(workDir, meta, branch)
-		if err != nil {
-			log.Fatalf("failed to checkout package %s at branch %s: %s", meta.Package, branch, err)
-		}
-
-		err = lang.Prep(workDir, meta, local)
-		if err != nil {
-			log.Fatalf("error running prep steps: %s", err)
-		}
-
-		err = lang.Test(workDir, meta.Package, testTimeout, local)
-		if err != nil {
-			log.Fatalf("error running go test: %s", err)
-		}
-
-		log.Printf("Tests Succeeded!\n\n")
-
-		err = lang.Build(workDir, meta, buildSkipTargets, local)
-		if err != nil {
-			log.Fatalf("build failed: %s", err)
-		}
-
-		err = gm.HandleArtifacts(meta, workDir, cwd, true, false, true, buildSkipTargets, local)
-		if err != nil {
-			log.Fatalf("signing failed: %s", err)
-		}
-
-		err = gm.HandleExtras(meta, workDir, cwd, true, false, true, local)
-		if err != nil {
-			log.Fatalf("Extra artifact processing failed: %s", err)
+		if cleanupErr != nil {
+			log.Fatalf("%s", cleanupErr)
 		}
 	},
+}
+
+// runSign tests, builds, and signs the project in a clean, ephemeral work dir.
+// It returns the root work dir it created so the caller can clean it up on
+// every path, including the failure paths.
+func runSign() (rootWorkDir string, err error) {
+	var gm *gomason.Gomason
+
+	gm, err = gomason.NewGomason()
+	if err != nil {
+		err = fmt.Errorf("error creating gomason object: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	var cwd string
+
+	cwd, err = os.Getwd()
+	if err != nil {
+		err = fmt.Errorf("failed to get current working directory: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	var meta gomason.Metadata
+
+	meta, err = gomason.ReadMetadata(gomason.MetadataFilename)
+	if err != nil {
+		err = fmt.Errorf("failed to read metadata: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	var lang gomason.Language
+
+	lang, err = gomason.GetByName(meta.GetLanguage())
+	if err != nil {
+		err = fmt.Errorf("invalid language: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	var workDir string
+
+	rootWorkDir, workDir, err = prepareWorkspace(lang, meta)
+	if err != nil {
+		return rootWorkDir, err
+	}
+
+	err = lang.Prep(workDir, meta, local)
+	if err != nil {
+		err = fmt.Errorf("error running prep steps: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	err = lang.Test(workDir, meta.Package, testTimeout, local)
+	if err != nil {
+		err = fmt.Errorf("error running go test: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	log.Printf("Tests Succeeded!\n\n")
+
+	err = lang.Build(workDir, meta, buildSkipTargets, local)
+	if err != nil {
+		err = fmt.Errorf("build failed: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	err = gm.HandleArtifacts(meta, workDir, cwd, true, false, true, buildSkipTargets, local)
+	if err != nil {
+		err = fmt.Errorf("signing failed: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	err = gm.HandleExtras(meta, workDir, cwd, true, false, true, local)
+	if err != nil {
+		err = fmt.Errorf("extra artifact processing failed: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	return rootWorkDir, err
 }
 
 //nolint:gochecknoinits // Cobra boilerplate

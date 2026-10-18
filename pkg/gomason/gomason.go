@@ -1,3 +1,17 @@
+// Copyright © 2017 Nik Ogura <nik.ogura@gmail.com>
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package gomason
 
 import (
@@ -56,7 +70,7 @@ func (m Metadata) GetLanguage() (lang string) {
 	lang = m.Language
 
 	if lang == "" {
-		lang = "golang"
+		lang = LanguageGolang
 	}
 
 	return lang
@@ -97,6 +111,10 @@ type BuildInfo struct {
 	PrepCommands []string        `json:"prepcommands,omitempty"`
 	Targets      []BuildTarget   `json:"targets,omitempty"`
 	Extras       []ExtraArtifact `json:"extras,omitempty"`
+	// Attestations gates generation of signed in-toto attestations (SLSA provenance
+	// and a CycloneDX SBOM) alongside each built binary. Opt-in; absent means the
+	// existing behavior, no attestations.
+	Attestations bool `json:"attestations,omitempty"`
 }
 
 // BuildTarget contains information on each build target.
@@ -140,6 +158,9 @@ type PublishTarget struct {
 	Destination string `json:"dst"`
 	Signature   bool   `json:"sig"`
 	Checksums   bool   `json:"checksums"`
+	// Attestations gates uploading the attestation files (provenance, SBOM, and their
+	// signatures) alongside this artifact, when they were generated.
+	Attestations bool `json:"attestations,omitempty"`
 }
 
 // UserConfig is a struct representing the information stored in ~/.gomason.
@@ -181,7 +202,7 @@ func resolveWorkDir(gopath string, meta Metadata, local bool) (workdir string, e
 }
 
 // processArtifactFile handles signing, publishing, and collecting a single artifact file.
-func (g *Gomason) processArtifactFile(meta Metadata, filename string, sign bool, publish bool, collect bool, cwd string) (err error) {
+func (g *Gomason) processArtifactFile(meta Metadata, filename string, target BuildTarget, sign bool, publish bool, collect bool, cwd string) (err error) {
 	_, statErr := os.Stat(filename)
 	if os.IsNotExist(statErr) {
 		err = errors.Wrapf(statErr, "failed building binary: %s\n", filename)
@@ -195,6 +216,17 @@ func (g *Gomason) processArtifactFile(meta Metadata, filename string, sign bool,
 		if err != nil {
 			err = errors.Wrapf(err, "failed to sign binary %s", filename)
 			return err
+		}
+
+		// Attestations are generated and signed with the binary: an unsigned attestation
+		// is a forgeable text file, so none are ever emitted without their signatures.
+		// Only built binaries get attestations (target is set); templated extras do not.
+		if meta.BuildInfo.Attestations && target.Name != "" {
+			err = g.HandleAttestations(meta, filename, target)
+			if err != nil {
+				err = errors.Wrapf(err, "failed to generate attestations for %s", filename)
+				return err
+			}
 		}
 	}
 
@@ -214,6 +246,61 @@ func (g *Gomason) processArtifactFile(meta Metadata, filename string, sign bool,
 		err = CollectFileAndSignature(cwd, filename)
 		if err != nil {
 			err = errors.Wrap(err, "failed to collect binaries")
+			return err
+		}
+
+		err = collectAttestationFiles(cwd, filename)
+		if err != nil {
+			err = errors.Wrap(err, "failed to collect attestations")
+			return err
+		}
+	}
+
+	return err
+}
+
+// HandleAttestations generates the provenance and SBOM attestation files for a built
+// binary and signs each with the same identity that signed the binary.
+func (g *Gomason) HandleAttestations(meta Metadata, filename string, target BuildTarget) (err error) {
+	err = g.GenerateAttestationFiles(meta, filename, target)
+	if err != nil {
+		return err
+	}
+
+	for _, attFile := range []string{fmt.Sprintf("%s.att.json", filename), fmt.Sprintf("%s.sbom.json", filename)} {
+		logrus.Debugf("Signing %s", attFile)
+
+		err = g.SignBinary(meta, attFile)
+		if err != nil {
+			err = errors.Wrapf(err, "failed to sign attestation %s", attFile)
+			return err
+		}
+	}
+
+	return err
+}
+
+// collectAttestationFiles copies whatever attestation files exist beside an artifact
+// into the cwd, alongside the artifact and its signature. Attestations are opt-in; when
+// none were generated there is nothing to collect and this is a no-op.
+func collectAttestationFiles(cwd string, filename string) (err error) {
+	for _, suffix := range []string{".att.json", ".att.json.asc", ".sbom.json", ".sbom.json.asc"} {
+		attPath := fmt.Sprintf("%s%s", filename, suffix)
+
+		_, statErr := os.Stat(attPath)
+		if os.IsNotExist(statErr) {
+			continue
+		}
+
+		if statErr != nil {
+			err = errors.Wrapf(statErr, "failed to stat %s", attPath)
+			return err
+		}
+
+		destination := filepath.Join(cwd, filepath.Base(attPath))
+
+		err = copyAndRemove(attPath, destination)
+		if err != nil {
 			return err
 		}
 	}
@@ -288,7 +375,7 @@ func (g *Gomason) handleTargetArtifacts(meta Metadata, gopath string, cwd string
 		filename := fmt.Sprintf("%s/%s", workdir, file.Name())
 		logrus.Debugf("Handling %s", filename)
 
-		err = g.processArtifactFile(meta, filename, sign, publish, collect, cwd)
+		err = g.processArtifactFile(meta, filename, target, sign, publish, collect, cwd)
 		if err != nil {
 			return err
 		}
@@ -321,7 +408,8 @@ func (g *Gomason) HandleExtras(meta Metadata, gopath string, cwd string, sign bo
 			return err
 		}
 
-		err = g.processArtifactFile(meta, filename, sign, publish, collect, cwd)
+		// Extras are templated artifacts, not built binaries: they carry no attestations.
+		err = g.processArtifactFile(meta, filename, BuildTarget{}, sign, publish, collect, cwd)
 		if err != nil {
 			return err
 		}
@@ -389,16 +477,19 @@ func CollectFileAndSignature(cwd string, filename string) (err error) {
 		}
 	}
 
-	sigName := fmt.Sprintf("%s.asc", filepath.Base(filename))
+	// The signature lives beside the file it signs — look there, not in the process's
+	// current directory. Resolving relative to the process cwd silently dropped
+	// signatures for any caller that had not chdir'd into the workdir.
+	sigPath := fmt.Sprintf("%s.asc", filename)
 
-	_, sigStatErr := os.Stat(sigName)
+	_, sigStatErr := os.Stat(sigPath)
 	if os.IsNotExist(sigStatErr) {
 		return err
 	}
 
-	signatureDestinationPath := fmt.Sprintf("%s/%s", cwd, sigName)
-	if signatureDestinationPath != sigName {
-		err = copyAndRemove(sigName, signatureDestinationPath)
+	signatureDestinationPath := fmt.Sprintf("%s/%s", cwd, filepath.Base(sigPath))
+	if signatureDestinationPath != sigPath {
+		err = copyAndRemove(sigPath, signatureDestinationPath)
 	}
 
 	return err

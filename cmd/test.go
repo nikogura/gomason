@@ -15,8 +15,8 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
-	"os"
 
 	"github.com/nikogura/gomason/v2/pkg/gomason"
 	"github.com/spf13/cobra"
@@ -42,49 +42,71 @@ Sure, you could do the same thing with a CI or CD system.  But sometimes that's 
 Sometimes you need the benefits of a full system here.  Now.  Right at your fingertips.  You're welcome.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		_, err := gomason.NewGomason()
-		if err != nil {
-			log.Fatalf("error creating gomason object")
+		rootWorkDir, runErr := runTest()
+
+		cleanupErr := cleanupWorkDir(rootWorkDir)
+
+		if runErr != nil {
+			log.Fatalf("%s", runErr)
 		}
 
-		rootWorkDir, err := os.MkdirTemp("", "gomason")
-		if err != nil {
-			log.Fatalf("Failed to create temp dir: %s", err)
+		if cleanupErr != nil {
+			log.Fatalf("%s", cleanupErr)
 		}
-
-		defer os.RemoveAll(rootWorkDir)
-
-		meta, err := gomason.ReadMetadata(gomason.MetadataFilename)
-		if err != nil {
-			log.Fatalf("failed to read metadata: %s", err)
-		}
-
-		lang, err := gomason.GetByName(meta.GetLanguage())
-		if err != nil {
-			log.Fatalf("Invalid language: %v", err)
-		}
-
-		workDir, err := lang.CreateWorkDir(rootWorkDir)
-		if err != nil {
-			log.Fatalf("Failed to create ephemeral workDir: %s", err)
-		}
-
-		err = lang.Checkout(workDir, meta, branch)
-		if err != nil {
-			log.Fatalf("failed to checkout package %s at branch %s: %s", meta.Package, branch, err)
-		}
-
-		err = lang.Prep(workDir, meta, local)
-		if err != nil {
-			log.Fatalf("error running prep steps: %s", err)
-		}
-
-		err = lang.Test(workDir, meta.Package, testTimeout, local)
-		if err != nil {
-			log.Fatalf("error running go test: %s", err)
-		}
-
 	},
+}
+
+// runTest tests the project in a clean, ephemeral work dir.  It returns the
+// root work dir it created so the caller can clean it up on every path,
+// including the failure paths.
+func runTest() (rootWorkDir string, err error) {
+	_, err = gomason.NewGomason()
+	if err != nil {
+		err = fmt.Errorf("error creating gomason object: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	var meta gomason.Metadata
+
+	meta, err = gomason.ReadMetadata(gomason.MetadataFilename)
+	if err != nil {
+		err = fmt.Errorf("failed to read metadata: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	var lang gomason.Language
+
+	lang, err = gomason.GetByName(meta.GetLanguage())
+	if err != nil {
+		err = fmt.Errorf("invalid language: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	var workDir string
+
+	rootWorkDir, workDir, err = prepareWorkspace(lang, meta)
+	if err != nil {
+		return rootWorkDir, err
+	}
+
+	err = lang.Prep(workDir, meta, local)
+	if err != nil {
+		err = fmt.Errorf("error running prep steps: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	err = lang.Test(workDir, meta.Package, testTimeout, local)
+	if err != nil {
+		err = fmt.Errorf("error running go test: %w", err)
+
+		return rootWorkDir, err
+	}
+
+	return rootWorkDir, err
 }
 
 //nolint:gochecknoinits // Cobra boilerplate

@@ -57,7 +57,7 @@ Code is downloaded via ```go get``` (or `go mod download` in module-aware builds
 
 Signing is currently done via GPG.  I intend to support other signing methods such as Keybase.io, but at the moment, gpg is all you get.  If your signing keys are in gpg, and you have the gpg-agent running, it should *just work*.
 
-## Language Suppport
+## Language Support
 
 At present, `gomason` only supports golang, but it turns out automating the whole test/build/sign/publish steps and making the UX painless is a really attractive thing, and it would be nice to have when working in other languages.
 
@@ -68,6 +68,49 @@ Necessity being the mother of invention, stay tuned...
 ## Installation
 
     go install github.com/nikogura/gomason/v2@latest
+
+## Building and Development
+
+### Requirements
+
+* Go 1.24 or later
+* `gpg` on the path (the signing tests exercise real signatures)
+* [`golangci-lint`](https://golangci-lint.run/) v2
+* [`namedreturns`](https://github.com/nikogura/namedreturns) -- a custom linter, not bundled with golangci-lint
+
+```bash
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+go install github.com/nikogura/namedreturns@latest
+```
+
+### Build From Source
+
+```bash
+# Host platform, into bin/
+make build
+
+# Every released platform, into dist/
+make build-all
+```
+
+### Run Tests and Linters
+
+```bash
+# Unit tests, with the race detector
+make test
+
+# namedreturns followed by golangci-lint
+make lint
+
+# Both
+make test-all
+```
+
+Both linters must pass, and all tests must pass, before a change is complete.
+CI runs the same targets, so a green `make test-all` locally is the same gate.
+
+The signing tests read a signing identity from `~/.gomason`. If you do not
+have one, `pkg/gomason/testfixtures/.gomason` is the fixture CI uses.
 
 ## Modern Usage Patterns
 
@@ -576,7 +619,25 @@ Each 'extra' is a map with the following information:
 * **filename** String The name of the file to write from the template
 
 * **executable** Bool  Whether to make the written file executable.
-    
+
+#### Attestations
+
+Boolean.  Opt-in.  When `true`, gomason generates and signs [in-toto](https://in-toto.io/) attestations alongside each built binary:
+
+* `<binary>.att.json` — SLSA v1.0 provenance statement (`https://slsa.dev/provenance/v1`)
+* `<binary>.sbom.json` — a CycloneDX SBOM wrapped in an in-toto statement (`https://cyclonedx.org/bom`)
+
+Each is signed with the same identity that signs the binary (detached armored GPG at `<file>.asc`).  See [Attestations](#attestations) for the full contract.
+
+Requires [`syft`](https://github.com/anchore/syft) on `PATH` — gomason shells out for package identification rather than reimplementing it.  With attestations enabled and syft missing, the build fails closed rather than publishing half the pair.
+
+    "building": {
+      "attestations": true,
+      "targets": [
+        { "name": "linux/amd64" }
+      ]
+    }
+
 ### Signing
 
 Information related to signing.
@@ -607,6 +668,8 @@ Each target represents a file that will be uploaded.  Targets have the following
 
 * **checksums** Boolean Whether or not to upload the checksum files for your published file.  Artifactory generates these files automatically, but if you're using something that supports a PUT, but can't generate the checksums, setting this to true will handle it for you.
 
+* **attestations** Boolean Whether or not to upload the attestation files (provenance, SBOM, and their signatures) generated for this artifact.  Setting it without also setting `building.attestations` is an error — the files will not exist.
+
 #### Username
 
 The username to use when authenticating to your artifact repository.  This can be set here, or in the per-user config.  Setting it in the per-user config is recommended.
@@ -622,6 +685,47 @@ A shell function that will return the username to use.  Enables getting username
 #### Passwordfunc
 
 A shell function that will return the password to use when publishing.  Enables getting the password from a service such as AWS Parameter store or Vault.
+
+---
+
+## Attestations
+
+With `building.attestations: true`, gomason becomes a producer of **signed software supply-chain attestations**: for every built binary it emits two in-toto Statement v1 documents, signs both with the signing identity, and (with `attestations: true` on the publish target) publishes them beside the binary on the repository:
+
+```
+<dst>                       the binary
+<dst>.asc                   its signature
+<dst>.sha256                its checksum
+<dst>.att.json              SLSA v1.0 provenance attestation
+<dst>.att.json.asc          …and its signature
+<dst>.sbom.json             CycloneDX SBOM attestation
+<dst>.sbom.json.asc         …and its signature
+```
+
+This is the layout [dbt — the Dynamic Binary Toolkit](https://github.com/nikogura/dynamic-binary-toolkit) verifies as its third leg: checksum, signature, and attestations. A gomason-published repository with a matching `attestationPolicy: required` on the dbt side gives you a distribution chain where nothing runs unless its provenance and SBOM are signed, current, and bound to the exact bytes.
+
+### The Contract
+
+Each statement is an in-toto Statement v1 with **exactly one subject**: the name the binary carries at its publish destination, and its sha256 digest. The digest is the spine — it is what proves the attestation describes *these* bytes and not some other, innocent artifact.
+
+The subject name is taken from the **publish destination**, not from the module or the local artifact filename. Rebranded distributions rename the binary — an `acme`-branded dbt publishes as `acme` while the module is still `dynamic-binary-toolkit` — and the distribution client verifies the subject against the name the binary actually carries. The destination is the only place that name is known. If a binary has no publish target, gomason refuses to guess a subject name and fails loudly.
+
+The provenance statement says what gomason actually knows and nothing more: the package, version, and target from `metadata.json`, the source URI and commit of the checkout, and the identity whose key signs the artifacts (`runDetails.builder.id` — the builder is the signer, the trust-the-person model). It makes no claim of build isolation or a hosted platform: a gomason build is a local build signed by a person, which is SLSA Level 1 semantics, honestly stated.
+
+### Requirements
+
+* [`syft`](https://github.com/anchore/syft) on `PATH` — for the SBOM. Fail-closed: no syft, no attestations, no build.
+* `signing.email` (or the `[user] email` in `~/.gomason`) — the builder identity in the provenance and the key that signs everything.
+* A publish target for each attested binary — the subject name comes from its `dst`.
+
+### Fail-Closed Rules
+
+* No syft → error, and **neither** file is written (a half-attested binary is refuse-bait on the consumer side, which treats half-published attestations as a botched publish).
+* No publish target for the binary → error, no guessed subject names.
+* Publish target asks for attestations (`attestations: true`) but the files were never generated → error at publish, no silent partial publish.
+* Metadata without the opt-in → byte-for-byte the existing behavior; no attestation files anywhere.
+
+`publish --skip-build` generates attestations too — from the prebuilt binaries, exactly as the build path generates them from its own. A publish target that asks for attestations is satisfiable either way, as long as syft is on `PATH` and the prebuilt artifact sits at its `src` name in the working directory.
 
 ---
 

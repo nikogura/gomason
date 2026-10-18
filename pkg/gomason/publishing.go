@@ -1,3 +1,17 @@
+// Copyright © 2017 Nik Ogura <nik.ogura@gmail.com>
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package gomason
 
 import (
@@ -9,10 +23,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go/aws"                  //nolint:staticcheck // aws-sdk-go v1 is past end-of-support; migrating the S3 publish path to aws-sdk-go-v2 is tracked separately.
+	"github.com/aws/aws-sdk-go/aws/session"          //nolint:staticcheck // aws-sdk-go v1 is past end-of-support; migrating the S3 publish path to aws-sdk-go-v2 is tracked separately.
+	"github.com/aws/aws-sdk-go/service/s3"           //nolint:staticcheck // aws-sdk-go v1 is past end-of-support; migrating the S3 publish path to aws-sdk-go-v2 is tracked separately.
+	"github.com/aws/aws-sdk-go/service/s3/s3manager" //nolint:staticcheck // aws-sdk-go v1 is past end-of-support; migrating the S3 publish path to aws-sdk-go-v2 is tracked separately.
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -60,6 +74,52 @@ func (g *Gomason) PublishFile(meta Metadata, filePath string) (err error) {
 		err = UploadChecksums(client, target.Destination, filePath, meta, username, password, bearerToken)
 		if err != nil {
 			err = errors.Wrapf(err, "failed to upload checksums for %s", filePath)
+			return err
+		}
+	}
+
+	// upload the attestation files (provenance, SBOM, and their signatures) if configured
+	// to do so. Fail closed: the target asks for attestations but the files were never
+	// generated — that mismatch is an error, not a silent partial publish.
+	if target.Attestations {
+		err = UploadAttestationFiles(client, target.Destination, filePath, meta, username, password, bearerToken)
+		if err != nil {
+			err = errors.Wrapf(err, "failed to upload attestations for %s", filePath)
+			return err
+		}
+	}
+
+	return err
+}
+
+// UploadAttestationFiles uploads the provenance attestation, the SBOM attestation, and
+// each one's detached signature, beside the artifact's destination — the file layout a
+// distribution client (e.g. dbt) expects: <destination>.att.json, .att.json.asc,
+// .sbom.json, .sbom.json.asc.
+func UploadAttestationFiles(client *http.Client, destination string, filename string, meta Metadata, username string, password string, bearerToken string) (err error) {
+	for _, suffix := range []string{".att.json", ".att.json.asc", ".sbom.json", ".sbom.json.asc"} {
+		attFile := fmt.Sprintf("%s%s", filename, suffix)
+
+		_, statErr := os.Stat(attFile)
+		if os.IsNotExist(statErr) {
+			err = fmt.Errorf("attestation file %s is missing: generate attestations before publishing (building.attestations in metadata, and syft on PATH)", attFile)
+			return err
+		}
+
+		if statErr != nil {
+			err = errors.Wrapf(statErr, "failed to stat %s", attFile)
+			return err
+		}
+
+		parsedDestination, parseErr := ParseTemplateForMetadata(fmt.Sprintf("%s%s", destination, suffix), meta)
+		if parseErr != nil {
+			err = errors.Wrapf(parseErr, "failed to parse destination url %s", destination)
+			return err
+		}
+
+		err = UploadFile(client, parsedDestination, attFile, meta, username, password, bearerToken)
+		if err != nil {
+			err = errors.Wrapf(err, "failed to upload %s", attFile)
 			return err
 		}
 	}
