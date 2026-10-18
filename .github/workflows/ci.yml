@@ -67,7 +67,7 @@ jobs:
       uses: golangci/golangci-lint-action@v8
       with:
         # Pinned: a floating latest turns a lint release into an unplanned CI break.
-        version: v2.13.2
+        version: v2.15.0
         install-mode: binary
         args: --version
 

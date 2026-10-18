@@ -312,40 +312,18 @@ func (g Golang) Build(gopath string, meta Metadata, skipTargets string, local bo
 
 	var wd string
 
-	if local {
-		wd, err = os.Getwd()
-		if err != nil {
-			err = errors.Wrapf(err, "failed getting CWD")
-			return err
-		}
-	} else {
-		wd = fmt.Sprintf("%s/src/%s", gopath, meta.Package)
-
-		logrus.Debugf("Changing working directory to: %s", wd)
-
-		err = os.Chdir(wd)
-
-		if err != nil {
-			err = errors.Wrapf(err, "changing working dir to %q", wd)
-			return err
-		}
+	wd, err = enterBuildDir(gopath, meta, local)
+	if err != nil {
+		return err
 	}
 
 	gox := fmt.Sprintf("%s/bin/gox", gopath)
 
 	logrus.Debugf("Gox is: %s", gox)
 
-	var metadatapath string
-	if local {
-		metadatapath = fmt.Sprintf("%s/%s", wd, MetadataFilename)
-
-	} else {
-		metadatapath = fmt.Sprintf("%s/src/%s/%s", gopath, meta.Package, MetadataFilename)
-	}
-
 	var md Metadata
 
-	md, err = ReadMetadata(metadatapath)
+	md, err = ReadMetadata(filepath.Join(wd, MetadataFilename))
 	if err != nil {
 		err = errors.Wrap(err, "Failed to read metadata file from checked out code")
 		return err
@@ -381,6 +359,30 @@ func (g Golang) Build(gopath string, meta Metadata, skipTargets string, local bo
 	}
 
 	return err
+}
+
+// enterBuildDir resolves the directory the build runs in and, for a clean
+// (non-local) build, changes into the checked-out package so gox sees the
+// module. A local build already runs from the user's working directory.
+func enterBuildDir(gopath string, meta Metadata, local bool) (wd string, err error) {
+	wd, err = resolveWorkDir(gopath, meta, local)
+	if err != nil {
+		return wd, err
+	}
+
+	if local {
+		return wd, err
+	}
+
+	logrus.Debugf("Changing working directory to: %s", wd)
+
+	err = os.Chdir(wd)
+	if err != nil {
+		err = errors.Wrapf(err, "changing working dir to %q", wd)
+		return wd, err
+	}
+
+	return wd, err
 }
 
 // buildSingleTarget builds a single gox target.
